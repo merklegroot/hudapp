@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { hostname, platform, release, type, totalmem, freemem, networkInterfaces } from 'os';
 import { execSync } from 'child_process';
+import { statSync } from 'fs';
 
 function formatBytes(bytes: number): string {
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
@@ -49,6 +50,111 @@ function getMachineModel(): string {
   }
 }
 
+interface DiskInfo {
+  mount: string;
+  total: string;
+  used: string;
+  available: string;
+  usedPercent: number;
+  filesystem: string;
+}
+
+function getDiskInfo(): DiskInfo[] {
+  try {
+    if (platform() === 'linux' || platform() === 'darwin') {
+      // Use df command to get disk usage
+      const dfOutput = execSync('df -h --output=source,target,size,used,avail,pcent 2>/dev/null || df -h', { encoding: 'utf8' });
+      const lines = dfOutput.split('\n').slice(1); // Skip header
+      
+      const diskInfo: DiskInfo[] = [];
+      
+      for (const line of lines) {
+        const parts = line.trim().split(/\s+/);
+        if (parts.length >= 6 && !parts[0].includes('tmpfs') && !parts[0].includes('devtmpfs') && parts[1] !== 'none') {
+          // Filter out virtual filesystems
+          if (parts[1].startsWith('/') || parts[1] === '/') {
+            const usedPercentStr = parts[5].replace('%', '');
+            const usedPercent = parseInt(usedPercentStr) || 0;
+            
+            diskInfo.push({
+              mount: parts[1],
+              total: parts[2],
+              used: parts[3],
+              available: parts[4],
+              usedPercent,
+              filesystem: parts[0]
+            });
+          }
+        }
+      }
+      
+      return diskInfo.length > 0 ? diskInfo : [{
+        mount: '/',
+        total: 'Unknown',
+        used: 'Unknown', 
+        available: 'Unknown',
+        usedPercent: 0,
+        filesystem: 'Unknown'
+      }];
+      
+    } else if (platform() === 'win32') {
+      // Use wmic for Windows
+      const wmicOutput = execSync('wmic logicaldisk get size,freespace,caption /format:csv', { encoding: 'utf8' });
+      const lines = wmicOutput.split('\n').slice(1); // Skip header
+      
+      const diskInfo: DiskInfo[] = [];
+      
+      for (const line of lines) {
+        const parts = line.split(',');
+        if (parts.length >= 4 && parts[1] && parts[2] && parts[3]) {
+          const caption = parts[1].trim();
+          const freeSpace = parseInt(parts[2]) || 0;
+          const totalSpace = parseInt(parts[3]) || 0;
+          const usedSpace = totalSpace - freeSpace;
+          const usedPercent = totalSpace > 0 ? Math.round((usedSpace / totalSpace) * 100) : 0;
+          
+          diskInfo.push({
+            mount: caption,
+            total: formatBytes(totalSpace),
+            used: formatBytes(usedSpace),
+            available: formatBytes(freeSpace),
+            usedPercent,
+            filesystem: 'NTFS'
+          });
+        }
+      }
+      
+      return diskInfo.length > 0 ? diskInfo : [{
+        mount: 'C:',
+        total: 'Unknown',
+        used: 'Unknown',
+        available: 'Unknown', 
+        usedPercent: 0,
+        filesystem: 'Unknown'
+      }];
+    }
+    
+    return [{
+      mount: '/',
+      total: 'Unknown',
+      used: 'Unknown',
+      available: 'Unknown',
+      usedPercent: 0,
+      filesystem: 'Unknown'
+    }];
+  } catch (error) {
+    console.error('Error getting disk info:', error);
+    return [{
+      mount: '/',
+      total: 'Unknown',
+      used: 'Unknown',
+      available: 'Unknown',
+      usedPercent: 0,
+      filesystem: 'Unknown'
+    }];
+  }
+}
+
 export async function GET() {
   try {
     const machineHostname = hostname();
@@ -59,6 +165,7 @@ export async function GET() {
     const totalRAM = formatBytes(totalmem());
     const freeRAM = formatBytes(freemem());
     const usedRAM = formatBytes(totalmem() - freemem());
+    const diskInfo = getDiskInfo();
 
     return NextResponse.json({
       hostname: machineHostname,
@@ -68,7 +175,8 @@ export async function GET() {
       osName,
       totalRAM,
       freeRAM,
-      usedRAM
+      usedRAM,
+      disks: diskInfo
     });
   } catch (error) {
     console.error('Error getting system information:', error);
@@ -80,7 +188,8 @@ export async function GET() {
       osName: 'Unknown',
       totalRAM: 'Unknown',
       freeRAM: 'Unknown',
-      usedRAM: 'Unknown'
+      usedRAM: 'Unknown',
+      disks: []
     }, { status: 500 });
   }
 }
