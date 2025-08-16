@@ -88,6 +88,20 @@ export default function Machine() {
     { label: 'Used RAM', value: machineInfo.usedRAM },
   ];
 
+  // Calculate RAM usage percentage
+  const calculateRAMUsage = () => {
+    // Extract numeric values from formatted strings (e.g., "8.5 GiB" -> 8.5)
+    const totalStr = machineInfo.totalRAM.split(' ')[0];
+    const freeStr = machineInfo.freeRAM.split(' ')[0];
+    const total = parseFloat(totalStr) || 0;
+    const free = parseFloat(freeStr) || 0;
+    const used = total - free;
+    const usedPercent = total > 0 ? Math.round((used / total) * 100) : 0;
+    return usedPercent;
+  };
+
+  const ramUsagePercent = calculateRAMUsage();
+
   return (
     <div className="min-h-[calc(100vh-4rem)] p-8">
       <div className="max-w-4xl mx-auto">
@@ -109,6 +123,25 @@ export default function Machine() {
         {/* Memory Information */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">Memory Usage</h2>
+          
+          {/* RAM Usage Bar */}
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-lg font-semibold text-gray-900">RAM Usage</h3>
+              <span className="text-sm text-gray-600">{ramUsagePercent}% used</span>
+            </div>
+            
+            <div className="w-full bg-gray-200 rounded-full h-4 mb-3">
+              <div 
+                className={`h-4 rounded-full ${
+                  ramUsagePercent > 90 ? 'bg-red-500' : 
+                  ramUsagePercent > 75 ? 'bg-yellow-500' : 'bg-green-500'
+                }`}
+                style={{ width: `${ramUsagePercent}%` }}
+              ></div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {memoryItems.map((item, index) => (
               <div key={index} className="p-4 bg-gray-50 rounded-lg">
