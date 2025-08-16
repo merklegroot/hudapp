@@ -16,5 +16,4 @@ export interface machineInfo {
   disks: diskInfo[];
   physicalDisks: physicalDisk[];
   topProcesses: topProcess[];
-  gpus: gpuInfo[];
 }

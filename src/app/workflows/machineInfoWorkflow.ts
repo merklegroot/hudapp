@@ -503,7 +503,6 @@ async function getMachineInfo(): Promise<machineInfo> {
     const diskInfo = await getDiskInfo();
     const physicalDisks = await getPhysicalDisks();
     const topProcesses = await getTopProcesses();
-    const gpus = await getGpuInfos();
 
     return {
       hostname: machineHostname,
@@ -517,8 +516,7 @@ async function getMachineInfo(): Promise<machineInfo> {
       usedRAM,
       disks: diskInfo,
       physicalDisks,
-      topProcesses,
-      gpus
+      topProcesses
     };
   } catch (error) {
     console.error('Error getting system information:', error);
@@ -534,8 +532,7 @@ async function getMachineInfo(): Promise<machineInfo> {
       usedRAM: 'Unknown',
       disks: [],
       physicalDisks: [],
-      topProcesses: [],
-      gpus: []
+      topProcesses: []
     };
   }
 }
