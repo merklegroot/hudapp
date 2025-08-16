@@ -162,9 +162,6 @@ export default function Machine() {
           </div>
         </div>
 
-        {/* GPU Information */}
-        <GpuSection gpus={machineInfo.gpus} />
-
         {/* Physical Disks */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">Physical Disks</h2>
