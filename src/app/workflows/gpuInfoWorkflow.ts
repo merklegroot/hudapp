@@ -1,13 +1,14 @@
-import { gpuInfo } from "./models";
+import { gpu } from "./models";
 import { detectPlatform, platformType } from "./detectPlatform";
 import { formatBytes } from "./formatBytes";
 import { promisify } from "util";
 import { exec } from "child_process";
 import { gpuParser } from "./gpuParser";
+import { gpuInfo } from "./models";
 
 const execAsync = promisify(exec);
 
-async function getGpusFromLspci(): Promise<gpuInfo[]> {
+async function getGpusFromLspci(): Promise<gpu[]> {
   try {
     const { stdout: lspciOutput } = await execAsync('lspci -v | grep -A 20 -i "vga\\|3d\\|display" 2>/dev/null');
     
@@ -18,7 +19,7 @@ async function getGpusFromLspci(): Promise<gpuInfo[]> {
   }
 }
 
-async function getGpusFromNvidiaSmi(): Promise<gpuInfo[]> {
+async function getGpusFromNvidiaSmi(): Promise<gpu[]> {
   try {
     const { stdout: nvidiaOutput } = await execAsync('nvidia-smi --query-gpu=index,name,memory.total,memory.used,memory.free,utilization.gpu,temperature.gpu,driver_version --format=csv,noheader,nounits 2>/dev/null');
       
@@ -28,7 +29,7 @@ async function getGpusFromNvidiaSmi(): Promise<gpuInfo[]> {
 
     const lines = nvidiaOutput.split('\n').filter(line => line.trim());
       
-    const gpus: gpuInfo[] = [];
+    const gpus: gpu[] = [];
     for (const line of lines) {
       const parts = line.split(',').map(part => part.trim());
       if (parts.length >= 7) {
@@ -58,7 +59,7 @@ async function getGpusFromNvidiaSmi(): Promise<gpuInfo[]> {
   }
 }
 
-async function getLinuxGpuInfos(): Promise<gpuInfo[]> {
+async function getLinuxGpuInfos(): Promise<gpu[]> {
   const gpusFromNvidia = await getGpusFromNvidiaSmi();
   if (gpusFromNvidia.length > 0)
     return gpusFromNvidia;
@@ -66,7 +67,7 @@ async function getLinuxGpuInfos(): Promise<gpuInfo[]> {
   return await getGpusFromLspci();
 }
 
-export async function getGpuInfos(): Promise<gpuInfo[]> {
+async function getGpus(): Promise<gpu[]> {
     try {
       const currentPlatform = detectPlatform();
       
@@ -79,7 +80,7 @@ export async function getGpuInfos(): Promise<gpuInfo[]> {
           const { stdout: gpuOutput } = await execAsync('system_profiler SPDisplaysDataType -json 2>/dev/null');
           const data = JSON.parse(gpuOutput);
           const displays = data?.SPDisplaysDataType || [];
-          const gpus: gpuInfo[] = [];
+          const gpus: gpu[] = [];
           
           for (let i = 0; i < displays.length; i++) {
             const display = displays[i];
@@ -121,7 +122,7 @@ export async function getGpuInfos(): Promise<gpuInfo[]> {
         try {
           const { stdout: wmicOutput } = await execAsync('wmic path win32_VideoController get Name,AdapterRAM,DriverVersion /format:csv 2>/dev/null');
           const lines = wmicOutput.split('\n').slice(1).filter(line => line.trim() && line.includes(','));
-          const gpus: gpuInfo[] = [];
+          const gpus: gpu[] = [];
           
           for (let i = 0; i < lines.length; i++) {
             const parts = lines[i].split(',');
@@ -153,4 +154,17 @@ export async function getGpuInfos(): Promise<gpuInfo[]> {
       return [];
     }
   }
-  
+
+
+
+async function execute(): Promise<gpuInfo> {
+  const gpus = await getGpus();
+
+  return {
+    gpus
+  };
+}
+
+export const gpuInfoWorkflow = {
+  execute
+}

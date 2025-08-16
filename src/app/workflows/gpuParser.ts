@@ -1,8 +1,8 @@
-import { gpuInfo } from "./models";
+import { gpu } from "./models";
 
 function parseLspciOutput(lspciOutput: string) {
     const sections = lspciOutput.split('--\n').filter(section => section.trim());
-    const gpus: gpuInfo[] = [];
+    const gpus: gpu[] = [];
     
     for (let i = 0; i < sections.length; i++) {
       const section = sections[i];

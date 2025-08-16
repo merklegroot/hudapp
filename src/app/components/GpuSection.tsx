@@ -1,16 +1,17 @@
-import { gpuInfo } from '../workflows/models';
+import { gpu } from '../workflows/models';
+import { gpuInfo } from '../workflows/models/gpuInfo';
 
 interface GpuSectionProps {
-  gpus: gpuInfo[];
+  gpuInfo: gpuInfo;
 }
 
-export default function GpuSection({ gpus }: GpuSectionProps) {
+export default function GpuSection({ gpuInfo }: GpuSectionProps) {
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
       <h2 className="text-2xl font-semibold text-gray-800 mb-4">Graphics Cards</h2>
-      {gpus && gpus.length > 0 ? (
+      {gpuInfo?.gpus && gpuInfo.gpus.length > 0 ? (
         <div className="space-y-4">
-          {gpus.map((gpu, index) => (
+          {gpuInfo.gpus.map((gpu, index) => (
             <div key={index} className="p-4 bg-gray-50 rounded-lg">
               <div className="flex justify-between items-center mb-3">
                 <h3 className="text-lg font-semibold text-gray-900">

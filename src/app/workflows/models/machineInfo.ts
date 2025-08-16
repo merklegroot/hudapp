@@ -1,7 +1,6 @@
 import { diskInfo } from './diskInfo';
 import { physicalDisk } from './physicalDisk';
 import { topProcess } from './topProcess';
-import { gpuInfo } from './gpuInfo';
 
 export interface machineInfo {
   hostname: string;

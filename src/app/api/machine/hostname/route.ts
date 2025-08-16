@@ -20,8 +20,7 @@ export async function GET(): Promise<NextResponse<machineInfo>> {
       usedRAM: 'Unknown',
       disks: [],
       physicalDisks: [],
-      topProcesses: [],
-      gpus: []
+      topProcesses: []
     };
     return NextResponse.json<machineInfo>(fallbackResponse, { status: 500 });
   }

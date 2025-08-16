@@ -3,8 +3,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { readFile } from 'fs/promises';
 import { detectPlatform, platformType } from './detectPlatform';
-import { getGpuInfos } from './getGpuInfos';
-import { gpuInfo, diskInfo, physicalDisk, topProcess, machineInfo } from './models';
+import { diskInfo, physicalDisk, topProcess, machineInfo } from './models';
 import { formatBytes } from './formatBytes';
 
 const execAsync = promisify(exec);
@@ -39,7 +38,7 @@ async function getMachineModel(): Promise<string> {
         if (productName && productName !== 'To be filled by O.E.M.' && productName !== 'System Product Name') {
           return productName;
         }
-      } catch (e) {
+      } catch (e: any) {
         // Continue to fallback methods if file doesn't exist or can't be read
       }
       
@@ -50,7 +49,7 @@ async function getMachineModel(): Promise<string> {
         if (boardName && boardName !== 'To be filled by O.E.M.' && boardName !== 'Default string') {
           return boardName;
         }
-      } catch (e) {
+      } catch (e: any) {
         // Continue to fallback methods
       }
       
@@ -61,7 +60,7 @@ async function getMachineModel(): Promise<string> {
         if (dmiInfo.trim() && !dmiInfo.includes('Permission denied')) {
           return dmiInfo.trim();
         }
-      } catch (e) {
+      } catch (e: any) {
         // Expected to fail without sudo
       }
       
@@ -78,7 +77,7 @@ async function getMachineModel(): Promise<string> {
       return model.replace('Model=', '').trim() || 'Unknown';
     }
     return 'Unknown';
-  } catch (error) {
+  } catch (error: any) {
     return 'Unknown';
   }
 }
@@ -192,7 +191,7 @@ async function getDiskInfo(): Promise<diskInfo[]> {
       usedPercent: 0,
       filesystem: 'Unknown'
     }];
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error getting disk info:', error);
     return [{
       mount: '/',
@@ -322,7 +321,7 @@ async function getPhysicalDisks(): Promise<physicalDisk[]> {
     }
     
     return [];
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error getting physical disk info:', error);
     return [];
   }
@@ -426,7 +425,7 @@ async function getTopProcesses(): Promise<topProcess[]> {
     }
     
     return [];
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error getting top processes:', error);
     return [];
   }
@@ -484,7 +483,7 @@ async function getOSName(): Promise<string> {
     
     // Fallback to basic OS detection
     return `${type()} ${release()}`;
-  } catch (error) {
+  } catch (error: any) {
     return 'Unknown OS';
   }
 }
@@ -503,7 +502,7 @@ async function getMachineInfo(): Promise<machineInfo> {
     const diskInfo = await getDiskInfo();
     const physicalDisks = await getPhysicalDisks();
     const topProcesses = await getTopProcesses();
-
+    
     return {
       hostname: machineHostname,
       localIP,
@@ -518,7 +517,7 @@ async function getMachineInfo(): Promise<machineInfo> {
       physicalDisks,
       topProcesses
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error getting system information:', error);
     return {
       hostname: 'Unknown Machine',

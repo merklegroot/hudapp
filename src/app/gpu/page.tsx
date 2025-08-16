@@ -1,23 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { machineInfo } from '../workflows/models';
+import { gpuInfo } from '../workflows/models/gpuInfo';
 import GpuSection from '../components/GpuSection';
 
 export default function GPU() {
-  const [machineInfo, setMachineInfo] = useState<machineInfo | null>(null);
+  const [gpuInfo, setGpuInfo] = useState<gpuInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/gpu')
-      .then(response => response.json())
+      .then(response => response.json() as Promise<gpuInfo>)
       .then(data => {
-        // Create a minimal machineInfo object with just the GPU data
-        setMachineInfo({ gpus: data } as machineInfo);
+        setGpuInfo(data);
         setLoading(false);
       })
-      .catch(err => {
+      .catch((err: Error) => {
         console.error('Error fetching GPU info:', err);
         setError('Failed to fetch GPU information');
         setLoading(false);
@@ -40,7 +39,7 @@ export default function GPU() {
     );
   }
 
-  if (!machineInfo) {
+  if (!gpuInfo) {
     return (
       <div className="min-h-[calc(100vh-4rem)] p-8 flex items-center justify-center">
         <div className="text-xl text-gray-600">No GPU information available</div>
@@ -54,7 +53,7 @@ export default function GPU() {
         <h1 className="text-4xl font-bold mb-8">Graphics Cards</h1>
         
         {/* GPU Information */}
-        <GpuSection gpus={machineInfo.gpus} />
+        <GpuSection gpuInfo={gpuInfo} />
       </div>
     </div>
   );
