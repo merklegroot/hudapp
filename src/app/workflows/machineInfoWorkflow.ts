@@ -1,6 +1,6 @@
 import { hostname, platform, release, type, totalmem, freemem, networkInterfaces } from 'os';
 import { execSync } from 'child_process';
-import { readFileSync } from 'fs';
+import { readFile } from 'fs/promises';
 import { detectPlatform, platformType } from './detectPlatform';
 
 export interface DiskInfo {
@@ -68,14 +68,14 @@ function getLocalIPAddress(): string {
   return 'Unknown';
 }
 
-function getMachineModel(): string {
+async function getMachineModel(): Promise<string> {
   try {
     const currentPlatform = detectPlatform();
 
     if (currentPlatform === platformType.linux) {
       // Try to get machine model from /sys filesystem (no sudo required)
       try {
-        const productName = readFileSync('/sys/class/dmi/id/product_name', 'utf8').trim();
+        const productName = (await readFile('/sys/class/dmi/id/product_name', 'utf8')).trim();
 
         if (productName && productName !== 'To be filled by O.E.M.' && productName !== 'System Product Name') {
           return productName;
@@ -86,7 +86,7 @@ function getMachineModel(): string {
       
       // Try alternative sys paths
       try {
-        const boardName = readFileSync('/sys/class/dmi/id/board_name', 'utf8').trim();
+        const boardName = (await readFile('/sys/class/dmi/id/board_name', 'utf8')).trim();
 
         if (boardName && boardName !== 'To be filled by O.E.M.' && boardName !== 'Default string') {
           return boardName;
@@ -473,14 +473,14 @@ function getTopProcesses(): TopProcess[] {
   }
 }
 
-function getOSName(): string {
+async function getOSName(): Promise<string> {
   try {
     const currentPlatform = detectPlatform();
 
     if (currentPlatform === platformType.linux) {
       // Try to read from /etc/os-release for detailed OS information
       try {
-        const osRelease = readFileSync('/etc/os-release', 'utf8');
+        const osRelease = await readFile('/etc/os-release', 'utf8');
         const lines = osRelease.split('\n');
         
         let prettyName = '';
@@ -532,9 +532,9 @@ function getOSName(): string {
 async function getMachineInfo(): Promise<MachineInfo> {
   try {
     const machineHostname = hostname();
-    const osName = getOSName();
+    const osName = await getOSName();
     const kernelVersion = release();
-    const machineModel = getMachineModel();
+    const machineModel = await getMachineModel();
     const cpuInfo = getCPUInfo();
     const localIP = getLocalIPAddress();
     const totalRAM = formatBytes(totalmem());
