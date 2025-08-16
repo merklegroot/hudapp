@@ -3,56 +3,15 @@ import { detectPlatform, platformType } from "./detectPlatform";
 import { formatBytes } from "./formatBytes";
 import { promisify } from "util";
 import { exec } from "child_process";
+import { gpuParser } from "./gpuParser";
 
 const execAsync = promisify(exec);
 
 async function getGpusFromLspci(): Promise<gpuInfo[]> {
   try {
     const { stdout: lspciOutput } = await execAsync('lspci -v | grep -A 20 -i "vga\\|3d\\|display" 2>/dev/null');
-    const sections = lspciOutput.split('\n\n').filter(section => section.trim());
-    const gpus: gpuInfo[] = [];
     
-    for (let i = 0; i < sections.length; i++) {
-      const section = sections[i];
-      const lines = section.split('\n');
-      
-      if (lines.length > 0) {
-        const firstLine = lines[0];
-        
-        // Parse bus ID and device info from first line
-        // Format: "01:00.0 VGA compatible controller: NVIDIA Corporation GA107M [GeForce RTX 3050 Ti Mobile] (rev a1)"
-        const busMatch = firstLine.match(/^([0-9a-f]{2}:[0-9a-f]{2}\.[0-9a-f])/i);
-        const deviceMatch = firstLine.match(/(?:VGA compatible controller|3D controller|Display controller):\s*(.+)/i);
-        const revMatch = firstLine.match(/\(rev\s+([a-f0-9]+)\)/i);
-        
-        const busId = busMatch ? busMatch[1] : 'Unknown';
-        let deviceName = deviceMatch ? deviceMatch[1].trim() : 'Unknown GPU';
-        const revision = revMatch ? revMatch[1] : 'Unknown';
-        
-        // Remove revision info from device name if it's included
-        deviceName = deviceName.replace(/\s*\(rev\s+[a-f0-9]+\)$/i, '');
-        
-        // Try to find driver info in the section
-        let driver = 'Unknown';
-        for (const line of lines) {
-          const driverMatch = line.match(/Kernel driver in use:\s*(.+)/i);
-          if (driverMatch) {
-            driver = driverMatch[1].trim();
-            break;
-          }
-        }
-        
-        gpus.push({
-          index: i,
-          name: deviceName,
-          bus: busId,
-          revision: revision,
-          driver: driver
-        });
-      }
-    }
-    
-    return gpus;
+    return gpuParser.parseLspciOutput(lspciOutput);
   }
   catch(error) {
     return [];
