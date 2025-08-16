@@ -441,10 +441,58 @@ function getTopProcesses(): TopProcess[] {
   }
 }
 
+function getOSName(): string {
+  try {
+    if (platform() === 'linux') {
+      // Try to read from /etc/os-release for detailed OS information
+      try {
+        const osRelease = readFileSync('/etc/os-release', 'utf8');
+        const lines = osRelease.split('\n');
+        
+        let prettyName = '';
+        let versionInfo = '';
+        
+        for (const line of lines) {
+          if (line.startsWith('PRETTY_NAME=')) {
+            prettyName = line.split('=')[1].replace(/"/g, '');
+          } else if (line.startsWith('VERSION=')) {
+            versionInfo = line.split('=')[1].replace(/"/g, '');
+          }
+        }
+        
+        // Check if this is Kubuntu by checking hostname or other indicators
+        const currentHostname = hostname().toLowerCase();
+        const isKubuntu = currentHostname.includes('kubuntu');
+        
+        if (isKubuntu && prettyName && versionInfo) {
+          // Format as "Kubuntu 25.04 (Ubuntu 25.04 "Plucky")"
+          const version = prettyName.split(' ')[1] || '';
+          // Extract codename from version info - e.g., "25.04 (Plucky Puffin)" -> "Plucky"
+          const codenamePart = versionInfo.match(/\(([^)]+)\)/);
+          const codename = codenamePart ? codenamePart[1].split(' ')[0] : '';
+          return `Kubuntu ${version} (Ubuntu ${version} "${codename}")`;
+        } else if (prettyName && versionInfo) {
+          // Use the full version info for other Ubuntu variants
+          return `${prettyName} (${versionInfo})`;
+        } else if (prettyName) {
+          return prettyName;
+        }
+      } catch (e) {
+        // Fall back to basic detection if /etc/os-release is not available
+      }
+    }
+    
+    // Fallback to basic OS detection
+    return `${type()} ${release()}`;
+  } catch (error) {
+    return 'Unknown OS';
+  }
+}
+
 async function getMachineInfo(): Promise<MachineInfo> {
   try {
     const machineHostname = hostname();
-    const osName = `${type()} ${release()}`;
+    const osName = getOSName();
     const kernelVersion = release();
     const machineModel = getMachineModel();
     const cpuInfo = getCPUInfo();
