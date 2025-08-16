@@ -4,7 +4,7 @@ import { execSync } from 'child_process';
 import { statSync } from 'fs';
 
 function formatBytes(bytes: number): string {
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const sizes = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB'];
   if (bytes === 0) return '0 Bytes';
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
@@ -57,6 +57,13 @@ interface DiskInfo {
   available: string;
   usedPercent: number;
   filesystem: string;
+}
+
+interface PhysicalDisk {
+  device: string;
+  size: string;
+  model: string;
+  type: string;
 }
 
 function getDiskInfo(): DiskInfo[] {
@@ -155,6 +162,119 @@ function getDiskInfo(): DiskInfo[] {
   }
 }
 
+function getPhysicalDisks(): PhysicalDisk[] {
+  try {
+    if (platform() === 'linux') {
+      // Use lsblk to get physical disk information
+      const lsblkOutput = execSync('lsblk -d -o NAME,SIZE,MODEL,ROTA -n 2>/dev/null || echo ""', { encoding: 'utf8' });
+      const lines = lsblkOutput.split('\n').filter(line => line.trim());
+      
+      const physicalDisks: PhysicalDisk[] = [];
+      
+      for (const line of lines) {
+        const parts = line.trim().split(/\s+/);
+        if (parts.length >= 3 && !parts[0].includes('loop') && !parts[0].includes('ram')) {
+          const device = parts[0];
+          const size = parts[1];
+          const model = parts.slice(2, -1).join(' ') || 'Unknown';
+          const isRotational = parts[parts.length - 1] === '1';
+          const type = isRotational ? 'HDD' : 'SSD';
+          
+          physicalDisks.push({
+            device: `/dev/${device}`,
+            size,
+            model: model.trim() || 'Unknown',
+            type
+          });
+        }
+      }
+      
+      // Fallback: try using fdisk if lsblk fails
+      if (physicalDisks.length === 0) {
+        try {
+          const fdiskOutput = execSync('fdisk -l 2>/dev/null | grep "Disk /dev/" | head -10', { encoding: 'utf8' });
+          const fdiskLines = fdiskOutput.split('\n').filter(line => line.includes('Disk /dev/'));
+          
+          for (const line of fdiskLines) {
+            const match = line.match(/Disk (\/dev\/\w+).*?(\d+(?:\.\d+)?\s*[KMGT]?B)/);
+            if (match) {
+              physicalDisks.push({
+                device: match[1],
+                size: match[2],
+                model: 'Unknown',
+                type: 'Unknown'
+              });
+            }
+          }
+        } catch (fdiskError) {
+          // Ignore fdisk errors
+        }
+      }
+      
+      return physicalDisks;
+      
+    } else if (platform() === 'darwin') {
+      // Use diskutil for macOS
+      const diskutilOutput = execSync('diskutil list physical 2>/dev/null || echo ""', { encoding: 'utf8' });
+      const lines = diskutilOutput.split('\n');
+      
+      const physicalDisks: PhysicalDisk[] = [];
+      
+      for (const line of lines) {
+        if (line.includes('/dev/disk') && line.includes('*')) {
+          const parts = line.trim().split(/\s+/);
+          const sizeIndex = parts.findIndex(part => part.includes('B'));
+          if (sizeIndex > 0) {
+            const device = parts[0].replace('*', '');
+            const size = parts[sizeIndex];
+            const model = parts.slice(sizeIndex + 1).join(' ') || 'Unknown';
+            
+            physicalDisks.push({
+              device,
+              size,
+              model: model.trim() || 'Unknown',
+              type: 'Unknown'
+            });
+          }
+        }
+      }
+      
+      return physicalDisks;
+      
+    } else if (platform() === 'win32') {
+      // Use wmic for Windows physical disk info
+      const wmicOutput = execSync('wmic diskdrive get size,model,caption /format:csv 2>/dev/null || echo ""', { encoding: 'utf8' });
+      const lines = wmicOutput.split('\n').slice(1); // Skip header
+      
+      const physicalDisks: PhysicalDisk[] = [];
+      
+      for (const line of lines) {
+        const parts = line.split(',');
+        if (parts.length >= 4 && parts[1] && parts[2] && parts[3]) {
+          const caption = parts[1].trim();
+          const model = parts[2].trim() || 'Unknown';
+          const sizeBytes = parseInt(parts[3]) || 0;
+          const size = formatBytes(sizeBytes);
+          
+          physicalDisks.push({
+            device: caption,
+            size,
+            model,
+            type: 'Unknown'
+          });
+        }
+      }
+      
+      return physicalDisks;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Error getting physical disk info:', error);
+    return [];
+  }
+}
+
 export async function GET() {
   try {
     const machineHostname = hostname();
@@ -166,6 +286,7 @@ export async function GET() {
     const freeRAM = formatBytes(freemem());
     const usedRAM = formatBytes(totalmem() - freemem());
     const diskInfo = getDiskInfo();
+    const physicalDisks = getPhysicalDisks();
 
     return NextResponse.json({
       hostname: machineHostname,
@@ -176,7 +297,8 @@ export async function GET() {
       totalRAM,
       freeRAM,
       usedRAM,
-      disks: diskInfo
+      disks: diskInfo,
+      physicalDisks
     });
   } catch (error) {
     console.error('Error getting system information:', error);
@@ -189,7 +311,8 @@ export async function GET() {
       totalRAM: 'Unknown',
       freeRAM: 'Unknown',
       usedRAM: 'Unknown',
-      disks: []
+      disks: [],
+      physicalDisks: []
     }, { status: 500 });
   }
 }
