@@ -18,6 +18,14 @@ interface PhysicalDisk {
   type: string;
 }
 
+interface TopProcess {
+  pid: string;
+  name: string;
+  memoryUsage: string;
+  memoryPercent: number;
+  memoryAbsolute: string;
+}
+
 interface MachineInfo {
   hostname: string;
   localIP: string;
@@ -29,6 +37,7 @@ interface MachineInfo {
   usedRAM: string;
   disks: DiskInfo[];
   physicalDisks: PhysicalDisk[];
+  topProcesses: TopProcess[];
 }
 
 export default function Machine() {
@@ -142,13 +151,49 @@ export default function Machine() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             {memoryItems.map((item, index) => (
               <div key={index} className="p-4 bg-gray-50 rounded-lg">
                 <h3 className="text-sm font-medium text-gray-600 mb-1">{item.label}</h3>
                 <p className="text-lg font-semibold text-gray-900">{item.value}</p>
               </div>
             ))}
+          </div>
+
+          {/* Top Processes */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">Top RAM Consuming Processes</h3>
+            {machineInfo.topProcesses && machineInfo.topProcesses.length > 0 ? (
+              <div className="space-y-2">
+                {machineInfo.topProcesses.map((process, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <span className="flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                        {index + 1}
+                      </span>
+                      <div>
+                        <p className="font-medium text-gray-900">{process.name}</p>
+                        <p className="text-xs text-gray-500">PID: {process.pid}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-gray-900">{process.memoryAbsolute}</p>
+                      <p className="text-sm text-gray-600">{process.memoryUsage}</p>
+                      {process.memoryPercent > 0 && (
+                        <div className="w-20 bg-gray-200 rounded-full h-2 mt-1">
+                          <div 
+                            className="bg-blue-500 h-2 rounded-full"
+                            style={{ width: `${Math.min(process.memoryPercent * 2, 100)}%` }}
+                          ></div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-600">No process information available</p>
+            )}
           </div>
         </div>
 

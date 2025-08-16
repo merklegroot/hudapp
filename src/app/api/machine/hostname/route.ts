@@ -66,6 +66,14 @@ interface PhysicalDisk {
   type: string;
 }
 
+interface TopProcess {
+  pid: string;
+  name: string;
+  memoryUsage: string;
+  memoryPercent: number;
+  memoryAbsolute: string;
+}
+
 function getDiskInfo(): DiskInfo[] {
   try {
     if (platform() === 'linux' || platform() === 'darwin') {
@@ -275,6 +283,109 @@ function getPhysicalDisks(): PhysicalDisk[] {
   }
 }
 
+function getTopProcesses(): TopProcess[] {
+  try {
+    const totalMemoryBytes = totalmem();
+    
+    if (platform() === 'linux') {
+      // Use ps command to get top processes by memory usage
+      const psOutput = execSync('ps aux --sort=-%mem --no-headers | head -3', { encoding: 'utf8' });
+      const lines = psOutput.split('\n').filter(line => line.trim());
+      
+      const processes: TopProcess[] = [];
+      
+      for (const line of lines) {
+        const parts = line.trim().split(/\s+/);
+        if (parts.length >= 11) {
+          const pid = parts[1];
+          const memPercent = parseFloat(parts[3]) || 0;
+          const command = parts.slice(10).join(' ');
+          // Extract just the process name (first part of command)
+          const processName = command.split(' ')[0].split('/').pop() || command;
+          
+          // Calculate absolute memory usage
+          const memoryBytes = (memPercent / 100) * totalMemoryBytes;
+          const memoryAbsolute = formatBytes(memoryBytes);
+          
+          processes.push({
+            pid,
+            name: processName.length > 30 ? processName.substring(0, 30) + '...' : processName,
+            memoryUsage: `${memPercent.toFixed(1)}%`,
+            memoryPercent: Math.round(memPercent * 100) / 100,
+            memoryAbsolute
+          });
+        }
+      }
+      
+      return processes;
+      
+    } else if (platform() === 'darwin') {
+      // Use ps command for macOS
+      const psOutput = execSync('ps aux -r | head -4 | tail -3', { encoding: 'utf8' });
+      const lines = psOutput.split('\n').filter(line => line.trim());
+      
+      const processes: TopProcess[] = [];
+      
+      for (const line of lines) {
+        const parts = line.trim().split(/\s+/);
+        if (parts.length >= 11) {
+          const pid = parts[1];
+          const memPercent = parseFloat(parts[3]) || 0;
+          const command = parts.slice(10).join(' ');
+          const processName = command.split(' ')[0].split('/').pop() || command;
+          
+          // Calculate absolute memory usage
+          const memoryBytes = (memPercent / 100) * totalMemoryBytes;
+          const memoryAbsolute = formatBytes(memoryBytes);
+          
+          processes.push({
+            pid,
+            name: processName.length > 30 ? processName.substring(0, 30) + '...' : processName,
+            memoryUsage: `${memPercent.toFixed(1)}%`,
+            memoryPercent: Math.round(memPercent * 100) / 100,
+            memoryAbsolute
+          });
+        }
+      }
+      
+      return processes;
+      
+    } else if (platform() === 'win32') {
+      // Use wmic for Windows
+      const wmicOutput = execSync('wmic process get Name,ProcessId,WorkingSetSize /format:csv | sort /r /+4 | head -4 | tail -3', { encoding: 'utf8' });
+      const lines = wmicOutput.split('\n').filter(line => line.trim() && line.includes(','));
+      
+      const processes: TopProcess[] = [];
+      
+      for (const line of lines) {
+        const parts = line.split(',');
+        if (parts.length >= 4 && parts[1] && parts[2] && parts[3]) {
+          const name = parts[1].trim();
+          const pid = parts[2].trim();
+          const workingSetBytes = parseInt(parts[3]) || 0;
+          const memoryAbsolute = formatBytes(workingSetBytes);
+          const memPercent = totalMemoryBytes > 0 ? (workingSetBytes / totalMemoryBytes) * 100 : 0;
+          
+          processes.push({
+            pid,
+            name: name.length > 30 ? name.substring(0, 30) + '...' : name,
+            memoryUsage: `${memPercent.toFixed(1)}%`,
+            memoryPercent: Math.round(memPercent * 100) / 100,
+            memoryAbsolute
+          });
+        }
+      }
+      
+      return processes;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Error getting top processes:', error);
+    return [];
+  }
+}
+
 export async function GET() {
   try {
     const machineHostname = hostname();
@@ -287,6 +398,7 @@ export async function GET() {
     const usedRAM = formatBytes(totalmem() - freemem());
     const diskInfo = getDiskInfo();
     const physicalDisks = getPhysicalDisks();
+    const topProcesses = getTopProcesses();
 
     return NextResponse.json({
       hostname: machineHostname,
@@ -298,7 +410,8 @@ export async function GET() {
       freeRAM,
       usedRAM,
       disks: diskInfo,
-      physicalDisks
+      physicalDisks,
+      topProcesses
     });
   } catch (error) {
     console.error('Error getting system information:', error);
@@ -312,7 +425,8 @@ export async function GET() {
       freeRAM: 'Unknown',
       usedRAM: 'Unknown',
       disks: [],
-      physicalDisks: []
+      physicalDisks: [],
+      topProcesses: []
     }, { status: 500 });
   }
 }
