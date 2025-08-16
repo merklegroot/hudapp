@@ -4,50 +4,10 @@ import { promisify } from 'util';
 import { readFile } from 'fs/promises';
 import { detectPlatform, platformType } from './detectPlatform';
 import { getGpuInfos } from './getGpuInfos';
-import { gpuInfo } from './models';
+import { gpuInfo, diskInfo, physicalDisk, topProcess, machineInfo } from './models';
 import { formatBytes } from './formatBytes';
 
 const execAsync = promisify(exec);
-
-export interface DiskInfo {
-  mount: string;
-  total: string;
-  used: string;
-  available: string;
-  usedPercent: number;
-  filesystem: string;
-}
-
-export interface PhysicalDisk {
-  device: string;
-  size: string;
-  model: string;
-  type: string;
-}
-
-export interface TopProcess {
-  pid: string;
-  name: string;
-  memoryUsage: string;
-  memoryPercent: number;
-  memoryAbsolute: string;
-}
-
-export interface MachineInfo {
-  hostname: string;
-  localIP: string;
-  machineModel: string;
-  cpuInfo: string;
-  kernelVersion: string;
-  osName: string;
-  totalRAM: string;
-  freeRAM: string;
-  usedRAM: string;
-  disks: DiskInfo[];
-  physicalDisks: PhysicalDisk[];
-  topProcesses: TopProcess[];
-  gpus: gpuInfo[];
-}
 
 function getLocalIPAddress(): string {
   const interfaces = networkInterfaces();
@@ -147,7 +107,7 @@ async function getCPUInfo(): Promise<string> {
   }
 }
 
-async function getDiskInfo(): Promise<DiskInfo[]> {
+async function getDiskInfo(): Promise<diskInfo[]> {
   try {
     const currentPlatform = detectPlatform();
     if (currentPlatform === platformType.linux || currentPlatform === platformType.mac) {
@@ -155,7 +115,7 @@ async function getDiskInfo(): Promise<DiskInfo[]> {
       const { stdout: dfOutput } = await execAsync('df -h --output=source,target,size,used,avail,pcent 2>/dev/null || df -h');
       const lines = dfOutput.split('\n').slice(1); // Skip header
       
-      const diskInfo: DiskInfo[] = [];
+      const diskInfo: diskInfo[] = [];
       
       for (const line of lines) {
         const parts = line.trim().split(/\s+/);
@@ -191,7 +151,7 @@ async function getDiskInfo(): Promise<DiskInfo[]> {
       const { stdout: wmicOutput } = await execAsync('wmic logicaldisk get size,freespace,caption /format:csv');
       const lines = wmicOutput.split('\n').slice(1); // Skip header
       
-      const diskInfo: DiskInfo[] = [];
+      const diskInfo: diskInfo[] = [];
       
       for (const line of lines) {
         const parts = line.split(',');
@@ -245,7 +205,7 @@ async function getDiskInfo(): Promise<DiskInfo[]> {
   }
 }
 
-async function getPhysicalDisks(): Promise<PhysicalDisk[]> {
+async function getPhysicalDisks(): Promise<physicalDisk[]> {
   try {
     const currentPlatform = detectPlatform();
 
@@ -254,7 +214,7 @@ async function getPhysicalDisks(): Promise<PhysicalDisk[]> {
       const { stdout: lsblkOutput } = await execAsync('lsblk -d -o NAME,SIZE,MODEL,ROTA -n 2>/dev/null || echo ""');
       const lines = lsblkOutput.split('\n').filter(line => line.trim());
       
-      const physicalDisks: PhysicalDisk[] = [];
+      const physicalDisks: physicalDisk[] = [];
       
       for (const line of lines) {
         const parts = line.trim().split(/\s+/);
@@ -307,7 +267,7 @@ async function getPhysicalDisks(): Promise<PhysicalDisk[]> {
       const { stdout: diskutilOutput } = await execAsync('diskutil list physical 2>/dev/null || echo ""');
       const lines = diskutilOutput.split('\n');
       
-      const physicalDisks: PhysicalDisk[] = [];
+      const physicalDisks: physicalDisk[] = [];
       
       for (const line of lines) {
 
@@ -338,7 +298,7 @@ async function getPhysicalDisks(): Promise<PhysicalDisk[]> {
       const { stdout: wmicOutput } = await execAsync('wmic diskdrive get size,model,caption /format:csv 2>/dev/null || echo ""');
       const lines = wmicOutput.split('\n').slice(1); // Skip header
       
-      const physicalDisks: PhysicalDisk[] = [];
+      const physicalDisks: physicalDisk[] = [];
       
       for (const line of lines) {
         const parts = line.split(',');
@@ -368,7 +328,7 @@ async function getPhysicalDisks(): Promise<PhysicalDisk[]> {
   }
 }
 
-async function getTopProcesses(): Promise<TopProcess[]> {
+async function getTopProcesses(): Promise<topProcess[]> {
   try {
     const totalMemoryBytes = totalmem();
     const currentPlatform = detectPlatform();
@@ -378,7 +338,7 @@ async function getTopProcesses(): Promise<TopProcess[]> {
       const { stdout: psOutput } = await execAsync('ps aux --sort=-%mem --no-headers | head -3');
       const lines = psOutput.split('\n').filter(line => line.trim());
       
-      const processes: TopProcess[] = [];
+      const processes: topProcess[] = [];
       
       for (const line of lines) {
         const parts = line.trim().split(/\s+/);
@@ -410,7 +370,7 @@ async function getTopProcesses(): Promise<TopProcess[]> {
       const { stdout: psOutput } = await execAsync('ps aux -r | head -4 | tail -3');
       const lines = psOutput.split('\n').filter(line => line.trim());
       
-      const processes: TopProcess[] = [];
+      const processes: topProcess[] = [];
       
       for (const line of lines) {
         const parts = line.trim().split(/\s+/);
@@ -441,7 +401,7 @@ async function getTopProcesses(): Promise<TopProcess[]> {
       const { stdout: wmicOutput } = await execAsync('wmic process get Name,ProcessId,WorkingSetSize /format:csv | sort /r /+4 | head -4 | tail -3');
       const lines = wmicOutput.split('\n').filter(line => line.trim() && line.includes(','));
       
-      const processes: TopProcess[] = [];
+      const processes: topProcess[] = [];
       
       for (const line of lines) {
         const parts = line.split(',');
@@ -529,7 +489,7 @@ async function getOSName(): Promise<string> {
   }
 }
 
-async function getMachineInfo(): Promise<MachineInfo> {
+async function getMachineInfo(): Promise<machineInfo> {
   try {
     const machineHostname = hostname();
     const osName = await getOSName();
