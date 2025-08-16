@@ -30,6 +30,7 @@ interface MachineInfo {
   hostname: string;
   localIP: string;
   machineModel: string;
+  cpuInfo: string;
   kernelVersion: string;
   osName: string;
   totalRAM: string;
@@ -87,6 +88,7 @@ export default function Machine() {
     { label: 'Machine Name', value: machineInfo.hostname },
     { label: 'Local IP Address', value: machineInfo.localIP },
     { label: 'Machine Model', value: machineInfo.machineModel },
+    { label: 'CPU', value: machineInfo.cpuInfo },
     { label: 'Operating System', value: machineInfo.osName },
     { label: 'Kernel Version', value: machineInfo.kernelVersion },
   ];

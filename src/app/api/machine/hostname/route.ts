@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { hostname, platform, release, type, totalmem, freemem, networkInterfaces } from 'os';
 import { execSync } from 'child_process';
-import { statSync } from 'fs';
+import { statSync, readFileSync } from 'fs';
 
 function formatBytes(bytes: number): string {
   const sizes = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB'];
@@ -29,20 +29,61 @@ function getLocalIPAddress(): string {
 function getMachineModel(): string {
   try {
     if (platform() === 'linux') {
-      // Try to get model from /proc/cpuinfo
-      const cpuInfo = execSync('cat /proc/cpuinfo | grep "model name" | head -1 | cut -d: -f2', { encoding: 'utf8' });
-      if (cpuInfo.trim()) {
-        return cpuInfo.trim();
+      // Try to get machine model from /sys filesystem (no sudo required)
+      try {
+        const productName = readFileSync('/sys/class/dmi/id/product_name', 'utf8').trim();
+        if (productName && productName !== 'To be filled by O.E.M.' && productName !== 'System Product Name') {
+          return productName;
+        }
+      } catch (e) {
+        // Continue to fallback methods if file doesn't exist or can't be read
       }
-      // Fallback to DMI info
-      const dmiInfo = execSync('dmidecode -s system-product-name 2>/dev/null || echo "Unknown"', { encoding: 'utf8' });
-      return dmiInfo.trim() || 'Unknown';
+      
+      // Try alternative sys paths
+      try {
+        const boardName = readFileSync('/sys/class/dmi/id/board_name', 'utf8').trim();
+        if (boardName && boardName !== 'To be filled by O.E.M.' && boardName !== 'Default string') {
+          return boardName;
+        }
+      } catch (e) {
+        // Continue to fallback methods
+      }
+      
+      // Fallback: try dmidecode without sudo (will likely fail, but worth trying)
+      try {
+        const dmiInfo = execSync('dmidecode -s system-product-name 2>/dev/null', { encoding: 'utf8' });
+        if (dmiInfo.trim() && !dmiInfo.includes('Permission denied')) {
+          return dmiInfo.trim();
+        }
+      } catch (e) {
+        // Expected to fail without sudo
+      }
+      
+      return 'Unknown';
     } else if (platform() === 'darwin') {
       const model = execSync('system_profiler SPHardwareDataType | grep "Model Name" | cut -d: -f2', { encoding: 'utf8' });
       return model.trim() || 'Unknown';
     } else if (platform() === 'win32') {
       const model = execSync('wmic computersystem get model /value | findstr Model=', { encoding: 'utf8' });
       return model.replace('Model=', '').trim() || 'Unknown';
+    }
+    return 'Unknown';
+  } catch (error) {
+    return 'Unknown';
+  }
+}
+
+function getCPUInfo(): string {
+  try {
+    if (platform() === 'linux') {
+      const cpuInfo = execSync('cat /proc/cpuinfo | grep "model name" | head -1 | cut -d: -f2', { encoding: 'utf8' });
+      return cpuInfo.trim() || 'Unknown';
+    } else if (platform() === 'darwin') {
+      const cpuInfo = execSync('system_profiler SPHardwareDataType | grep "Processor Name" | cut -d: -f2', { encoding: 'utf8' });
+      return cpuInfo.trim() || 'Unknown';
+    } else if (platform() === 'win32') {
+      const cpuInfo = execSync('wmic cpu get name /value | findstr Name=', { encoding: 'utf8' });
+      return cpuInfo.replace('Name=', '').trim() || 'Unknown';
     }
     return 'Unknown';
   } catch (error) {
@@ -392,6 +433,7 @@ export async function GET() {
     const osName = `${type()} ${release()}`;
     const kernelVersion = release();
     const machineModel = getMachineModel();
+    const cpuInfo = getCPUInfo();
     const localIP = getLocalIPAddress();
     const totalRAM = formatBytes(totalmem());
     const freeRAM = formatBytes(freemem());
@@ -404,6 +446,7 @@ export async function GET() {
       hostname: machineHostname,
       localIP,
       machineModel,
+      cpuInfo,
       kernelVersion,
       osName,
       totalRAM,
@@ -419,6 +462,7 @@ export async function GET() {
       hostname: 'Unknown Machine',
       localIP: 'Unknown',
       machineModel: 'Unknown',
+      cpuInfo: 'Unknown',
       kernelVersion: 'Unknown', 
       osName: 'Unknown',
       totalRAM: 'Unknown',
