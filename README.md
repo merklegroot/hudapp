@@ -2,6 +2,8 @@
 
 A web-based system monitoring dashboard that provides real-time information about the machine's hardware and performance.
 
+![Screenshot](img/hud-screenshot.png "Screenshot")
+
 ## Features
 
 - **System Information**: Display hostname, IP address, machine model, CPU details, and OS information
