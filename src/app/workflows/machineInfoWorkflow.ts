@@ -1,22 +1,7 @@
 import { hostname, platform, release, type, totalmem, freemem, networkInterfaces } from 'os';
 import { execSync } from 'child_process';
 import { readFileSync } from 'fs';
-
-enum platformType {
-  unknown,
-  linux,
-  windows,
-  mac
-}
-
-function detectPlatform(): platformType {
-  const plat = (platform() || '').trim().toLowerCase();
-  
-  return plat === 'linux' ? platformType.linux
-    : plat === 'win32' ? platformType.windows
-    : plat === 'darwin' ? platformType.mac
-    : platformType.unknown;
-}
+import { detectPlatform, platformType } from './detectPlatform';
 
 export interface DiskInfo {
   mount: string;
