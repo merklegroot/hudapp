@@ -245,52 +245,7 @@ export default function Machine() {
                     </div>
                   </div>
                   
-                  {/* GPU Memory Usage Bar */}
-                  {gpu.memoryTotal !== 'Unknown' && gpu.memoryUsed !== 'Unknown' && (
-                    <div className="mb-3">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm text-gray-600">VRAM Usage</span>
-                        <span className="text-sm text-gray-600">
-                          {gpu.memoryUsed} / {gpu.memoryTotal}
-                        </span>
-                      </div>
-                      
-                      {(() => {
-                        // Calculate memory usage percentage
-                        const totalStr = gpu.memoryTotal?.split(' ')[0] || '0';
-                        const usedStr = gpu.memoryUsed?.split(' ')[0] || '0';
-                        const total = parseFloat(totalStr) || 0;
-                        const used = parseFloat(usedStr) || 0;
-                        const usedPercent = total > 0 ? Math.round((used / total) * 100) : 0;
-                        
-                        return (
-                          <div className="w-full bg-gray-200 rounded-full h-3">
-                            <div 
-                              className={`h-3 rounded-full ${
-                                usedPercent > 90 ? 'bg-red-500' : 
-                                usedPercent > 75 ? 'bg-yellow-500' : 'bg-blue-500'
-                              }`}
-                              style={{ width: `${usedPercent}%` }}
-                            ></div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  )}
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-                    <div>
-                      <span className="text-gray-600">Total VRAM:</span>
-                      <span className="ml-1 font-medium">{gpu.memoryTotal}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Used VRAM:</span>
-                      <span className="ml-1 font-medium">{gpu.memoryUsed}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Free VRAM:</span>
-                      <span className="ml-1 font-medium">{gpu.memoryFree}</span>
-                    </div>
+                  <div className="text-sm">
                     <div>
                       <span className="text-gray-600">Driver:</span>
                       <span className="ml-1 font-medium">{gpu.driver}</span>
