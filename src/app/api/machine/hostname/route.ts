@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
-import { machineInfoWorkflow, MachineInfo} from '@/app/workflows';
+import { machineInfoWorkflow } from '@/app/workflows';
+import { machineInfo } from '@/app/workflows/models';
 
-export async function GET(): Promise<NextResponse<MachineInfo>> {
+export async function GET(): Promise<NextResponse<machineInfo>> {
   try {
-    const machineInfo = await machineInfoWorkflow.getMachineInfo();
-    return NextResponse.json<MachineInfo>(machineInfo);
+    const machineInfoData = await machineInfoWorkflow.getMachineInfo();
+    return NextResponse.json<machineInfo>(machineInfoData);
   } catch (error) {
     console.error('Error getting system information:', error);
-    const fallbackResponse: MachineInfo = {
+    const fallbackResponse: machineInfo = {
       hostname: 'Unknown Machine',
       localIP: 'Unknown',
       machineModel: 'Unknown',
@@ -19,8 +20,9 @@ export async function GET(): Promise<NextResponse<MachineInfo>> {
       usedRAM: 'Unknown',
       disks: [],
       physicalDisks: [],
-      topProcesses: []
+      topProcesses: [],
+      gpus: []
     };
-    return NextResponse.json<MachineInfo>(fallbackResponse, { status: 500 });
+    return NextResponse.json<machineInfo>(fallbackResponse, { status: 500 });
   }
 }
