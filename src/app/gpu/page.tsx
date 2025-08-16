@@ -10,14 +10,15 @@ export default function GPU() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/machine/hostname')
+    fetch('/api/gpu')
       .then(response => response.json())
       .then(data => {
-        setMachineInfo(data);
+        // Create a minimal machineInfo object with just the GPU data
+        setMachineInfo({ gpus: data } as machineInfo);
         setLoading(false);
       })
       .catch(err => {
-        console.error('Error fetching machine info:', err);
+        console.error('Error fetching GPU info:', err);
         setError('Failed to fetch GPU information');
         setLoading(false);
       });
