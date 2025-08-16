@@ -1,7 +1,10 @@
 import { hostname, platform, release, type, totalmem, freemem, networkInterfaces } from 'os';
-import { execSync } from 'child_process';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import { readFile } from 'fs/promises';
 import { detectPlatform, platformType } from './detectPlatform';
+
+const execAsync = promisify(exec);
 
 export interface DiskInfo {
   mount: string;
@@ -97,7 +100,7 @@ async function getMachineModel(): Promise<string> {
       
       // Fallback: try dmidecode without sudo (will likely fail, but worth trying)
       try {
-        const dmiInfo = execSync('dmidecode -s system-product-name 2>/dev/null', { encoding: 'utf8' });
+        const { stdout: dmiInfo } = await execAsync('dmidecode -s system-product-name 2>/dev/null');
 
         if (dmiInfo.trim() && !dmiInfo.includes('Permission denied')) {
           return dmiInfo.trim();
@@ -110,12 +113,12 @@ async function getMachineModel(): Promise<string> {
     }
 
     if (currentPlatform === platformType.mac) {
-      const model = execSync('system_profiler SPHardwareDataType | grep "Model Name" | cut -d: -f2', { encoding: 'utf8' });
+      const { stdout: model } = await execAsync('system_profiler SPHardwareDataType | grep "Model Name" | cut -d: -f2');
       return model.trim() || 'Unknown';
     }
 
     if (currentPlatform === platformType.windows) {
-      const model = execSync('wmic computersystem get model /value | findstr Model=', { encoding: 'utf8' });
+      const { stdout: model } = await execAsync('wmic computersystem get model /value | findstr Model=');
       return model.replace('Model=', '').trim() || 'Unknown';
     }
     return 'Unknown';
@@ -124,22 +127,22 @@ async function getMachineModel(): Promise<string> {
   }
 }
 
-function getCPUInfo(): string {
+async function getCPUInfo(): Promise<string> {
   try {
     const currentPlatform = detectPlatform();
 
     if (currentPlatform === platformType.linux) {
-      const cpuInfo = execSync('cat /proc/cpuinfo | grep "model name" | head -1 | cut -d: -f2', { encoding: 'utf8' });
+      const { stdout: cpuInfo } = await execAsync('cat /proc/cpuinfo | grep "model name" | head -1 | cut -d: -f2');
       return cpuInfo.trim() || 'Unknown';
     }
 
     if (currentPlatform === platformType.mac) {
-      const cpuInfo = execSync('system_profiler SPHardwareDataType | grep "Processor Name" | cut -d: -f2', { encoding: 'utf8' });
+      const { stdout: cpuInfo } = await execAsync('system_profiler SPHardwareDataType | grep "Processor Name" | cut -d: -f2');
       return cpuInfo.trim() || 'Unknown';
     }
 
     if (currentPlatform === platformType.windows) {
-      const cpuInfo = execSync('wmic cpu get name /value | findstr Name=', { encoding: 'utf8' });
+      const { stdout: cpuInfo } = await execAsync('wmic cpu get name /value | findstr Name=');
       return cpuInfo.replace('Name=', '').trim() || 'Unknown';
     }
     return 'Unknown';
@@ -148,12 +151,12 @@ function getCPUInfo(): string {
   }
 }
 
-function getDiskInfo(): DiskInfo[] {
+async function getDiskInfo(): Promise<DiskInfo[]> {
   try {
     const currentPlatform = detectPlatform();
     if (currentPlatform === platformType.linux || currentPlatform === platformType.mac) {
       // Use df command to get disk usage
-      const dfOutput = execSync('df -h --output=source,target,size,used,avail,pcent 2>/dev/null || df -h', { encoding: 'utf8' });
+      const { stdout: dfOutput } = await execAsync('df -h --output=source,target,size,used,avail,pcent 2>/dev/null || df -h');
       const lines = dfOutput.split('\n').slice(1); // Skip header
       
       const diskInfo: DiskInfo[] = [];
@@ -189,7 +192,7 @@ function getDiskInfo(): DiskInfo[] {
     }
     if (currentPlatform === platformType.windows) {
       // Use wmic for Windows
-      const wmicOutput = execSync('wmic logicaldisk get size,freespace,caption /format:csv', { encoding: 'utf8' });
+      const { stdout: wmicOutput } = await execAsync('wmic logicaldisk get size,freespace,caption /format:csv');
       const lines = wmicOutput.split('\n').slice(1); // Skip header
       
       const diskInfo: DiskInfo[] = [];
@@ -246,13 +249,13 @@ function getDiskInfo(): DiskInfo[] {
   }
 }
 
-function getPhysicalDisks(): PhysicalDisk[] {
+async function getPhysicalDisks(): Promise<PhysicalDisk[]> {
   try {
     const currentPlatform = detectPlatform();
 
     if (currentPlatform === platformType.linux) {
       // Use lsblk to get physical disk information
-      const lsblkOutput = execSync('lsblk -d -o NAME,SIZE,MODEL,ROTA -n 2>/dev/null || echo ""', { encoding: 'utf8' });
+      const { stdout: lsblkOutput } = await execAsync('lsblk -d -o NAME,SIZE,MODEL,ROTA -n 2>/dev/null || echo ""');
       const lines = lsblkOutput.split('\n').filter(line => line.trim());
       
       const physicalDisks: PhysicalDisk[] = [];
@@ -280,7 +283,7 @@ function getPhysicalDisks(): PhysicalDisk[] {
 
       if (physicalDisks.length === 0) {
         try {
-          const fdiskOutput = execSync('fdisk -l 2>/dev/null | grep "Disk /dev/" | head -10', { encoding: 'utf8' });
+          const { stdout: fdiskOutput } = await execAsync('fdisk -l 2>/dev/null | grep "Disk /dev/" | head -10');
           const fdiskLines = fdiskOutput.split('\n').filter(line => line.includes('Disk /dev/'));
           
           for (const line of fdiskLines) {
@@ -305,7 +308,7 @@ function getPhysicalDisks(): PhysicalDisk[] {
 
     if (currentPlatform === platformType.mac) {
       // Use diskutil for macOS
-      const diskutilOutput = execSync('diskutil list physical 2>/dev/null || echo ""', { encoding: 'utf8' });
+      const { stdout: diskutilOutput } = await execAsync('diskutil list physical 2>/dev/null || echo ""');
       const lines = diskutilOutput.split('\n');
       
       const physicalDisks: PhysicalDisk[] = [];
@@ -336,7 +339,7 @@ function getPhysicalDisks(): PhysicalDisk[] {
 
     if (currentPlatform === platformType.windows) {
       // Use wmic for Windows physical disk info
-      const wmicOutput = execSync('wmic diskdrive get size,model,caption /format:csv 2>/dev/null || echo ""', { encoding: 'utf8' });
+      const { stdout: wmicOutput } = await execAsync('wmic diskdrive get size,model,caption /format:csv 2>/dev/null || echo ""');
       const lines = wmicOutput.split('\n').slice(1); // Skip header
       
       const physicalDisks: PhysicalDisk[] = [];
@@ -369,14 +372,14 @@ function getPhysicalDisks(): PhysicalDisk[] {
   }
 }
 
-function getTopProcesses(): TopProcess[] {
+async function getTopProcesses(): Promise<TopProcess[]> {
   try {
     const totalMemoryBytes = totalmem();
     const currentPlatform = detectPlatform();
     
     if (currentPlatform === platformType.linux) {
       // Use ps command to get top processes by memory usage
-      const psOutput = execSync('ps aux --sort=-%mem --no-headers | head -3', { encoding: 'utf8' });
+      const { stdout: psOutput } = await execAsync('ps aux --sort=-%mem --no-headers | head -3');
       const lines = psOutput.split('\n').filter(line => line.trim());
       
       const processes: TopProcess[] = [];
@@ -408,7 +411,7 @@ function getTopProcesses(): TopProcess[] {
     }
     if (currentPlatform === platformType.mac) {
       // Use ps command for macOS
-      const psOutput = execSync('ps aux -r | head -4 | tail -3', { encoding: 'utf8' });
+      const { stdout: psOutput } = await execAsync('ps aux -r | head -4 | tail -3');
       const lines = psOutput.split('\n').filter(line => line.trim());
       
       const processes: TopProcess[] = [];
@@ -439,7 +442,7 @@ function getTopProcesses(): TopProcess[] {
     }
     if (currentPlatform === platformType.windows) {
       // Use wmic for Windows
-      const wmicOutput = execSync('wmic process get Name,ProcessId,WorkingSetSize /format:csv | sort /r /+4 | head -4 | tail -3', { encoding: 'utf8' });
+      const { stdout: wmicOutput } = await execAsync('wmic process get Name,ProcessId,WorkingSetSize /format:csv | sort /r /+4 | head -4 | tail -3');
       const lines = wmicOutput.split('\n').filter(line => line.trim() && line.includes(','));
       
       const processes: TopProcess[] = [];
@@ -535,14 +538,14 @@ async function getMachineInfo(): Promise<MachineInfo> {
     const osName = await getOSName();
     const kernelVersion = release();
     const machineModel = await getMachineModel();
-    const cpuInfo = getCPUInfo();
+    const cpuInfo = await getCPUInfo();
     const localIP = getLocalIPAddress();
     const totalRAM = formatBytes(totalmem());
     const freeRAM = formatBytes(freemem());
     const usedRAM = formatBytes(totalmem() - freemem());
-    const diskInfo = getDiskInfo();
-    const physicalDisks = getPhysicalDisks();
-    const topProcesses = getTopProcesses();
+    const diskInfo = await getDiskInfo();
+    const physicalDisks = await getPhysicalDisks();
+    const topProcesses = await getTopProcesses();
 
     return {
       hostname: machineHostname,
