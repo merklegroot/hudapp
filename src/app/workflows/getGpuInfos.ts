@@ -6,45 +6,7 @@ import { exec } from "child_process";
 
 const execAsync = promisify(exec);
 
-async function getLinuxGpuInfos(): Promise<gpuInfo[]> {
-  try {
-    const { stdout: nvidiaOutput } = await execAsync('nvidia-smi --query-gpu=index,name,memory.total,memory.used,memory.free,utilization.gpu,temperature.gpu,driver_version --format=csv,noheader,nounits 2>/dev/null');
-    
-    if (nvidiaOutput.trim()) {
-      const lines = nvidiaOutput.split('\n').filter(line => line.trim());
-      const gpus: gpuInfo[] = [];
-      
-      for (const line of lines) {
-        const parts = line.split(',').map(part => part.trim());
-        if (parts.length >= 7) {
-          const memoryTotalMB = parseInt(parts[2]) || 0;
-          const memoryUsedMB = parseInt(parts[3]) || 0;
-          const memoryFreeMB = parseInt(parts[4]) || 0;
-          
-          gpus.push({
-            index: parseInt(parts[0]) || 0,
-            name: parts[1] || 'Unknown GPU',
-            bus: 'Unknown',
-            revision: 'Unknown',
-            driver: parts[7] || 'Unknown',
-            memoryTotal: formatBytes(memoryTotalMB * 1024 * 1024),
-            memoryUsed: formatBytes(memoryUsedMB * 1024 * 1024),
-            memoryFree: formatBytes(memoryFreeMB * 1024 * 1024),
-            utilization: parseInt(parts[5]) || 0,
-            temperature: parseInt(parts[6]) || 0
-          });
-        }
-      }
-      
-      if (gpus.length > 0) {
-        return gpus;
-      }
-    }
-  } catch (e) {
-    // nvidia-smi not available or failed, continue to lspci
-  }
-  
-  // Fallback to lspci for general GPU detection
+async function getGpusFromLspci(): Promise<gpuInfo[]> {
   try {
     const { stdout: lspciOutput } = await execAsync('lspci -v | grep -A 20 -i "vga\\|3d\\|display" 2>/dev/null');
     const sections = lspciOutput.split('\n\n').filter(section => section.trim());
@@ -91,10 +53,58 @@ async function getLinuxGpuInfos(): Promise<gpuInfo[]> {
     }
     
     return gpus;
-  } catch (e) {
-    // lspci also failed
   }
-  return [];
+  catch(error) {
+    return [];
+  }
+}
+
+async function getGpusFromNvidiaSmi(): Promise<gpuInfo[]> {
+  try {
+    const { stdout: nvidiaOutput } = await execAsync('nvidia-smi --query-gpu=index,name,memory.total,memory.used,memory.free,utilization.gpu,temperature.gpu,driver_version --format=csv,noheader,nounits 2>/dev/null');
+      
+    if (!nvidiaOutput.trim()) {
+      return [];
+    }
+
+    const lines = nvidiaOutput.split('\n').filter(line => line.trim());
+      
+    const gpus: gpuInfo[] = [];
+    for (const line of lines) {
+      const parts = line.split(',').map(part => part.trim());
+      if (parts.length >= 7) {
+        const memoryTotalMB = parseInt(parts[2]) || 0;
+        const memoryUsedMB = parseInt(parts[3]) || 0;
+        const memoryFreeMB = parseInt(parts[4]) || 0;
+        
+        gpus.push({
+          index: parseInt(parts[0]) || 0,
+          name: parts[1] || 'Unknown GPU',
+          bus: 'Unknown',
+          revision: 'Unknown',
+          driver: parts[7] || 'Unknown',
+          memoryTotal: formatBytes(memoryTotalMB * 1024 * 1024),
+          memoryUsed: formatBytes(memoryUsedMB * 1024 * 1024),
+          memoryFree: formatBytes(memoryFreeMB * 1024 * 1024),
+          utilization: parseInt(parts[5]) || 0,
+          temperature: parseInt(parts[6]) || 0
+        });
+      }
+    }
+    
+    return gpus;
+  }
+  catch(error) {
+    return [];
+  }
+}
+
+async function getLinuxGpuInfos(): Promise<gpuInfo[]> {
+  const gpusFromNvidia = await getGpusFromNvidiaSmi();
+  if (gpusFromNvidia.length > 0)
+    return gpusFromNvidia;
+  
+  return await getGpusFromLspci();
 }
 
 export async function getGpuInfos(): Promise<gpuInfo[]> {
