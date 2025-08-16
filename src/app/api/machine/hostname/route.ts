@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
-import { getMachineInfo } from '../machineInfoRepo';
+import { getMachineInfo, type MachineInfo } from '../machineInfoRepo';
 
-export async function GET() {
+export async function GET(): Promise<NextResponse<MachineInfo>> {
   try {
     const machineInfo = await getMachineInfo();
-    return NextResponse.json(machineInfo);
+    return NextResponse.json<MachineInfo>(machineInfo);
   } catch (error) {
     console.error('Error getting system information:', error);
-    return NextResponse.json({ 
+    const fallbackResponse: MachineInfo = {
       hostname: 'Unknown Machine',
       localIP: 'Unknown',
       machineModel: 'Unknown',
@@ -20,6 +20,7 @@ export async function GET() {
       disks: [],
       physicalDisks: [],
       topProcesses: []
-    }, { status: 500 });
+    };
+    return NextResponse.json<MachineInfo>(fallbackResponse, { status: 500 });
   }
 }
