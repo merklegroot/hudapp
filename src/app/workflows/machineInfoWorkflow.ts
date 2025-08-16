@@ -59,6 +59,7 @@ export interface MachineInfo {
 
 function formatBytes(bytes: number): string {
   const sizes = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB'];
+
   if (bytes === 0) return '0 Bytes';
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
@@ -68,9 +69,11 @@ function getLocalIPAddress(): string {
   const interfaces = networkInterfaces();
   for (const name of Object.keys(interfaces)) {
     const nets = interfaces[name];
+
     if (nets) {
       for (const net of nets) {
         // Skip over non-IPv4 and internal addresses
+
         if (net.family === 'IPv4' && !net.internal) {
           return net.address;
         }
@@ -83,10 +86,12 @@ function getLocalIPAddress(): string {
 function getMachineModel(): string {
   try {
     const currentPlatform = detectPlatform();
+
     if (currentPlatform === platformType.linux) {
       // Try to get machine model from /sys filesystem (no sudo required)
       try {
         const productName = readFileSync('/sys/class/dmi/id/product_name', 'utf8').trim();
+
         if (productName && productName !== 'To be filled by O.E.M.' && productName !== 'System Product Name') {
           return productName;
         }
@@ -97,6 +102,7 @@ function getMachineModel(): string {
       // Try alternative sys paths
       try {
         const boardName = readFileSync('/sys/class/dmi/id/board_name', 'utf8').trim();
+
         if (boardName && boardName !== 'To be filled by O.E.M.' && boardName !== 'Default string') {
           return boardName;
         }
@@ -107,6 +113,7 @@ function getMachineModel(): string {
       // Fallback: try dmidecode without sudo (will likely fail, but worth trying)
       try {
         const dmiInfo = execSync('dmidecode -s system-product-name 2>/dev/null', { encoding: 'utf8' });
+
         if (dmiInfo.trim() && !dmiInfo.includes('Permission denied')) {
           return dmiInfo.trim();
         }
@@ -116,10 +123,12 @@ function getMachineModel(): string {
       
       return 'Unknown';
     }
+
     if (currentPlatform === platformType.mac) {
       const model = execSync('system_profiler SPHardwareDataType | grep "Model Name" | cut -d: -f2', { encoding: 'utf8' });
       return model.trim() || 'Unknown';
     }
+
     if (currentPlatform === platformType.windows) {
       const model = execSync('wmic computersystem get model /value | findstr Model=', { encoding: 'utf8' });
       return model.replace('Model=', '').trim() || 'Unknown';
@@ -133,14 +142,17 @@ function getMachineModel(): string {
 function getCPUInfo(): string {
   try {
     const currentPlatform = detectPlatform();
+
     if (currentPlatform === platformType.linux) {
       const cpuInfo = execSync('cat /proc/cpuinfo | grep "model name" | head -1 | cut -d: -f2', { encoding: 'utf8' });
       return cpuInfo.trim() || 'Unknown';
     }
+
     if (currentPlatform === platformType.mac) {
       const cpuInfo = execSync('system_profiler SPHardwareDataType | grep "Processor Name" | cut -d: -f2', { encoding: 'utf8' });
       return cpuInfo.trim() || 'Unknown';
     }
+
     if (currentPlatform === platformType.windows) {
       const cpuInfo = execSync('wmic cpu get name /value | findstr Name=', { encoding: 'utf8' });
       return cpuInfo.replace('Name=', '').trim() || 'Unknown';
@@ -199,6 +211,7 @@ function getDiskInfo(): DiskInfo[] {
       
       for (const line of lines) {
         const parts = line.split(',');
+
         if (parts.length >= 4 && parts[1] && parts[2] && parts[3]) {
           const caption = parts[1].trim();
           const freeSpace = parseInt(parts[2]) || 0;
@@ -251,6 +264,7 @@ function getDiskInfo(): DiskInfo[] {
 function getPhysicalDisks(): PhysicalDisk[] {
   try {
     const currentPlatform = detectPlatform();
+
     if (currentPlatform === platformType.linux) {
       // Use lsblk to get physical disk information
       const lsblkOutput = execSync('lsblk -d -o NAME,SIZE,MODEL,ROTA -n 2>/dev/null || echo ""', { encoding: 'utf8' });
@@ -260,6 +274,7 @@ function getPhysicalDisks(): PhysicalDisk[] {
       
       for (const line of lines) {
         const parts = line.trim().split(/\s+/);
+
         if (parts.length >= 3 && !parts[0].includes('loop') && !parts[0].includes('ram')) {
           const device = parts[0];
           const size = parts[1];
@@ -277,6 +292,7 @@ function getPhysicalDisks(): PhysicalDisk[] {
       }
       
       // Fallback: try using fdisk if lsblk fails
+
       if (physicalDisks.length === 0) {
         try {
           const fdiskOutput = execSync('fdisk -l 2>/dev/null | grep "Disk /dev/" | head -10', { encoding: 'utf8' });
@@ -284,6 +300,7 @@ function getPhysicalDisks(): PhysicalDisk[] {
           
           for (const line of fdiskLines) {
             const match = line.match(/Disk (\/dev\/\w+).*?(\d+(?:\.\d+)?\s*[KMGT]?B)/);
+
             if (match) {
               physicalDisks.push({
                 device: match[1],
@@ -300,6 +317,7 @@ function getPhysicalDisks(): PhysicalDisk[] {
       
       return physicalDisks;
     }
+
     if (currentPlatform === platformType.mac) {
       // Use diskutil for macOS
       const diskutilOutput = execSync('diskutil list physical 2>/dev/null || echo ""', { encoding: 'utf8' });
@@ -308,9 +326,11 @@ function getPhysicalDisks(): PhysicalDisk[] {
       const physicalDisks: PhysicalDisk[] = [];
       
       for (const line of lines) {
+
         if (line.includes('/dev/disk') && line.includes('*')) {
           const parts = line.trim().split(/\s+/);
           const sizeIndex = parts.findIndex(part => part.includes('B'));
+
           if (sizeIndex > 0) {
             const device = parts[0].replace('*', '');
             const size = parts[sizeIndex];
@@ -328,6 +348,7 @@ function getPhysicalDisks(): PhysicalDisk[] {
       
       return physicalDisks;
     }
+
     if (currentPlatform === platformType.windows) {
       // Use wmic for Windows physical disk info
       const wmicOutput = execSync('wmic diskdrive get size,model,caption /format:csv 2>/dev/null || echo ""', { encoding: 'utf8' });
@@ -337,6 +358,7 @@ function getPhysicalDisks(): PhysicalDisk[] {
       
       for (const line of lines) {
         const parts = line.split(',');
+
         if (parts.length >= 4 && parts[1] && parts[2] && parts[3]) {
           const caption = parts[1].trim();
           const model = parts[2].trim() || 'Unknown';
@@ -469,6 +491,7 @@ function getTopProcesses(): TopProcess[] {
 function getOSName(): string {
   try {
     const currentPlatform = detectPlatform();
+
     if (currentPlatform === platformType.linux) {
       // Try to read from /etc/os-release for detailed OS information
       try {
@@ -479,6 +502,7 @@ function getOSName(): string {
         let versionInfo = '';
         
         for (const line of lines) {
+
           if (line.startsWith('PRETTY_NAME=')) {
             prettyName = line.split('=')[1].replace(/"/g, '');
           } else if (line.startsWith('VERSION=')) {
@@ -490,6 +514,7 @@ function getOSName(): string {
         const currentHostname = hostname().toLowerCase();
         const isKubuntu = currentHostname.includes('kubuntu');
         
+
         if (isKubuntu && prettyName && versionInfo) {
           // Format as "Kubuntu 25.04 (Ubuntu 25.04 "Plucky")"
           const version = prettyName.split(' ')[1] || '';
@@ -498,10 +523,12 @@ function getOSName(): string {
           const codename = codenamePart ? codenamePart[1].split(' ')[0] : '';
           return `Kubuntu ${version} (Ubuntu ${version} "${codename}")`;
         }
+
         if (prettyName && versionInfo) {
           // Use the full version info for other Ubuntu variants
           return `${prettyName} (${versionInfo})`;
         }
+
         if (prettyName) {
           return prettyName;
         }

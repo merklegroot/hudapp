@@ -4,34 +4,35 @@ alwaysApply: false
 
 # TypeScript Code Style Rules
 
-## Early Return Pattern
-- When an `if` block ends with a `return` statement, do NOT follow it with `else` or `else if` blocks
-- Use early returns to reduce nesting and improve readability
+## Blank Lines Before If Statements
+- All `if` statements should be preceded by a blank line unless they are the first statement in the file
+- This rule does NOT apply to `else` or `else if` statements
+- This improves code readability by visually separating conditional logic
 
 ### Example of what NOT to do:
 ```typescript
-if (condition) {
-  return value;
-} else {
-  // This else is unnecessary
-  return otherValue;
+const value = getData();
+if (value > 10) {
+  doSomething();
 }
 ```
 
 ### Example of what TO do:
 ```typescript
-if (condition) {
-  return value;
+const value = getData();
+
+if (value > 10) {
+  doSomething();
 }
-// No else needed - code naturally continues here
-return otherValue;
 ```
 
-## General Guidelines
-- Prefer guard clauses and early returns over nested conditionals
-- Reduce indentation levels by returning early when conditions are not met
-- Make code more linear and easier to follow by eliminating unnecessary else blocks
-# TypeScript Code Style Rules
+### Exception - First statement in file:
+```typescript
+if (condition) {
+  // This is fine - no blank line needed when it's the first statement
+  return;
+}
+```
 
 ## Early Return Pattern
 - When an `if` block ends with a `return` statement, do NOT follow it with `else` or `else if` blocks
