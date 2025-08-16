@@ -98,10 +98,12 @@ function getMachineModel(): string {
       }
       
       return 'Unknown';
-    } else if (platform() === 'darwin') {
+    }
+    if (platform() === 'darwin') {
       const model = execSync('system_profiler SPHardwareDataType | grep "Model Name" | cut -d: -f2', { encoding: 'utf8' });
       return model.trim() || 'Unknown';
-    } else if (platform() === 'win32') {
+    }
+    if (platform() === 'win32') {
       const model = execSync('wmic computersystem get model /value | findstr Model=', { encoding: 'utf8' });
       return model.replace('Model=', '').trim() || 'Unknown';
     }
@@ -116,10 +118,12 @@ function getCPUInfo(): string {
     if (platform() === 'linux') {
       const cpuInfo = execSync('cat /proc/cpuinfo | grep "model name" | head -1 | cut -d: -f2', { encoding: 'utf8' });
       return cpuInfo.trim() || 'Unknown';
-    } else if (platform() === 'darwin') {
+    }
+    if (platform() === 'darwin') {
       const cpuInfo = execSync('system_profiler SPHardwareDataType | grep "Processor Name" | cut -d: -f2', { encoding: 'utf8' });
       return cpuInfo.trim() || 'Unknown';
-    } else if (platform() === 'win32') {
+    }
+    if (platform() === 'win32') {
       const cpuInfo = execSync('wmic cpu get name /value | findstr Name=', { encoding: 'utf8' });
       return cpuInfo.replace('Name=', '').trim() || 'Unknown';
     }
@@ -166,8 +170,8 @@ function getDiskInfo(): DiskInfo[] {
         usedPercent: 0,
         filesystem: 'Unknown'
       }];
-      
-    } else if (platform() === 'win32') {
+    }
+    if (platform() === 'win32') {
       // Use wmic for Windows
       const wmicOutput = execSync('wmic logicaldisk get size,freespace,caption /format:csv', { encoding: 'utf8' });
       const lines = wmicOutput.split('\n').slice(1); // Skip header
@@ -275,8 +279,8 @@ function getPhysicalDisks(): PhysicalDisk[] {
       }
       
       return physicalDisks;
-      
-    } else if (platform() === 'darwin') {
+    }
+    if (platform() === 'darwin') {
       // Use diskutil for macOS
       const diskutilOutput = execSync('diskutil list physical 2>/dev/null || echo ""', { encoding: 'utf8' });
       const lines = diskutilOutput.split('\n');
@@ -303,8 +307,8 @@ function getPhysicalDisks(): PhysicalDisk[] {
       }
       
       return physicalDisks;
-      
-    } else if (platform() === 'win32') {
+    }
+    if (platform() === 'win32') {
       // Use wmic for Windows physical disk info
       const wmicOutput = execSync('wmic diskdrive get size,model,caption /format:csv 2>/dev/null || echo ""', { encoding: 'utf8' });
       const lines = wmicOutput.split('\n').slice(1); // Skip header
@@ -373,8 +377,8 @@ function getTopProcesses(): TopProcess[] {
       }
       
       return processes;
-      
-    } else if (platform() === 'darwin') {
+    }
+    if (platform() === 'darwin') {
       // Use ps command for macOS
       const psOutput = execSync('ps aux -r | head -4 | tail -3', { encoding: 'utf8' });
       const lines = psOutput.split('\n').filter(line => line.trim());
@@ -404,8 +408,8 @@ function getTopProcesses(): TopProcess[] {
       }
       
       return processes;
-      
-    } else if (platform() === 'win32') {
+    }
+    if (platform() === 'win32') {
       // Use wmic for Windows
       const wmicOutput = execSync('wmic process get Name,ProcessId,WorkingSetSize /format:csv | sort /r /+4 | head -4 | tail -3', { encoding: 'utf8' });
       const lines = wmicOutput.split('\n').filter(line => line.trim() && line.includes(','));
@@ -471,10 +475,12 @@ function getOSName(): string {
           const codenamePart = versionInfo.match(/\(([^)]+)\)/);
           const codename = codenamePart ? codenamePart[1].split(' ')[0] : '';
           return `Kubuntu ${version} (Ubuntu ${version} "${codename}")`;
-        } else if (prettyName && versionInfo) {
+        }
+        if (prettyName && versionInfo) {
           // Use the full version info for other Ubuntu variants
           return `${prettyName} (${versionInfo})`;
-        } else if (prettyName) {
+        }
+        if (prettyName) {
           return prettyName;
         }
       } catch (e) {
