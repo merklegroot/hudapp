@@ -30,6 +30,17 @@ export interface TopProcess {
   memoryAbsolute: string;
 }
 
+export interface GPUInfo {
+  name: string;
+  memoryTotal: string;
+  memoryUsed: string;
+  memoryFree: string;
+  utilization: number;
+  temperature: number;
+  driver: string;
+  index: number;
+}
+
 export interface MachineInfo {
   hostname: string;
   localIP: string;
@@ -43,6 +54,7 @@ export interface MachineInfo {
   disks: DiskInfo[];
   physicalDisks: PhysicalDisk[];
   topProcesses: TopProcess[];
+  gpus: GPUInfo[];
 }
 
 function formatBytes(bytes: number): string {
@@ -476,6 +488,161 @@ async function getTopProcesses(): Promise<TopProcess[]> {
   }
 }
 
+async function getGPUInfo(): Promise<GPUInfo[]> {
+  try {
+    const currentPlatform = detectPlatform();
+    
+    if (currentPlatform === platformType.linux) {
+      // Try nvidia-smi first for NVIDIA GPUs
+      try {
+        const { stdout: nvidiaOutput } = await execAsync('nvidia-smi --query-gpu=index,name,memory.total,memory.used,memory.free,utilization.gpu,temperature.gpu,driver_version --format=csv,noheader,nounits 2>/dev/null');
+        
+        if (nvidiaOutput.trim()) {
+          const lines = nvidiaOutput.split('\n').filter(line => line.trim());
+          const gpus: GPUInfo[] = [];
+          
+          for (const line of lines) {
+            const parts = line.split(',').map(part => part.trim());
+            if (parts.length >= 7) {
+              const memoryTotalMB = parseInt(parts[2]) || 0;
+              const memoryUsedMB = parseInt(parts[3]) || 0;
+              const memoryFreeMB = parseInt(parts[4]) || 0;
+              
+              gpus.push({
+                index: parseInt(parts[0]) || 0,
+                name: parts[1] || 'Unknown GPU',
+                memoryTotal: formatBytes(memoryTotalMB * 1024 * 1024),
+                memoryUsed: formatBytes(memoryUsedMB * 1024 * 1024),
+                memoryFree: formatBytes(memoryFreeMB * 1024 * 1024),
+                utilization: parseInt(parts[5]) || 0,
+                temperature: parseInt(parts[6]) || 0,
+                driver: parts[7] || 'Unknown'
+              });
+            }
+          }
+          
+          if (gpus.length > 0) {
+            return gpus;
+          }
+        }
+      } catch (e) {
+        // nvidia-smi not available or failed, continue to lspci
+      }
+      
+      // Fallback to lspci for general GPU detection
+      try {
+        const { stdout: lspciOutput } = await execAsync('lspci | grep -i vga 2>/dev/null');
+        const lines = lspciOutput.split('\n').filter(line => line.trim());
+        const gpus: GPUInfo[] = [];
+        
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          // Extract GPU name from lspci output
+          const match = line.match(/VGA compatible controller:\s*(.+)/i);
+          const gpuName = match ? match[1].trim() : 'Unknown GPU';
+          
+          gpus.push({
+            index: i,
+            name: gpuName,
+            memoryTotal: 'Unknown',
+            memoryUsed: 'Unknown',
+            memoryFree: 'Unknown',
+            utilization: 0,
+            temperature: 0,
+            driver: 'Unknown'
+          });
+        }
+        
+        return gpus;
+      } catch (e) {
+        // lspci also failed
+      }
+    }
+    
+    if (currentPlatform === platformType.mac) {
+      try {
+        const { stdout: gpuOutput } = await execAsync('system_profiler SPDisplaysDataType -json 2>/dev/null');
+        const data = JSON.parse(gpuOutput);
+        const displays = data?.SPDisplaysDataType || [];
+        const gpus: GPUInfo[] = [];
+        
+        for (let i = 0; i < displays.length; i++) {
+          const display = displays[i];
+          const name = display._name || display.sppci_model || 'Unknown GPU';
+          const vramSize = display.sppci_vram || display.spdisplays_vram || '0';
+          
+          // Convert VRAM size (often in format like "8 GB" or "8192 MB")
+          let memoryTotalBytes = 0;
+          if (typeof vramSize === 'string') {
+            const match = vramSize.match(/(\d+)\s*(GB|MB|GiB|MiB)/i);
+            if (match) {
+              const size = parseInt(match[1]);
+              const unit = match[2].toUpperCase();
+              if (unit.includes('G')) {
+                memoryTotalBytes = size * 1024 * 1024 * 1024;
+              } else if (unit.includes('M')) {
+                memoryTotalBytes = size * 1024 * 1024;
+              }
+            }
+          }
+          
+          gpus.push({
+            index: i,
+            name: name,
+            memoryTotal: memoryTotalBytes > 0 ? formatBytes(memoryTotalBytes) : 'Unknown',
+            memoryUsed: 'Unknown',
+            memoryFree: 'Unknown',
+            utilization: 0,
+            temperature: 0,
+            driver: 'Unknown'
+          });
+        }
+        
+        return gpus;
+      } catch (e) {
+        // JSON parsing or command failed
+      }
+    }
+    
+    if (currentPlatform === platformType.windows) {
+      try {
+        const { stdout: wmicOutput } = await execAsync('wmic path win32_VideoController get Name,AdapterRAM,DriverVersion /format:csv 2>/dev/null');
+        const lines = wmicOutput.split('\n').slice(1).filter(line => line.trim() && line.includes(','));
+        const gpus: GPUInfo[] = [];
+        
+        for (let i = 0; i < lines.length; i++) {
+          const parts = lines[i].split(',');
+          if (parts.length >= 4 && parts[1] && parts[2]) {
+            const adapterRAM = parseInt(parts[1]) || 0;
+            const driverVersion = parts[2].trim() || 'Unknown';
+            const name = parts[3].trim() || 'Unknown GPU';
+            
+            gpus.push({
+              index: i,
+              name: name,
+              memoryTotal: adapterRAM > 0 ? formatBytes(adapterRAM) : 'Unknown',
+              memoryUsed: 'Unknown',
+              memoryFree: 'Unknown',
+              utilization: 0,
+              temperature: 0,
+              driver: driverVersion
+            });
+          }
+        }
+        
+        return gpus;
+      } catch (e) {
+        // wmic failed
+      }
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Error getting GPU info:', error);
+    return [];
+  }
+}
+
 async function getOSName(): Promise<string> {
   try {
     const currentPlatform = detectPlatform();
@@ -546,6 +713,7 @@ async function getMachineInfo(): Promise<MachineInfo> {
     const diskInfo = await getDiskInfo();
     const physicalDisks = await getPhysicalDisks();
     const topProcesses = await getTopProcesses();
+    const gpus = await getGPUInfo();
 
     return {
       hostname: machineHostname,
@@ -559,7 +727,8 @@ async function getMachineInfo(): Promise<MachineInfo> {
       usedRAM,
       disks: diskInfo,
       physicalDisks,
-      topProcesses
+      topProcesses,
+      gpus
     };
   } catch (error) {
     console.error('Error getting system information:', error);
@@ -575,7 +744,8 @@ async function getMachineInfo(): Promise<MachineInfo> {
       usedRAM: 'Unknown',
       disks: [],
       physicalDisks: [],
-      topProcesses: []
+      topProcesses: [],
+      gpus: []
     };
   }
 }

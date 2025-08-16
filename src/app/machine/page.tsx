@@ -26,6 +26,17 @@ interface TopProcess {
   memoryAbsolute: string;
 }
 
+interface GPUInfo {
+  name: string;
+  memoryTotal: string;
+  memoryUsed: string;
+  memoryFree: string;
+  utilization: number;
+  temperature: number;
+  driver: string;
+  index: number;
+}
+
 interface MachineInfo {
   hostname: string;
   localIP: string;
@@ -39,6 +50,7 @@ interface MachineInfo {
   disks: DiskInfo[];
   physicalDisks: PhysicalDisk[];
   topProcesses: TopProcess[];
+  gpus: GPUInfo[];
 }
 
 export default function Machine() {
@@ -197,6 +209,115 @@ export default function Machine() {
               <p className="text-gray-600">No process information available</p>
             )}
           </div>
+        </div>
+
+        {/* GPU Information */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Graphics Cards</h2>
+          {machineInfo.gpus && machineInfo.gpus.length > 0 ? (
+            <div className="space-y-4">
+              {machineInfo.gpus.map((gpu, index) => (
+                <div key={index} className="p-4 bg-gray-50 rounded-lg">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      GPU {gpu.index}: {gpu.name}
+                    </h3>
+                    <div className="flex gap-2">
+                      {gpu.utilization > 0 && (
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          gpu.utilization > 80 ? 'bg-red-100 text-red-800' : 
+                          gpu.utilization > 50 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
+                        }`}>
+                          {gpu.utilization}% usage
+                        </span>
+                      )}
+                      {gpu.temperature > 0 && (
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          gpu.temperature > 80 ? 'bg-red-100 text-red-800' : 
+                          gpu.temperature > 60 ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {gpu.temperature}°C
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* GPU Memory Usage Bar */}
+                  {gpu.memoryTotal !== 'Unknown' && gpu.memoryUsed !== 'Unknown' && (
+                    <div className="mb-3">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm text-gray-600">VRAM Usage</span>
+                        <span className="text-sm text-gray-600">
+                          {gpu.memoryUsed} / {gpu.memoryTotal}
+                        </span>
+                      </div>
+                      
+                      {(() => {
+                        // Calculate memory usage percentage
+                        const totalStr = gpu.memoryTotal.split(' ')[0];
+                        const usedStr = gpu.memoryUsed.split(' ')[0];
+                        const total = parseFloat(totalStr) || 0;
+                        const used = parseFloat(usedStr) || 0;
+                        const usedPercent = total > 0 ? Math.round((used / total) * 100) : 0;
+                        
+                        return (
+                          <div className="w-full bg-gray-200 rounded-full h-3">
+                            <div 
+                              className={`h-3 rounded-full ${
+                                usedPercent > 90 ? 'bg-red-500' : 
+                                usedPercent > 75 ? 'bg-yellow-500' : 'bg-blue-500'
+                              }`}
+                              style={{ width: `${usedPercent}%` }}
+                            ></div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+                    <div>
+                      <span className="text-gray-600">Total VRAM:</span>
+                      <span className="ml-1 font-medium">{gpu.memoryTotal}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Used VRAM:</span>
+                      <span className="ml-1 font-medium">{gpu.memoryUsed}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Free VRAM:</span>
+                      <span className="ml-1 font-medium">{gpu.memoryFree}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Driver:</span>
+                      <span className="ml-1 font-medium">{gpu.driver}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Utilization Bar */}
+                  {gpu.utilization > 0 && (
+                    <div className="mt-3">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm text-gray-600">GPU Utilization</span>
+                        <span className="text-sm text-gray-600">{gpu.utilization}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div 
+                          className={`h-3 rounded-full ${
+                            gpu.utilization > 90 ? 'bg-red-500' : 
+                            gpu.utilization > 75 ? 'bg-yellow-500' : 'bg-green-500'
+                          }`}
+                          style={{ width: `${gpu.utilization}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-600">No GPU information available</p>
+          )}
         </div>
 
         {/* Physical Disks */}
