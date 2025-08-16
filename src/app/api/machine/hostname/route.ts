@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getMachineInfo, type MachineInfo } from '../machineInfoRepo';
+import { machineInfoWorkflow, MachineInfo} from '@/app/workflows';
 
 export async function GET(): Promise<NextResponse<MachineInfo>> {
   try {
-    const machineInfo = await getMachineInfo();
+    const machineInfo = await machineInfoWorkflow.getMachineInfo();
     return NextResponse.json<MachineInfo>(machineInfo);
   } catch (error) {
     console.error('Error getting system information:', error);

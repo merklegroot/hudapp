@@ -441,7 +441,7 @@ function getTopProcesses(): TopProcess[] {
   }
 }
 
-export async function getMachineInfo(): Promise<MachineInfo> {
+async function getMachineInfo(): Promise<MachineInfo> {
   try {
     const machineHostname = hostname();
     const osName = `${type()} ${release()}`;
@@ -488,3 +488,8 @@ export async function getMachineInfo(): Promise<MachineInfo> {
     };
   }
 }
+
+
+export const machineInfoWorkflow = {
+  getMachineInfo
+};
