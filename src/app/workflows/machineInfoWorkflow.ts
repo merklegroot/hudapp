@@ -32,13 +32,16 @@ export interface TopProcess {
 
 export interface GPUInfo {
   name: string;
-  memoryTotal: string;
-  memoryUsed: string;
-  memoryFree: string;
-  utilization: number;
-  temperature: number;
+  bus: string;
+  revision: string;
   driver: string;
   index: number;
+  // Optional fields for nvidia-smi when available
+  memoryTotal?: string;
+  memoryUsed?: string;
+  memoryFree?: string;
+  utilization?: number;
+  temperature?: number;
 }
 
 export interface MachineInfo {
@@ -511,12 +514,14 @@ async function getGPUInfo(): Promise<GPUInfo[]> {
               gpus.push({
                 index: parseInt(parts[0]) || 0,
                 name: parts[1] || 'Unknown GPU',
+                bus: 'Unknown',
+                revision: 'Unknown',
+                driver: parts[7] || 'Unknown',
                 memoryTotal: formatBytes(memoryTotalMB * 1024 * 1024),
                 memoryUsed: formatBytes(memoryUsedMB * 1024 * 1024),
                 memoryFree: formatBytes(memoryFreeMB * 1024 * 1024),
                 utilization: parseInt(parts[5]) || 0,
-                temperature: parseInt(parts[6]) || 0,
-                driver: parts[7] || 'Unknown'
+                temperature: parseInt(parts[6]) || 0
               });
             }
           }
@@ -531,26 +536,48 @@ async function getGPUInfo(): Promise<GPUInfo[]> {
       
       // Fallback to lspci for general GPU detection
       try {
-        const { stdout: lspciOutput } = await execAsync('lspci | grep -i vga 2>/dev/null');
-        const lines = lspciOutput.split('\n').filter(line => line.trim());
+        const { stdout: lspciOutput } = await execAsync('lspci -v | grep -A 20 -i "vga\\|3d\\|display" 2>/dev/null');
+        const sections = lspciOutput.split('\n\n').filter(section => section.trim());
         const gpus: GPUInfo[] = [];
         
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i];
-          // Extract GPU name from lspci output
-          const match = line.match(/VGA compatible controller:\s*(.+)/i);
-          const gpuName = match ? match[1].trim() : 'Unknown GPU';
+        for (let i = 0; i < sections.length; i++) {
+          const section = sections[i];
+          const lines = section.split('\n');
           
-          gpus.push({
-            index: i,
-            name: gpuName,
-            memoryTotal: 'Unknown',
-            memoryUsed: 'Unknown',
-            memoryFree: 'Unknown',
-            utilization: 0,
-            temperature: 0,
-            driver: 'Unknown'
-          });
+          if (lines.length > 0) {
+            const firstLine = lines[0];
+            
+            // Parse bus ID and device info from first line
+            // Format: "01:00.0 VGA compatible controller: NVIDIA Corporation GA107M [GeForce RTX 3050 Ti Mobile] (rev a1)"
+            const busMatch = firstLine.match(/^([0-9a-f]{2}:[0-9a-f]{2}\.[0-9a-f])/i);
+            const deviceMatch = firstLine.match(/(?:VGA compatible controller|3D controller|Display controller):\s*(.+)/i);
+            const revMatch = firstLine.match(/\(rev\s+([a-f0-9]+)\)/i);
+            
+            const busId = busMatch ? busMatch[1] : 'Unknown';
+            let deviceName = deviceMatch ? deviceMatch[1].trim() : 'Unknown GPU';
+            const revision = revMatch ? revMatch[1] : 'Unknown';
+            
+            // Remove revision info from device name if it's included
+            deviceName = deviceName.replace(/\s*\(rev\s+[a-f0-9]+\)$/i, '');
+            
+            // Try to find driver info in the section
+            let driver = 'Unknown';
+            for (const line of lines) {
+              const driverMatch = line.match(/Kernel driver in use:\s*(.+)/i);
+              if (driverMatch) {
+                driver = driverMatch[1].trim();
+                break;
+              }
+            }
+            
+            gpus.push({
+              index: i,
+              name: deviceName,
+              bus: busId,
+              revision: revision,
+              driver: driver
+            });
+          }
         }
         
         return gpus;
@@ -589,12 +616,10 @@ async function getGPUInfo(): Promise<GPUInfo[]> {
           gpus.push({
             index: i,
             name: name,
-            memoryTotal: memoryTotalBytes > 0 ? formatBytes(memoryTotalBytes) : 'Unknown',
-            memoryUsed: 'Unknown',
-            memoryFree: 'Unknown',
-            utilization: 0,
-            temperature: 0,
-            driver: 'Unknown'
+            bus: 'Unknown',
+            revision: 'Unknown',
+            driver: 'Unknown',
+            ...(memoryTotalBytes > 0 && { memoryTotal: formatBytes(memoryTotalBytes) })
           });
         }
         
@@ -620,12 +645,10 @@ async function getGPUInfo(): Promise<GPUInfo[]> {
             gpus.push({
               index: i,
               name: name,
-              memoryTotal: adapterRAM > 0 ? formatBytes(adapterRAM) : 'Unknown',
-              memoryUsed: 'Unknown',
-              memoryFree: 'Unknown',
-              utilization: 0,
-              temperature: 0,
-              driver: driverVersion
+              bus: 'Unknown',
+              revision: 'Unknown',
+              driver: driverVersion,
+              ...(adapterRAM > 0 && { memoryTotal: formatBytes(adapterRAM) })
             });
           }
         }

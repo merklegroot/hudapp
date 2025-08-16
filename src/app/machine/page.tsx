@@ -28,13 +28,16 @@ interface TopProcess {
 
 interface GPUInfo {
   name: string;
-  memoryTotal: string;
-  memoryUsed: string;
-  memoryFree: string;
-  utilization: number;
-  temperature: number;
+  bus: string;
+  revision: string;
   driver: string;
   index: number;
+  // Optional fields for nvidia-smi when available
+  memoryTotal?: string;
+  memoryUsed?: string;
+  memoryFree?: string;
+  utilization?: number;
+  temperature?: number;
 }
 
 interface MachineInfo {
@@ -223,7 +226,7 @@ export default function Machine() {
                       GPU {gpu.index}: {gpu.name}
                     </h3>
                     <div className="flex gap-2">
-                      {gpu.utilization > 0 && (
+                      {gpu.utilization && gpu.utilization > 0 && (
                         <span className={`px-2 py-1 rounded text-xs font-medium ${
                           gpu.utilization > 80 ? 'bg-red-100 text-red-800' : 
                           gpu.utilization > 50 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
@@ -231,7 +234,7 @@ export default function Machine() {
                           {gpu.utilization}% usage
                         </span>
                       )}
-                      {gpu.temperature > 0 && (
+                      {gpu.temperature && gpu.temperature > 0 && (
                         <span className={`px-2 py-1 rounded text-xs font-medium ${
                           gpu.temperature > 80 ? 'bg-red-100 text-red-800' : 
                           gpu.temperature > 60 ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'
@@ -254,8 +257,8 @@ export default function Machine() {
                       
                       {(() => {
                         // Calculate memory usage percentage
-                        const totalStr = gpu.memoryTotal.split(' ')[0];
-                        const usedStr = gpu.memoryUsed.split(' ')[0];
+                        const totalStr = gpu.memoryTotal?.split(' ')[0] || '0';
+                        const usedStr = gpu.memoryUsed?.split(' ')[0] || '0';
                         const total = parseFloat(totalStr) || 0;
                         const used = parseFloat(usedStr) || 0;
                         const usedPercent = total > 0 ? Math.round((used / total) * 100) : 0;
@@ -295,7 +298,7 @@ export default function Machine() {
                   </div>
                   
                   {/* Utilization Bar */}
-                  {gpu.utilization > 0 && (
+                  {gpu.utilization && gpu.utilization > 0 && (
                     <div className="mt-3">
                       <div className="flex justify-between items-center mb-1">
                         <span className="text-sm text-gray-600">GPU Utilization</span>
@@ -304,8 +307,8 @@ export default function Machine() {
                       <div className="w-full bg-gray-200 rounded-full h-3">
                         <div 
                           className={`h-3 rounded-full ${
-                            gpu.utilization > 90 ? 'bg-red-500' : 
-                            gpu.utilization > 75 ? 'bg-yellow-500' : 'bg-green-500'
+                            (gpu.utilization || 0) > 90 ? 'bg-red-500' : 
+                            (gpu.utilization || 0) > 75 ? 'bg-yellow-500' : 'bg-green-500'
                           }`}
                           style={{ width: `${gpu.utilization}%` }}
                         ></div>
