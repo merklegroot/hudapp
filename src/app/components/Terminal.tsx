@@ -63,7 +63,7 @@ export default function Terminal({ onInstallStart, onInstallComplete, className 
         fitAddonRef.current = fitAddon;
 
         // Welcome message
-        terminal.writeln('\\x1b[32m.NET SDK Installation Terminal\\x1b[0m');
+        terminal.writeln('\x1b[32m.NET SDK Installation Terminal\x1b[0m');
         terminal.writeln('Click "Install .NET SDK 8" to begin installation.');
         terminal.writeln('');
 
@@ -106,14 +106,19 @@ export default function Terminal({ onInstallStart, onInstallComplete, className 
   }, []);
 
   const startInstallation = async () => {
-    if (!xtermRef.current || isInstalling) return;
+    if (!xtermRef.current || isInstalling || !isLoaded) return;
 
     setIsInstalling(true);
     onInstallStart?.();
 
     const terminal = xtermRef.current;
+    if (!terminal) {
+      setIsInstalling(false);
+      return;
+    }
+
     terminal.clear();
-    terminal.writeln('\\x1b[33mStarting .NET SDK 8 installation...\\x1b[0m');
+    terminal.writeln('\x1b[33mStarting .NET SDK 8 installation...\x1b[0m');
     terminal.writeln('');
 
     try {
@@ -144,29 +149,37 @@ export default function Terminal({ onInstallStart, onInstallComplete, className 
         buffer += decoder.decode(value, { stream: true });
         
         // Split by double newlines to separate SSE events
-        const events = buffer.split('\\n\\n');
+        const events = buffer.split('\n\n');
         buffer = events.pop() || ''; // Keep the last incomplete event in buffer
 
         for (const event of events) {
-          const lines = event.split('\\n');
+          if (!event || typeof event !== 'string') continue;
+          
+          const lines = event.split('\n');
+          if (!Array.isArray(lines)) continue;
+          
           for (const line of lines) {
+            if (!line || typeof line !== 'string') continue;
+            
             if (line.startsWith('data: ')) {
               const jsonData = line.slice(6).trim();
-              if (jsonData) {
+              if (jsonData && terminal) {
                 try {
                   const data = JSON.parse(jsonData);
                   
-                  if (data.type === 'output') {
-                    terminal.write(data.content);
-                  } else if (data.type === 'error') {
-                    terminal.write(`\\x1b[31m${data.content}\\x1b[0m`);
-                  } else if (data.type === 'success') {
-                    terminal.write(`\\x1b[32m${data.content}\\x1b[0m`);
+                  if (data && typeof data === 'object') {
+                    if (data.type === 'output') {
+                      terminal.write(data.content || '');
+                    } else if (data.type === 'error') {
+                      terminal.write(`\x1b[31m${data.content || ''}\x1b[0m`);
+                    } else if (data.type === 'success') {
+                      terminal.write(`\x1b[32m${data.content || ''}\x1b[0m`);
+                    }
                   }
                 } catch (e) {
                   console.error('Error parsing SSE data:', e, 'Raw data:', jsonData);
                   // If JSON parse fails, just write the raw content as plain text
-                  if (jsonData && jsonData.length > 0) {
+                  if (jsonData && jsonData.length > 0 && terminal) {
                     terminal.write(jsonData + '\r\n');
                   }
                 }
@@ -176,14 +189,19 @@ export default function Terminal({ onInstallStart, onInstallComplete, className 
         }
       }
 
-      terminal.writeln('');
-      terminal.writeln('\\x1b[32mInstallation process completed!\\x1b[0m');
+      if (terminal) {
+        terminal.writeln('');
+        terminal.writeln('\x1b[32mInstallation process completed!\x1b[0m');
+        terminal.writeln('\x1b[36mRefreshing .NET information...\x1b[0m');
+      }
       onInstallComplete?.();
 
     } catch (error) {
       console.error('Installation error:', error);
-      terminal.writeln('');
-      terminal.writeln(`\\x1b[31mInstallation failed: ${error}\\x1b[0m`);
+      if (terminal) {
+        terminal.writeln('');
+        terminal.writeln(`\x1b[31mInstallation failed: ${error}\x1b[0m`);
+      }
     } finally {
       setIsInstalling(false);
     }
