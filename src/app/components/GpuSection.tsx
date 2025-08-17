@@ -9,6 +9,16 @@ export default function GpuSection({ gpuInfo }: GpuSectionProps) {
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
       <h2 className="text-2xl font-semibold text-gray-800 mb-4">Graphics Cards</h2>
+      
+      {/* OpenGL Renderer Information */}
+      {gpuInfo?.openGLRenderer && (
+        <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="flex items-center">
+            <span className="text-sm font-medium text-blue-800">OpenGL Renderer:</span>
+            <span className="ml-2 text-sm text-blue-700">{gpuInfo.openGLRenderer}</span>
+          </div>
+        </div>
+      )}
       {gpuInfo?.gpus && gpuInfo.gpus.length > 0 ? (
         <div className="space-y-4">
           {gpuInfo.gpus.map((gpu, index) => (

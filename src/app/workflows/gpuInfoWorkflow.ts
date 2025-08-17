@@ -157,11 +157,24 @@ async function getGpus(): Promise<gpu[]> {
 
 
 
+async function getOpenGLRenderer(): Promise<string | undefined> {
+  try {
+    const { stdout } = await execAsync('glxinfo | grep "OpenGL renderer" 2>/dev/null');
+    const match = stdout.trim().match(/OpenGL renderer string:\s*(.+)/);
+    return match ? match[1].trim() : undefined;
+  } catch (error) {
+    // glxinfo command failed or not available
+    return undefined;
+  }
+}
+
 async function execute(): Promise<gpuInfo> {
   const gpus = await getGpus();
+  const openGLRenderer = await getOpenGLRenderer();
 
   return {
-    gpus
+    gpus,
+    openGLRenderer
   };
 }
 

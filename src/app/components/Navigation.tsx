@@ -20,6 +20,11 @@ export default function Navigation() {
               GPU
             </Link>
           </li>
+          <li>
+            <Link href="/dotnet" className="hover:text-gray-300 transition-colors">
+              dotnet
+            </Link>
+          </li>
         </ul>
       </div>
     </nav>
