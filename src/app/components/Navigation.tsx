@@ -25,6 +25,11 @@ export default function Navigation() {
               dotnet
             </Link>
           </li>
+          <li>
+            <Link href="/path" className="hover:text-gray-300 transition-colors">
+              Path
+            </Link>
+          </li>
         </ul>
       </div>
     </nav>
