@@ -1,6 +1,34 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+
+// Dynamically import Terminal to prevent SSR issues
+const Terminal = dynamic(() => import('../components/Terminal'), {
+  ssr: false,
+  loading: () => (
+    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="bg-gray-800 text-white p-2 text-sm font-medium flex justify-between items-center">
+        <span>.NET Installation Terminal</span>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-gray-500"></div>
+          <span className="text-xs">Loading...</span>
+        </div>
+      </div>
+      <div className="w-full bg-black flex items-center justify-center" style={{ height: '400px' }}>
+        <div className="text-gray-400 text-sm">Loading terminal component...</div>
+      </div>
+      <div className="bg-gray-700 p-2">
+        <button
+          disabled
+          className="px-4 py-2 bg-gray-500 text-white text-sm rounded cursor-not-allowed"
+        >
+          Loading Terminal...
+        </button>
+      </div>
+    </div>
+  )
+});
 
 interface DotnetInfo {
   isInstalled: boolean;
@@ -13,8 +41,10 @@ export default function Dotnet() {
   const [dotnetInfo, setDotnetInfo] = useState<DotnetInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showTerminal, setShowTerminal] = useState(false);
 
-  useEffect(() => {
+  const fetchDotnetInfo = () => {
+    setLoading(true);
     fetch('/api/dotnet')
       .then(response => response.json() as Promise<DotnetInfo>)
       .then(data => {
@@ -26,7 +56,22 @@ export default function Dotnet() {
         setError('Failed to fetch dotnet information');
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchDotnetInfo();
   }, []);
+
+  const handleInstallStart = () => {
+    setShowTerminal(true);
+  };
+
+  const handleInstallComplete = () => {
+    // Refresh dotnet info after installation
+    setTimeout(() => {
+      fetchDotnetInfo();
+    }, 2000);
+  };
 
   if (loading) {
     return (
@@ -54,29 +99,84 @@ export default function Dotnet() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] p-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <h1 className="text-4xl font-bold mb-8">dotnet</h1>
         
         {!dotnetInfo.isInstalled ? (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-yellow-800">
-                  dotnet is not installed
-                </h3>
-                <div className="mt-2 text-sm text-yellow-700">
-                  <p>The .NET SDK and runtime are not currently installed on this machine.</p>
+          <div className="space-y-6">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-yellow-800">
+                      dotnet is not installed
+                    </h3>
+                    <div className="mt-2 text-sm text-yellow-700">
+                      <p>The .NET SDK and runtime are not currently installed on this machine.</p>
+                    </div>
+                  </div>
                 </div>
+                <button
+                  onClick={() => setShowTerminal(!showTerminal)}
+                  className="ml-4 px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                >
+                  {showTerminal ? 'Hide Installation Terminal' : 'Install .NET SDK 8'}
+                </button>
               </div>
             </div>
+
+            {/* Installation Instructions */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-blue-800 mb-3">Installation Information</h3>
+              <div className="text-sm text-blue-700 space-y-2">
+                <p>This will install .NET SDK 8 using the official Microsoft installation script.</p>
+                <p>The installation process will:</p>
+                <ul className="list-disc list-inside ml-4 space-y-1">
+                  <li>Download the latest .NET SDK 8 from Microsoft</li>
+                  <li>Install it to <code className="bg-blue-100 px-1 rounded">~/.dotnet</code></li>
+                  <li>Set up the necessary environment variables</li>
+                </ul>
+                <p className="font-medium">You may be prompted for your password during installation.</p>
+              </div>
+            </div>
+
+            {/* Terminal Section */}
+            {showTerminal && (
+              <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                <Terminal 
+                  onInstallStart={handleInstallStart}
+                  onInstallComplete={handleInstallComplete}
+                  className="w-full"
+                />
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-6">
+            {/* Installation Success */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-green-800">
+                    .NET is installed and ready to use!
+                  </h3>
+                  <div className="mt-2 text-sm text-green-700">
+                    <p>You can now create and run .NET applications on this machine.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* SDKs Section */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">Installed SDKs</h2>
