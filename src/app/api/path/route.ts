@@ -2,21 +2,25 @@ import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 import { pathWorkflow } from '../../workflows/pathWorkflow';
 
-export async function GET(request: NextRequest) {
+interface PathData {
+  paths: string[];
+}
+
+interface PathErrorResponse {
+  error: string;
+}
+
+type PathResponse = PathData | PathErrorResponse;
+
+export async function GET(request: NextRequest): Promise<NextResponse<PathResponse>> {
   try {
-    // Check if a specific method is requested
-    const { searchParams } = new URL(request.url);
-    const forceMethod = searchParams.get('method') || undefined;
-    const useSpawn = searchParams.get('spawn') === 'true';
+    const pathData: PathData = await pathWorkflow.getPathInfo();
     
-    // Get path information using the workflow
-    const pathData = await pathWorkflow.getPathInfo(forceMethod, useSpawn);
-    
-    return NextResponse.json(pathData);
+    return NextResponse.json<PathData>(pathData);
 
   } catch (error) {
     console.error('Error fetching PATH information:', error);
-    return NextResponse.json({ 
+    return NextResponse.json<PathErrorResponse>({ 
       error: 'Failed to fetch PATH information' 
     }, { status: 500 });
   }
