@@ -31,6 +31,7 @@ export default function Path() {
   const [pathData, setPathData] = useState<PathData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isNoticeExpanded, setIsNoticeExpanded] = useState(false);
 
   const fetchPathData = (method?: string) => {
     setLoading(true);
@@ -109,42 +110,64 @@ export default function Path() {
       <div className="max-w-6xl mx-auto">
         <h1 className="text-4xl font-bold mb-8">PATH Environment Variable</h1>
 
-        {/* Information Notice */}
+                {/* Information Notice */}
         <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
-          <div className="flex">
+          <div className="flex items-start">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
             </div>
-            <div className="ml-3">
-              <p className="text-sm text-blue-700">
-                <strong>Did I just see a terminal window open?:</strong>
-                <br /><br />
-                You sure did.
-
-                <br />
-                This is necessary to accurately retrieve your system's PATH environment variable from a fresh shell session,
-                ensuring we show the actual PATH your terminal uses rather than the limited PATH available to this web application.
-
-                <br /><br />
-                You're welcome to inspecet the source code to see exactly what this application is doing.
-                
-                <br /><br />
-                There's likely a better way to do this and I'm happy to accept PRs.
-
-                <br /><br />
-
-                Source code: {' '}
-                <a
-                  href="https://github.com/merklegroot/hudapp"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline hover:text-blue-800 font-medium"
+            <div className="ml-3 flex-1">
+              <button
+                onClick={() => setIsNoticeExpanded(!isNoticeExpanded)}
+                className="flex items-center justify-between w-full text-left hover:text-blue-800 transition-colors"
+              >
+                <p className="text-sm text-blue-700 font-medium">
+                  Did I just see a terminal window open? {isNoticeExpanded ? '(Click to collapse)' : '(Click to expand)'}
+                </p>
+                <svg
+                  className={`h-4 w-4 text-blue-600 transition-transform ${isNoticeExpanded ? 'rotate-180' : ''}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
-                  https://github.com/merklegroot/hudapp
-                </a>{' '}
-              </p>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {isNoticeExpanded && (
+                <div className="mt-3 space-y-3">
+                  <p className="text-sm text-blue-700">
+                    You sure did.
+                  </p>
+                  
+                  <p className="text-sm text-blue-700">
+                    This is necessary to accurately retrieve your system's PATH environment variable from a fresh shell session,
+                    ensuring we show the actual PATH your terminal uses rather than the limited PATH available to this web application.
+                  </p>
+                  
+                  <p className="text-sm text-blue-700">
+                    You're welcome to inspect the source code to see exactly what this application is doing.
+                  </p>
+                  
+                  <p className="text-sm text-blue-700">
+                    There's likely a better way to do this and I'm happy to accept PRs.
+                  </p>
+                  
+                  <p className="text-sm text-blue-700">
+                    Source code:{' '}
+                    <a
+                      href="https://github.com/merklegroot/hudapp"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline hover:text-blue-800 font-medium"
+                    >
+                      https://github.com/merklegroot/hudapp
+                    </a>
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
