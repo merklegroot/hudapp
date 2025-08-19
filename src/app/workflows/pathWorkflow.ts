@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { spawnAndGetPathWorkflow } from './spawnAndGetPathWorkflow';
 
 interface PathInfo {
   path: string;
@@ -18,58 +19,21 @@ interface PathData {
   workingDirectory: string;
   existingPaths: number;
   readablePaths: number;
-  source: string;
   debug: {
     serverPath: string;
-    methods: any;
-    selectedMethod: string;
   };
 }
 
 
-/** fitler out paths that were likely added by the running process
- * make sure that this method is cross platform (should handle both windows and unix style paths)
- * these include paths ending in:
- * node_modules/.bin
- */
-function shouldKeepPath(path: string) {
-  const pathAsUnixStyle = path.replace(/\\/g, '/');
-
-  const filterOutIfEndsWithPaths = [
-    'node_modules/.bin',
-    'lib/node-gyp-bin'
-  ];
-
-  const filterOutIfContainsPaths = [
-    '/tmp/.',
-  ];
-
-  for (const pathToFilterOut of filterOutIfEndsWithPaths) {
-    if (pathAsUnixStyle.endsWith(pathToFilterOut)) {
-      return false;
-    }
-  }
-
-  for (const pathToFilterOut of filterOutIfContainsPaths) {
-    if (pathAsUnixStyle.includes(pathToFilterOut)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-async function getPathInfo(forceMethod?: string): Promise<PathData> {
-  // Use the simple process.env.PATH
-  const pathEnv = process.env.PATH || '';
+async function getPathInfo(): Promise<PathData> {
+  let pathEnv = '';
   
-  if (!pathEnv) {
+  pathEnv = await spawnAndGetPathWorkflow.executeWithFallback();
+  if (!pathEnv)
     throw new Error('PATH environment variable not found');
-  }
 
   // Split the PATH into individual directories
-  const originalPathDirs = pathEnv.split(':').filter(dir => dir.trim() !== '');
-  const pathDirs = originalPathDirs.filter(shouldKeepPath);
+  const pathDirs = pathEnv.split(':').filter(dir => dir.trim() !== '');
   
   // Check each path directory for existence and properties
   const pathInfo: PathInfo[] = await Promise.all(
@@ -142,11 +106,8 @@ async function getPathInfo(forceMethod?: string): Promise<PathData> {
     workingDirectory: pwdInfo,
     existingPaths: pathInfo.filter(p => p.exists).length,
     readablePaths: pathInfo.filter(p => p.readable).length,
-    source: 'process_env',
     debug: {
-      serverPath: pathEnv,
-      methods: { process_env: pathEnv },
-      selectedMethod: 'process_env'
+      serverPath: pathEnv
     }
   };
 }

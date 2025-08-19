@@ -7,9 +7,10 @@ export async function GET(request: NextRequest) {
     // Check if a specific method is requested
     const { searchParams } = new URL(request.url);
     const forceMethod = searchParams.get('method') || undefined;
+    const useSpawn = searchParams.get('spawn') === 'true';
     
     // Get path information using the workflow
-    const pathData = await pathWorkflow.getPathInfo(forceMethod);
+    const pathData = await pathWorkflow.getPathInfo(forceMethod, useSpawn);
     
     return NextResponse.json(pathData);
 
