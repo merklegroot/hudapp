@@ -30,6 +30,11 @@ export default function Navigation() {
               Path
             </Link>
           </li>
+          <li>
+            <Link href="/profile" className="hover:text-gray-300 transition-colors">
+              Profile
+            </Link>
+          </li>
         </ul>
       </div>
     </nav>
