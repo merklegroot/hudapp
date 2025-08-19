@@ -1,9 +1,5 @@
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import fs from 'fs';
 import path from 'path';
-
-const execAsync = promisify(exec);
 
 interface PathInfo {
   path: string;
@@ -30,60 +26,50 @@ interface PathData {
   };
 }
 
-async function getPathInfo(forceMethod?: string): Promise<PathData> {
-  // Get the user's actual PATH from their login shell
-  let pathEnv = '';
-  let serverPathEnv = process.env.PATH || '';
-  let debugInfo: any = {};
-  
-  try {
-    // Try multiple methods to get the cleanest user PATH
-    const methods = [
-      { name: 'bash_login', cmd: 'bash -l -c "echo $PATH"' },
-      { name: 'env_clean', cmd: 'env -i bash -l -c "echo $PATH"' },
-      { name: 'su_user', cmd: `su - ${process.env.USER || 'goose'} -c "echo \\$PATH"` },
-      { name: 'direct_source', cmd: 'bash -c "source ~/.bashrc && echo $PATH"' },
-      { name: 'minimal_path', cmd: 'env -i PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" bash -c "echo $PATH"' },
-      { name: 'system_default', cmd: 'getconf PATH' },
-      { name: 'no_profile', cmd: `bash --noprofile --norc -c "echo \\$PATH"` },
-      { name: 'true_user', cmd: `sudo -u ${process.env.USER || 'goose'} -i bash -c "echo \\$PATH"` }
-    ];
-    
-    for (const method of methods) {
-      try {
-        const { stdout } = await execAsync(method.cmd);
-        debugInfo[method.name] = stdout.trim();
-      } catch (error) {
-        debugInfo[method.name] = `Error: ${error}`;
-      }
+
+/** fitler out paths that were likely added by the running process
+ * make sure that this method is cross platform (should handle both windows and unix style paths)
+ * these include paths ending in:
+ * node_modules/.bin
+ */
+function shouldKeepPath(path: string) {
+  const pathAsUnixStyle = path.replace(/\\/g, '/');
+
+  const filterOutIfEndsWithPaths = [
+    'node_modules/.bin',
+    'lib/node-gyp-bin'
+  ];
+
+  const filterOutIfContainsPaths = [
+    '/tmp/.',
+  ];
+
+  for (const pathToFilterOut of filterOutIfEndsWithPaths) {
+    if (pathAsUnixStyle.endsWith(pathToFilterOut)) {
+      return false;
     }
-    
-    // Use forced method if specified, otherwise use the cleanest looking PATH
-    if (forceMethod && debugInfo[forceMethod] && !debugInfo[forceMethod].startsWith('Error:')) {
-      pathEnv = debugInfo[forceMethod];
-    } else {
-      // Prioritize methods that bypass config files
-      pathEnv = debugInfo.system_default || 
-                debugInfo.minimal_path || 
-                debugInfo.no_profile || 
-                debugInfo.true_user || 
-                debugInfo.env_clean || 
-                debugInfo.su_user || 
-                debugInfo.bash_login || 
-                serverPathEnv;
-    }
-    
-  } catch (error) {
-    console.error('Error getting user PATH:', error);
-    pathEnv = serverPathEnv;
   }
+
+  for (const pathToFilterOut of filterOutIfContainsPaths) {
+    if (pathAsUnixStyle.includes(pathToFilterOut)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+async function getPathInfo(forceMethod?: string): Promise<PathData> {
+  // Use the simple process.env.PATH
+  const pathEnv = process.env.PATH || '';
   
   if (!pathEnv) {
     throw new Error('PATH environment variable not found');
   }
 
   // Split the PATH into individual directories
-  const pathDirs = pathEnv.split(':').filter(dir => dir.trim() !== '');
+  const originalPathDirs = pathEnv.split(':').filter(dir => dir.trim() !== '');
+  const pathDirs = originalPathDirs.filter(shouldKeepPath);
   
   // Check each path directory for existence and properties
   const pathInfo: PathInfo[] = await Promise.all(
@@ -142,31 +128,10 @@ async function getPathInfo(forceMethod?: string): Promise<PathData> {
     })
   );
 
-  // Get some additional environment info
-  let shellInfo = '';
-  try {
-    const { stdout } = await execAsync('bash -l -c "echo $SHELL"');
-    shellInfo = stdout.trim();
-  } catch {
-    shellInfo = 'Unknown';
-  }
-
-  // Get additional user environment info
-  let userInfo = '';
-  let pwdInfo = '';
-  try {
-    const { stdout: userStdout } = await execAsync('bash -l -c "whoami"');
-    userInfo = userStdout.trim();
-  } catch {
-    userInfo = 'Unknown';
-  }
-
-  try {
-    const { stdout: pwdStdout } = await execAsync('bash -l -c "pwd"');
-    pwdInfo = pwdStdout.trim();
-  } catch {
-    pwdInfo = 'Unknown';
-  }
+  // Get some basic environment info
+  const shellInfo = process.env.SHELL || 'Unknown';
+  const userInfo = process.env.USER || 'Unknown';
+  const pwdInfo = process.cwd();
 
   return {
     pathVariable: pathEnv,
@@ -177,19 +142,11 @@ async function getPathInfo(forceMethod?: string): Promise<PathData> {
     workingDirectory: pwdInfo,
     existingPaths: pathInfo.filter(p => p.exists).length,
     readablePaths: pathInfo.filter(p => p.readable).length,
-    source: 'user_login_shell',
+    source: 'process_env',
     debug: {
-      serverPath: serverPathEnv,
-      methods: debugInfo,
-      selectedMethod: forceMethod && debugInfo[forceMethod] === pathEnv ? `${forceMethod} (forced)` :
-                    pathEnv === debugInfo.system_default ? 'system_default' :
-                    pathEnv === debugInfo.minimal_path ? 'minimal_path' :
-                    pathEnv === debugInfo.no_profile ? 'no_profile' :
-                    pathEnv === debugInfo.true_user ? 'true_user' :
-                    pathEnv === debugInfo.env_clean ? 'env_clean' : 
-                    pathEnv === debugInfo.su_user ? 'su_user' : 
-                    pathEnv === debugInfo.bash_login ? 'bash_login' : 
-                    pathEnv === serverPathEnv ? 'server_fallback' : 'unknown'
+      serverPath: pathEnv,
+      methods: { process_env: pathEnv },
+      selectedMethod: 'process_env'
     }
   };
 }
