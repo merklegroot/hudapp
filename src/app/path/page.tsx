@@ -35,9 +35,9 @@ export default function Path() {
   const fetchPathData = (method?: string) => {
     setLoading(true);
     setError(null);
-    
+
     const url = method ? `/api/path?method=${method}` : '/api/path';
-    
+
     fetch(url)
       .then(response => response.json())
       .then(data => {
@@ -108,7 +108,47 @@ export default function Path() {
     <div className="min-h-[calc(100vh-4rem)] p-8">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-4xl font-bold mb-8">PATH Environment Variable</h1>
-        
+
+        {/* Information Notice */}
+        <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-blue-700">
+                <strong>Did I just see a terminal window open?:</strong>
+                <br /><br />
+                You sure did.
+
+                <br />
+                This is necessary to accurately retrieve your system's PATH environment variable from a fresh shell session,
+                ensuring we show the actual PATH your terminal uses rather than the limited PATH available to this web application.
+
+                <br /><br />
+                You're welcome to inspecet the source code to see exactly what this application is doing.
+                
+                <br /><br />
+                There's likely a better way to do this and I'm happy to accept PRs.
+
+                <br /><br />
+
+                Source code: {' '}
+                <a
+                  href="https://github.com/merklegroot/hudapp"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-blue-800 font-medium"
+                >
+                  https://github.com/merklegroot/hudapp
+                </a>{' '}
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* User Environment Info */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">User Environment</h2>
@@ -150,7 +190,7 @@ export default function Path() {
           <p className="text-gray-600 mb-6">
             Below are all directories in your PATH environment variable, along with their status and executable count.
           </p>
-          
+
           <div className="space-y-3">
             {pathData.paths.map((pathInfo, index) => (
               <div key={index} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
