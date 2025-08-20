@@ -4,11 +4,8 @@ const nextConfig: NextConfig = {
   // Enable standalone output for Docker optimization
   output: 'standalone',
   
-  // Experimental features for better performance
-  experimental: {
-    // Enable server components logging
-    serverComponentsExternalPackages: [],
-  },
+  // External packages for server components
+  serverExternalPackages: [],
 };
 
 export default nextConfig;
