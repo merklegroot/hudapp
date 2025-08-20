@@ -35,6 +35,11 @@ export default function Navigation() {
               Profile
             </Link>
           </li>
+          <li>
+            <Link href="/utils" className="hover:text-gray-300 transition-colors">
+              Utils
+            </Link>
+          </li>
         </ul>
       </div>
     </nav>
