@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { machineInfo } from '../workflows/models';
-import GpuSection from '../components/GpuSection';
+import OSIcon from '../components/OSIcon';
 
 export default function Machine() {
   const [machineInfo, setMachineInfo] = useState<machineInfo | null>(null);
@@ -88,7 +88,12 @@ export default function Machine() {
             {infoItems.map((item, index) => (
               <div key={index} className="p-4 bg-gray-50 rounded-lg">
                 <h3 className="text-sm font-medium text-gray-600 mb-1">{item.label}</h3>
-                <p className="text-lg font-semibold text-gray-900">{item.value}</p>
+                <div className="flex items-center gap-2">
+                  {item.label === 'Operating System' && (
+                    <OSIcon osName={item.value} className="w-6 h-6" />
+                  )}
+                  <p className="text-lg font-semibold text-gray-900">{item.value}</p>
+                </div>
               </div>
             ))}
           </div>
