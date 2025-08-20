@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { machineInfo } from '../workflows/models';
 import OSIcon from '../components/OSIcon';
+import CPUIcon from '../components/CPUIcon';
 
 export default function Machine() {
   const [machineInfo, setMachineInfo] = useState<machineInfo | null>(null);
@@ -91,6 +92,9 @@ export default function Machine() {
                 <div className="flex items-center gap-2">
                   {item.label === 'Operating System' && (
                     <OSIcon osName={item.value} className="w-6 h-6" />
+                  )}
+                  {item.label === 'CPU' && (
+                    <CPUIcon cpuInfo={item.value} className="w-6 h-6" />
                   )}
                   <p className="text-lg font-semibold text-gray-900">{item.value}</p>
                 </div>
