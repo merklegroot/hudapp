@@ -107,6 +107,11 @@ export default function Dotnet() {
   const [addingToPath, setAddingToPath] = useState(false);
   const [pathAddError, setPathAddError] = useState<string | null>(null);
   const [pathAddSuccess, setPathAddSuccess] = useState(false);
+  const [pathAddResult, setPathAddResult] = useState<{
+    backupPath?: string;
+    profilePath?: string;
+    message?: string;
+  } | null>(null);
 
   const fetchDotnetInfo = (showLoading = true) => {
     if (showLoading) {
@@ -147,6 +152,7 @@ export default function Dotnet() {
     setAddingToPath(true);
     setPathAddError(null);
     setPathAddSuccess(false);
+    setPathAddResult(null);
     
     try {
       const response = await fetch('/api/dotnet/add-to-path', {
@@ -162,11 +168,14 @@ export default function Dotnet() {
         throw new Error(errorData.error || 'Failed to add to PATH');
       }
 
+      const result = await response.json();
       setPathAddSuccess(true);
+      setPathAddResult(result);
+      
       // Refresh dotnet info to check if PATH was successfully updated
       setTimeout(() => {
         fetchDotnetInfo(false);
-      }, 1000);
+      }, 2000);
     } catch (error) {
       console.error('Error adding to PATH:', error);
       setPathAddError(error instanceof Error ? error.message : 'Failed to add to PATH');
@@ -478,13 +487,23 @@ export default function Dotnet() {
                 {/* Success Message */}
                 {pathAddSuccess && (
                   <div className="mb-4 p-3 bg-green-100 border border-green-200 rounded-lg">
-                    <div className="flex items-center">
+                    <div className="flex items-center mb-2">
                       <svg className="h-4 w-4 text-green-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
-                      <span className="text-sm font-medium text-green-800">Successfully attempted to add dotnet to PATH!</span>
+                      <span className="text-sm font-medium text-green-800">Successfully added .NET to PATH!</span>
                     </div>
-                    <p className="text-xs text-green-700 mt-1">Please restart your terminal or refresh this page to verify the changes.</p>
+                    {pathAddResult && (
+                      <div className="text-xs text-green-700 space-y-1">
+                        {pathAddResult.profilePath && (
+                          <p><strong>Profile modified:</strong> {pathAddResult.profilePath}</p>
+                        )}
+                        {pathAddResult.backupPath && (
+                          <p><strong>Backup created:</strong> {pathAddResult.backupPath}</p>
+                        )}
+                        <p className="mt-2 font-medium">Please restart your terminal or run: <code className="bg-green-200 px-1 rounded">source {pathAddResult.profilePath?.split('/').pop()}</code></p>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -510,10 +529,10 @@ export default function Dotnet() {
                       <p className="mb-2 text-xs">This command will automatically detect your shell profile, create a backup, and add .NET to your PATH:</p>
                       <div className="p-3 bg-blue-100 rounded-lg relative">
                         <code className="text-sm font-mono text-blue-900 block pr-16 whitespace-pre-wrap break-all">
-                          {`PROFILE_FILE=$([ -f ~/.zshrc ] && echo ~/.zshrc || [ -f ~/.bashrc ] && echo ~/.bashrc || echo ~/.profile) && cp "$PROFILE_FILE" "$PROFILE_FILE.backup.$(date +%Y%m%d_%H%M%S)" && echo -e "\\n# [hudapp_begin add_dotnet_to_path]\\n# Add .NET to the PATH\\nif [ -d \\"${dotnetInfo.detectedPath}\\" ] ; then\\n    PATH=\\"${dotnetInfo.detectedPath}:$PATH\\"\\nfi\\n# [hudapp_end add_dotnet_to_path]" >> "$PROFILE_FILE" && echo "Backup created: $PROFILE_FILE.backup.$(date +%Y%m%d_%H%M%S)" && echo "Added .NET to $PROFILE_FILE. Please restart your terminal or run: source $PROFILE_FILE"`}
+                          {`PROFILE_FILE=$([ -f ~/.zshrc ] && echo ~/.zshrc || [ -f ~/.bashrc ] && echo ~/.bashrc || echo ~/.profile) && cp "$PROFILE_FILE" "$PROFILE_FILE.backup.$(date +%Y%m%d_%H%M%S)" && echo -e "\\n# [hudapp_begin add_dotnet_to_path]\\n# Add .NET to the PATH\\nif [ -d \\"${dotnetInfo.detectedPath}\\" ] ; then\\n    PATH=\\"${dotnetInfo.detectedPath}:$PATH\\"\\nfi\\n# [hudapp_end add_dotnet_to_path]\\n" >> "$PROFILE_FILE" && echo "Backup created: $PROFILE_FILE.backup.$(date +%Y%m%d_%H%M%S)" && echo "Added .NET to $PROFILE_FILE. Please restart your terminal or run: source $PROFILE_FILE"`}
                         </code>
                         <CopyButton 
-                          text={`PROFILE_FILE=$([ -f ~/.zshrc ] && echo ~/.zshrc || [ -f ~/.bashrc ] && echo ~/.bashrc || echo ~/.profile) && cp "$PROFILE_FILE" "$PROFILE_FILE.backup.$(date +%Y%m%d_%H%M%S)" && echo -e "\\n# [hudapp_begin add_dotnet_to_path]\\n# Add .NET to the PATH\\nif [ -d \\"${dotnetInfo.detectedPath}\\" ] ; then\\n    PATH=\\"${dotnetInfo.detectedPath}:$PATH\\"\\nfi\\n# [hudapp_end add_dotnet_to_path]" >> "$PROFILE_FILE" && echo "Backup created: $PROFILE_FILE.backup.$(date +%Y%m%d_%H%M%S)" && echo "Added .NET to $PROFILE_FILE. Please restart your terminal or run: source $PROFILE_FILE"`}
+                          text={`PROFILE_FILE=$([ -f ~/.zshrc ] && echo ~/.zshrc || [ -f ~/.bashrc ] && echo ~/.bashrc || echo ~/.profile) && cp "$PROFILE_FILE" "$PROFILE_FILE.backup.$(date +%Y%m%d_%H%M%S)" && echo -e "\\n# [hudapp_begin add_dotnet_to_path]\\n# Add .NET to the PATH\\nif [ -d \\"${dotnetInfo.detectedPath}\\" ] ; then\\n    PATH=\\"${dotnetInfo.detectedPath}:$PATH\\"\\nfi\\n# [hudapp_end add_dotnet_to_path]\\n" >> "$PROFILE_FILE" && echo "Backup created: $PROFILE_FILE.backup.$(date +%Y%m%d_%H%M%S)" && echo "Added .NET to $PROFILE_FILE. Please restart your terminal or run: source $PROFILE_FILE"`}
                           className="absolute top-2 right-2"
                         />
                       </div>
@@ -555,10 +574,11 @@ export default function Dotnet() {
 if [ -d "${dotnetInfo.detectedPath}" ] ; then
     PATH="${dotnetInfo.detectedPath}:$PATH"
 fi
-# [hudapp_end add_dotnet_to_path]`}
+# [hudapp_end add_dotnet_to_path]
+`}
                             </code>
                             <CopyButton 
-                              text={`# [hudapp_begin add_dotnet_to_path]\n# Add .NET to the PATH\nif [ -d "${dotnetInfo.detectedPath}" ] ; then\n    PATH="${dotnetInfo.detectedPath}:$PATH"\nfi\n# [hudapp_end add_dotnet_to_path]`}
+                              text={`# [hudapp_begin add_dotnet_to_path]\n# Add .NET to the PATH\nif [ -d "${dotnetInfo.detectedPath}" ] ; then\n    PATH="${dotnetInfo.detectedPath}:$PATH"\nfi\n# [hudapp_end add_dotnet_to_path]\n`}
                               className="absolute top-2 right-2"
                             />
                           </div>
@@ -573,10 +593,11 @@ fi
 # Add .NET to the PATH
 export DOTNET_ROOT=${dotnetInfo.detectedPath}
 export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
-# [hudapp_end add_dotnet_to_path]`}
+# [hudapp_end add_dotnet_to_path]
+`}
                             </code>
                             <CopyButton 
-                              text={`# [hudapp_begin add_dotnet_to_path]\n# Add .NET to the PATH\nexport DOTNET_ROOT=${dotnetInfo.detectedPath}\nexport PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools\n# [hudapp_end add_dotnet_to_path]`}
+                              text={`# [hudapp_begin add_dotnet_to_path]\n# Add .NET to the PATH\nexport DOTNET_ROOT=${dotnetInfo.detectedPath}\nexport PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools\n# [hudapp_end add_dotnet_to_path]\n`}
                               className="absolute top-2 right-2"
                             />
                           </div>
