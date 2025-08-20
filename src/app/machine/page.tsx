@@ -5,6 +5,7 @@ import { machineInfo } from '../workflows/models';
 import OSIcon from '../components/OSIcon';
 import CPUIcon from '../components/CPUIcon';
 import MachineIcon from '../components/MachineIcon';
+import KernelIcon from '../components/KernelIcon';
 
 export default function Machine() {
   const [machineInfo, setMachineInfo] = useState<machineInfo | null>(null);
@@ -99,6 +100,9 @@ export default function Machine() {
                   )}
                   {item.label === 'Machine Model' && (
                     <MachineIcon machineModel={item.value} className="w-6 h-6" />
+                  )}
+                  {item.label === 'Kernel Version' && (
+                    <KernelIcon kernelVersion={item.value} className="w-6 h-6" />
                   )}
                   <p className="text-lg font-semibold text-gray-900">{item.value}</p>
                 </div>
