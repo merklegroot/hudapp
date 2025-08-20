@@ -62,6 +62,8 @@ interface DotnetInfo {
   isInstalled: boolean;
   sdks: string[];
   runtimes: string[];
+  inPath: boolean;
+  detectedPath?: string;
   error?: string;
 }
 
@@ -318,34 +320,107 @@ export default function Dotnet() {
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Installation Success */}
-            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-green-800">
-                      .NET is installed and ready to use!
-                    </h3>
-                    <div className="mt-2 text-sm text-green-700">
-                      <p>You can now create and run .NET applications on this machine.</p>
+            {/* Installation Status */}
+            {dotnetInfo.inPath ? (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-green-800">
+                        .NET is installed and ready to use!
+                      </h3>
+                      <div className="mt-2 text-sm text-green-700">
+                        <p>You can now create and run .NET applications on this machine.</p>
+                      </div>
                     </div>
                   </div>
+                  {showTerminal && (
+                    <button
+                      onClick={() => setShowTerminal(false)}
+                      className="ml-4 px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-700 transition-colors"
+                    >
+                      Hide Terminal
+                    </button>
+                  )}
                 </div>
-                {showTerminal && (
-                  <button
-                    onClick={() => setShowTerminal(false)}
-                    className="ml-4 px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-700 transition-colors"
-                  >
-                    Hide Terminal
-                  </button>
-                )}
               </div>
-            </div>
+            ) : (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-yellow-800">
+                        .NET is installed but not in PATH
+                      </h3>
+                      <div className="mt-2 text-sm text-yellow-700">
+                        <p>
+                          .NET is installed at <code className="bg-yellow-100 px-1 rounded font-mono">{dotnetInfo.detectedPath}</code> 
+                          but is not accessible from the command line.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {showTerminal && (
+                    <button
+                      onClick={() => setShowTerminal(false)}
+                      className="ml-4 px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-700 transition-colors"
+                    >
+                      Hide Terminal
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* PATH Setup Instructions - Show when dotnet is not in PATH */}
+            {!dotnetInfo.inPath && dotnetInfo.detectedPath && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-blue-800 mb-3">Setup PATH to Access dotnet</h3>
+                <div className="text-sm text-blue-700 space-y-3">
+                  <p>To use dotnet from the command line, you need to add it to your PATH. Choose one of the following options:</p>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-blue-800 mb-2">Option 1: Temporary (current session only)</h4>
+                      <div className="p-3 bg-blue-100 rounded-lg">
+                        <code className="text-sm font-mono text-blue-900 block">
+                          export PATH=$PATH:{dotnetInfo.detectedPath}
+                        </code>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-blue-800 mb-2">Option 2: Permanent (recommended)</h4>
+                      <p className="mb-2">Add the following lines to your shell profile file (<code className="bg-blue-100 px-1 rounded">~/.bashrc</code>, <code className="bg-blue-100 px-1 rounded">~/.zshrc</code>, or <code className="bg-blue-100 px-1 rounded">~/.profile</code>):</p>
+                      <div className="p-3 bg-blue-100 rounded-lg space-y-1">
+                        <code className="text-sm font-mono text-blue-900 block">
+                          export DOTNET_ROOT={dotnetInfo.detectedPath}
+                        </code>
+                        <code className="text-sm font-mono text-blue-900 block">
+                          export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
+                        </code>
+                      </div>
+                      <p className="mt-2 text-xs">After adding these lines, restart your terminal or run <code className="bg-blue-100 px-1 rounded">source ~/.bashrc</code> (or your shell profile file).</p>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 p-3 bg-blue-100 rounded-lg">
+                    <p className="font-medium text-blue-800 mb-1">Verify the setup:</p>
+                    <code className="text-sm font-mono text-blue-900">dotnet --version</code>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Terminal Section - Show if requested */}
             {showTerminal && (
