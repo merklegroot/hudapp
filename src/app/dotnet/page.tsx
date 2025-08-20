@@ -72,6 +72,9 @@ export default function Dotnet() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showTerminal, setShowTerminal] = useState(false);
+  const [addingToPath, setAddingToPath] = useState(false);
+  const [pathAddError, setPathAddError] = useState<string | null>(null);
+  const [pathAddSuccess, setPathAddSuccess] = useState(false);
 
   const fetchDotnetInfo = (showLoading = true) => {
     if (showLoading) {
@@ -106,10 +109,44 @@ export default function Dotnet() {
     }, 2000);
   };
 
+  const handleAddToPath = async () => {
+    if (!dotnetInfo?.detectedPath) return;
+    
+    setAddingToPath(true);
+    setPathAddError(null);
+    setPathAddSuccess(false);
+    
+    try {
+      const response = await fetch('/api/dotnet/add-to-path', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ dotnetPath: dotnetInfo.detectedPath }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add to PATH');
+      }
+
+      setPathAddSuccess(true);
+      // Refresh dotnet info to check if PATH was successfully updated
+      setTimeout(() => {
+        fetchDotnetInfo(false);
+      }, 1000);
+    } catch (error) {
+      console.error('Error adding to PATH:', error);
+      setPathAddError(error instanceof Error ? error.message : 'Failed to add to PATH');
+    } finally {
+      setAddingToPath(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-[calc(100vh-4rem)] p-8 flex items-center justify-center">
-        <div className="text-xl text-gray-600">Loading dotnet information...</div>
+        <div className="text-xl text-gray-600">Loading .NET information...</div>
       </div>
     );
   }
@@ -133,7 +170,7 @@ export default function Dotnet() {
   return (
     <div className="min-h-[calc(100vh-4rem)] p-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8">dotnet</h1>
+        <h1 className="text-4xl font-bold mb-8">.NET</h1>
         
         {!dotnetInfo.isInstalled ? (
           <div className="space-y-6">
@@ -385,9 +422,55 @@ export default function Dotnet() {
             {/* PATH Setup Instructions - Show when dotnet is not in PATH */}
             {!dotnetInfo.inPath && dotnetInfo.detectedPath && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-blue-800 mb-3">Setup PATH to Access dotnet</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold text-blue-800">Setup PATH to Access dotnet</h3>
+                  <button
+                    onClick={handleAddToPath}
+                    disabled={addingToPath}
+                    className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {addingToPath ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        Adding to PATH...
+                      </>
+                    ) : (
+                      'Add to PATH Automatically'
+                    )}
+                  </button>
+                </div>
+
+                {/* Success Message */}
+                {pathAddSuccess && (
+                  <div className="mb-4 p-3 bg-green-100 border border-green-200 rounded-lg">
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-green-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-sm font-medium text-green-800">Successfully attempted to add dotnet to PATH!</span>
+                    </div>
+                    <p className="text-xs text-green-700 mt-1">Please restart your terminal or refresh this page to verify the changes.</p>
+                  </div>
+                )}
+
+                {/* Error Message */}
+                {pathAddError && (
+                  <div className="mb-4 p-3 bg-red-100 border border-red-200 rounded-lg">
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-red-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-sm font-medium text-red-800">Failed to add to PATH</span>
+                    </div>
+                    <p className="text-xs text-red-700 mt-1">{pathAddError}</p>
+                  </div>
+                )}
+
                 <div className="text-sm text-blue-700 space-y-3">
-                  <p>To use dotnet from the command line, you need to add it to your PATH. Choose one of the following options:</p>
+                  <p>To use dotnet from the command line, you need to add it to your PATH. You can try the automatic option above, or choose one of the manual options below:</p>
                   
                   <div className="space-y-4">
                     <div>
