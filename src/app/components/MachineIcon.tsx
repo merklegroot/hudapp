@@ -5,7 +5,7 @@ import {
   SiIntel,
   SiRaspberrypi
 } from 'react-icons/si';
-import { FaDesktop, FaLaptop, FaServer, FaQuestion, FaBuilding, FaMicrochip } from 'react-icons/fa';
+import { FaDesktop, FaLaptop, FaServer, FaQuestion, FaBuilding } from 'react-icons/fa';
 import { HiDesktopComputer } from 'react-icons/hi';
 
 interface MachineIconProps {
