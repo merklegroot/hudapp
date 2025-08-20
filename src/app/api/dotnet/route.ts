@@ -4,6 +4,7 @@ import { promisify } from 'util';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
+import { dotnetDetectionWorkflow } from '@/app/workflows';
 
 const execAsync = promisify(exec);
 
@@ -25,8 +26,22 @@ const COMMON_DOTNET_PATHS = [
   '/snap/dotnet-sdk/current'
 ];
 
-async function findDotnetInstallation(): Promise<{ path?: string; inPath: boolean }> {
-  // First check if dotnet is in PATH
+async function findDotnetInstallation(): Promise<{ path?: string; inPath: boolean; freshShellSdks?: string[]; freshShellRuntimes?: string[] }> {
+  // First check if dotnet is in PATH using fresh shell (like PATH detection)
+  try {
+    const freshShellResult = await dotnetDetectionWorkflow.detectDotnetWithFallback();
+    if (freshShellResult.inPath) {
+      return { 
+        inPath: true,
+        freshShellSdks: freshShellResult.sdks,
+        freshShellRuntimes: freshShellResult.runtimes
+      };
+    }
+  } catch (error) {
+    console.log('Fresh shell detection failed, falling back to current process detection:', error);
+  }
+
+  // Fallback: check in current process environment
   try {
     await execAsync('dotnet --version');
     return { inPath: true };
@@ -65,7 +80,7 @@ async function getDotnetInfo(dotnetPath?: string): Promise<{ sdks: string[]; run
 
 export async function GET(): Promise<NextResponse<DotnetInfo>> {
   try {
-    const { path: detectedPath, inPath } = await findDotnetInstallation();
+    const { path: detectedPath, inPath, freshShellSdks, freshShellRuntimes } = await findDotnetInstallation();
     
     if (!inPath && !detectedPath) {
       return NextResponse.json({
@@ -78,7 +93,22 @@ export async function GET(): Promise<NextResponse<DotnetInfo>> {
     }
 
     try {
-      const { sdks, runtimes } = await getDotnetInfo(detectedPath);
+      // Use fresh shell results if available, otherwise fall back to current process detection
+      let sdks: string[] = [];
+      let runtimes: string[] = [];
+      
+      if (freshShellSdks && freshShellRuntimes) {
+        // Use results from fresh shell (more accurate after profile changes)
+        sdks = freshShellSdks;
+        runtimes = freshShellRuntimes;
+        console.log('Using fresh shell dotnet detection results');
+      } else {
+        // Fall back to current process detection
+        const dotnetInfo = await getDotnetInfo(detectedPath);
+        sdks = dotnetInfo.sdks;
+        runtimes = dotnetInfo.runtimes;
+        console.log('Using current process dotnet detection results');
+      }
       
       return NextResponse.json({
         isInstalled: true,

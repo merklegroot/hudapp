@@ -1,5 +1,5 @@
 
-import { spawn } from 'child_process';
+import { spawn, ChildProcess } from 'child_process';
 import { promisify } from 'util';
 
 /** Opens a new console/terminal instance and gets the actual user PATH */
@@ -24,9 +24,9 @@ async function execute(): Promise<string> {
     console.log(`Spawning terminal: ${command} ${args.join(' ')}`);
     
     // Spawn the process
-    const child = spawn(command, args, {
+    const child: ChildProcess = spawn(command, args, {
       stdio: ['pipe', 'pipe', 'pipe'],
-      env: {}, // Start with empty environment to get clean user environment
+      env: { NODE_ENV: 'development' }, // Use current environment instead of empty object
       shell: false,
       detached: false
     });
@@ -35,17 +35,17 @@ async function execute(): Promise<string> {
     let stderr = '';
     
     // Collect stdout data
-    child.stdout?.on('data', (data) => {
+    child.stdout?.on('data', (data: Buffer) => {
       stdout += data.toString();
     });
     
     // Collect stderr data
-    child.stderr?.on('data', (data) => {
+    child.stderr?.on('data', (data: Buffer) => {
       stderr += data.toString();
     });
     
     // Handle process completion
-    child.on('close', (code) => {
+    child.on('close', (code: number | null) => {
       if (code === 0) {
         const path = stdout.trim();
         console.log(`Terminal PATH result: ${path.substring(0, 100)}...`);
@@ -58,7 +58,7 @@ async function execute(): Promise<string> {
     });
     
     // Handle process errors
-    child.on('error', (error) => {
+    child.on('error', (error: Error) => {
       console.error('Failed to spawn terminal process:', error);
       reject(error);
     });
