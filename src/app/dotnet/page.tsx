@@ -158,6 +158,123 @@ export default function Dotnet() {
                 />
               </div>
             )}
+
+            {/* Common Installation Locations */}
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Common .NET Installation Locations</h2>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-700 mb-2">Linux</h3>
+                  <div className="space-y-2">
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">~/.dotnet/</code>
+                        <span className="text-xs text-gray-500">User installation (recommended)</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">/usr/share/dotnet/</code>
+                        <span className="text-xs text-gray-500">System-wide installation</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">/opt/dotnet/</code>
+                        <span className="text-xs text-gray-500">Alternative system location</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-medium text-gray-700 mb-2">Windows</h3>
+                  <div className="space-y-2">
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">C:\Program Files\dotnet\</code>
+                        <span className="text-xs text-gray-500">Default system installation</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">C:\Program Files (x86)\dotnet\</code>
+                        <span className="text-xs text-gray-500">32-bit installation</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">%USERPROFILE%\.dotnet\</code>
+                        <span className="text-xs text-gray-500">User-specific installation</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-medium text-gray-700 mb-2">macOS</h3>
+                  <div className="space-y-2">
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">/usr/local/share/dotnet/</code>
+                        <span className="text-xs text-gray-500">Default installation</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">~/.dotnet/</code>
+                        <span className="text-xs text-gray-500">User installation</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">/Applications/Visual Studio.app/Contents/MacOS/dotnet/</code>
+                        <span className="text-xs text-gray-500">Visual Studio for Mac</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-medium text-gray-700 mb-2">BSD Systems (FreeBSD, OpenBSD, NetBSD)</h3>
+                  <div className="space-y-2">
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">~/.dotnet/</code>
+                        <span className="text-xs text-gray-500">User installation (recommended)</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">/usr/local/share/dotnet/</code>
+                        <span className="text-xs text-gray-500">System-wide installation</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">/opt/dotnet/</code>
+                        <span className="text-xs text-gray-500">Alternative system location</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">/usr/pkg/share/dotnet/</code>
+                        <span className="text-xs text-gray-500">NetBSD pkgsrc installation</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h4 className="text-sm font-medium text-blue-800 mb-2">Environment Variables</h4>
+                  <div className="text-sm text-blue-700 space-y-1">
+                    <p><code className="bg-blue-100 px-1 rounded">DOTNET_ROOT</code> - Points to the .NET installation directory</p>
+                    <p><code className="bg-blue-100 px-1 rounded">PATH</code> - Should include the .NET installation directory</p>
+                    <p>Use <code className="bg-blue-100 px-1 rounded">dotnet --info</code> to see the current installation paths</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="space-y-6">
@@ -231,6 +348,123 @@ export default function Dotnet() {
               ) : (
                 <p className="text-gray-600">No runtimes found</p>
               )}
+            </div>
+
+            {/* Common Installation Locations */}
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Common .NET Installation Locations</h2>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-700 mb-2">Linux</h3>
+                  <div className="space-y-2">
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">~/.dotnet/</code>
+                        <span className="text-xs text-gray-500">User installation (recommended)</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">/usr/share/dotnet/</code>
+                        <span className="text-xs text-gray-500">System-wide installation</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">/opt/dotnet/</code>
+                        <span className="text-xs text-gray-500">Alternative system location</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-medium text-gray-700 mb-2">Windows</h3>
+                  <div className="space-y-2">
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">C:\Program Files\dotnet\</code>
+                        <span className="text-xs text-gray-500">Default system installation</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">C:\Program Files (x86)\dotnet\</code>
+                        <span className="text-xs text-gray-500">32-bit installation</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">%USERPROFILE%\.dotnet\</code>
+                        <span className="text-xs text-gray-500">User-specific installation</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-medium text-gray-700 mb-2">macOS</h3>
+                  <div className="space-y-2">
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">/usr/local/share/dotnet/</code>
+                        <span className="text-xs text-gray-500">Default installation</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">~/.dotnet/</code>
+                        <span className="text-xs text-gray-500">User installation</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">/Applications/Visual Studio.app/Contents/MacOS/dotnet/</code>
+                        <span className="text-xs text-gray-500">Visual Studio for Mac</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-medium text-gray-700 mb-2">BSD Systems (FreeBSD, OpenBSD, NetBSD)</h3>
+                  <div className="space-y-2">
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">~/.dotnet/</code>
+                        <span className="text-xs text-gray-500">User installation (recommended)</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">/usr/local/share/dotnet/</code>
+                        <span className="text-xs text-gray-500">System-wide installation</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">/opt/dotnet/</code>
+                        <span className="text-xs text-gray-500">Alternative system location</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <code className="text-sm font-mono text-gray-900">/usr/pkg/share/dotnet/</code>
+                        <span className="text-xs text-gray-500">NetBSD pkgsrc installation</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h4 className="text-sm font-medium text-blue-800 mb-2">Environment Variables</h4>
+                  <div className="text-sm text-blue-700 space-y-1">
+                    <p><code className="bg-blue-100 px-1 rounded">DOTNET_ROOT</code> - Points to the .NET installation directory</p>
+                    <p><code className="bg-blue-100 px-1 rounded">PATH</code> - Should include the .NET installation directory</p>
+                    <p>Use <code className="bg-blue-100 px-1 rounded">dotnet --info</code> to see the current installation paths</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
