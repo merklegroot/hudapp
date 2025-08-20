@@ -2,6 +2,34 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { SiLinux, SiApple } from 'react-icons/si';
+import { DiWindows } from 'react-icons/di';
+
+// Custom BSD Icon Component
+interface BSDIconProps {
+  className?: string;
+}
+
+const BSDIcon = ({ className = "w-5 h-5" }: BSDIconProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <circle cx="12" cy="12" r="11" stroke="#000000" strokeWidth="1" fill="none" />
+    <text
+      x="12"
+      y="16"
+      textAnchor="middle"
+      fontSize="8"
+      fontWeight="900"
+      fill="#ef4444"
+      fontFamily="Arial, sans-serif"
+    >
+      BSD
+    </text>
+  </svg>
+);
 
 // Dynamically import Terminal to prevent SSR issues
 const Terminal = dynamic(() => import('../components/Terminal'), {
@@ -164,7 +192,10 @@ export default function Dotnet() {
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">Common .NET Installation Locations</h2>
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-medium text-gray-700 mb-2">Linux</h3>
+                  <div className="flex items-center gap-2 mb-2">
+                    <SiLinux className="w-5 h-5 text-yellow-500" />
+                    <h3 className="text-lg font-medium text-gray-700">Linux</h3>
+                  </div>
                   <div className="space-y-2">
                     <div className="p-3 bg-gray-50 rounded-lg">
                       <div className="flex justify-between items-center">
@@ -188,7 +219,10 @@ export default function Dotnet() {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-medium text-gray-700 mb-2">Windows</h3>
+                  <div className="flex items-center gap-2 mb-2">
+                    <DiWindows className="w-5 h-5 text-blue-600" />
+                    <h3 className="text-lg font-medium text-gray-700">Windows</h3>
+                  </div>
                   <div className="space-y-2">
                     <div className="p-3 bg-gray-50 rounded-lg">
                       <div className="flex justify-between items-center">
@@ -212,7 +246,10 @@ export default function Dotnet() {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-medium text-gray-700 mb-2">macOS</h3>
+                  <div className="flex items-center gap-2 mb-2">
+                    <SiApple className="w-5 h-5 text-gray-600" />
+                    <h3 className="text-lg font-medium text-gray-700">macOS</h3>
+                  </div>
                   <div className="space-y-2">
                     <div className="p-3 bg-gray-50 rounded-lg">
                       <div className="flex justify-between items-center">
@@ -236,7 +273,10 @@ export default function Dotnet() {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-medium text-gray-700 mb-2">BSD Systems (FreeBSD, OpenBSD, NetBSD)</h3>
+                  <div className="flex items-center gap-2 mb-2">
+                    <BSDIcon className="w-5 h-5" />
+                    <h3 className="text-lg font-medium text-gray-700">BSD Systems (FreeBSD, OpenBSD, NetBSD)</h3>
+                  </div>
                   <div className="space-y-2">
                     <div className="p-3 bg-gray-50 rounded-lg">
                       <div className="flex justify-between items-center">
@@ -355,7 +395,10 @@ export default function Dotnet() {
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">Common .NET Installation Locations</h2>
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-medium text-gray-700 mb-2">Linux</h3>
+                  <div className="flex items-center gap-2 mb-2">
+                    <SiLinux className="w-5 h-5 text-yellow-500" />
+                    <h3 className="text-lg font-medium text-gray-700">Linux</h3>
+                  </div>
                   <div className="space-y-2">
                     <div className="p-3 bg-gray-50 rounded-lg">
                       <div className="flex justify-between items-center">
@@ -379,7 +422,10 @@ export default function Dotnet() {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-medium text-gray-700 mb-2">Windows</h3>
+                  <div className="flex items-center gap-2 mb-2">
+                    <DiWindows className="w-5 h-5 text-blue-600" />
+                    <h3 className="text-lg font-medium text-gray-700">Windows</h3>
+                  </div>
                   <div className="space-y-2">
                     <div className="p-3 bg-gray-50 rounded-lg">
                       <div className="flex justify-between items-center">
@@ -403,7 +449,10 @@ export default function Dotnet() {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-medium text-gray-700 mb-2">macOS</h3>
+                  <div className="flex items-center gap-2 mb-2">
+                    <SiApple className="w-5 h-5 text-gray-600" />
+                    <h3 className="text-lg font-medium text-gray-700">macOS</h3>
+                  </div>
                   <div className="space-y-2">
                     <div className="p-3 bg-gray-50 rounded-lg">
                       <div className="flex justify-between items-center">
@@ -427,7 +476,10 @@ export default function Dotnet() {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-medium text-gray-700 mb-2">BSD Systems (FreeBSD, OpenBSD, NetBSD)</h3>
+                  <div className="flex items-center gap-2 mb-2">
+                    <BSDIcon className="w-5 h-5" />
+                    <h3 className="text-lg font-medium text-gray-700">BSD Systems (FreeBSD, OpenBSD, NetBSD)</h3>
+                  </div>
                   <div className="space-y-2">
                     <div className="p-3 bg-gray-50 rounded-lg">
                       <div className="flex justify-between items-center">
