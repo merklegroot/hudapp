@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  hudapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    volumes:
+      # Mount host system directories for system monitoring
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro
+    privileged: true
+    restart: unless-stopped
+    container_name: hudapp
+
+  # Development service
+  hudapp-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro
+    privileged: true
+    restart: unless-stopped
+    container_name: hudapp-dev
+    profiles:
+      - dev
