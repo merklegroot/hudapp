@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { SiLinux, SiApple } from 'react-icons/si';
 import { DiWindows } from 'react-icons/di';
+import { FaCopy, FaCheck } from 'react-icons/fa';
 
 // Custom BSD Icon Component
 interface BSDIconProps {
@@ -30,6 +31,37 @@ const BSDIcon = ({ className = "w-5 h-5" }: BSDIconProps) => (
     </text>
   </svg>
 );
+
+// Copy Button Component
+interface CopyButtonProps {
+  text: string;
+  className?: string;
+}
+
+const CopyButton = ({ text, className = "" }: CopyButtonProps) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className={`inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors ${className}`}
+      title={copied ? "Copied!" : "Copy to clipboard"}
+    >
+      {copied ? <FaCheck className="w-3 h-3" /> : <FaCopy className="w-3 h-3" />}
+      {copied ? "Copied!" : "Copy"}
+    </button>
+  );
+};
 
 // Dynamically import Terminal to prevent SSR issues
 const Terminal = dynamic(() => import('../components/Terminal'), {
@@ -470,36 +502,98 @@ export default function Dotnet() {
                 )}
 
                 <div className="text-sm text-blue-700 space-y-3">
-                  <p>To use dotnet from the command line, you need to add it to your PATH. You can try the automatic option above, or choose one of the manual options below:</p>
+                  <p>To use dotnet from the command line, you need to add it to your PATH. You can try the automatic option above, or choose one of the options below:</p>
                   
                   <div className="space-y-4">
                     <div>
-                      <h4 className="font-medium text-blue-800 mb-2">Option 1: Temporary (current session only)</h4>
-                      <div className="p-3 bg-blue-100 rounded-lg">
-                        <code className="text-sm font-mono text-blue-900 block">
+                      <h4 className="font-medium text-blue-800 mb-2">Option 1: One-command automatic setup (with backup)</h4>
+                      <p className="mb-2 text-xs">This command will automatically detect your shell profile, create a backup, and add .NET to your PATH:</p>
+                      <div className="p-3 bg-blue-100 rounded-lg relative">
+                        <code className="text-sm font-mono text-blue-900 block pr-16 whitespace-pre-wrap break-all">
+                          {`PROFILE_FILE=$([ -f ~/.zshrc ] && echo ~/.zshrc || [ -f ~/.bashrc ] && echo ~/.bashrc || echo ~/.profile) && cp "$PROFILE_FILE" "$PROFILE_FILE.backup.$(date +%Y%m%d_%H%M%S)" && echo -e "\\n# [hudapp_begin add_dotnet_to_path]\\n# Add .NET to the PATH\\nif [ -d \\"${dotnetInfo.detectedPath}\\" ] ; then\\n    PATH=\\"${dotnetInfo.detectedPath}:$PATH\\"\\nfi\\n# [hudapp_end add_dotnet_to_path]" >> "$PROFILE_FILE" && echo "Backup created: $PROFILE_FILE.backup.$(date +%Y%m%d_%H%M%S)" && echo "Added .NET to $PROFILE_FILE. Please restart your terminal or run: source $PROFILE_FILE"`}
+                        </code>
+                        <CopyButton 
+                          text={`PROFILE_FILE=$([ -f ~/.zshrc ] && echo ~/.zshrc || [ -f ~/.bashrc ] && echo ~/.bashrc || echo ~/.profile) && cp "$PROFILE_FILE" "$PROFILE_FILE.backup.$(date +%Y%m%d_%H%M%S)" && echo -e "\\n# [hudapp_begin add_dotnet_to_path]\\n# Add .NET to the PATH\\nif [ -d \\"${dotnetInfo.detectedPath}\\" ] ; then\\n    PATH=\\"${dotnetInfo.detectedPath}:$PATH\\"\\nfi\\n# [hudapp_end add_dotnet_to_path]" >> "$PROFILE_FILE" && echo "Backup created: $PROFILE_FILE.backup.$(date +%Y%m%d_%H%M%S)" && echo "Added .NET to $PROFILE_FILE. Please restart your terminal or run: source $PROFILE_FILE"`}
+                          className="absolute top-2 right-2"
+                        />
+                      </div>
+                      <div className="mt-2 space-y-1">
+                        <p className="text-xs text-blue-600">This command will:</p>
+                        <ul className="text-xs text-blue-600 list-disc list-inside ml-2 space-y-0.5">
+                          <li>Automatically choose ~/.zshrc, ~/.bashrc, or ~/.profile (in that order)</li>
+                          <li>Create a timestamped backup (e.g., ~/.bashrc.backup.20241220_143052)</li>
+                          <li>Add the PATH configuration safely</li>
+                          <li>Show you exactly what was done</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-blue-800 mb-2">Option 2: Temporary (current session only)</h4>
+                      <div className="p-3 bg-blue-100 rounded-lg relative">
+                        <code className="text-sm font-mono text-blue-900 block pr-16">
                           export PATH=$PATH:{dotnetInfo.detectedPath}
                         </code>
+                        <CopyButton 
+                          text={`export PATH=$PATH:${dotnetInfo.detectedPath}`}
+                          className="absolute top-2 right-2"
+                        />
                       </div>
                     </div>
                     
                     <div>
-                      <h4 className="font-medium text-blue-800 mb-2">Option 2: Permanent (recommended)</h4>
+                      <h4 className="font-medium text-blue-800 mb-2">Option 3: Manual permanent setup</h4>
                       <p className="mb-2">Add the following lines to your shell profile file (<code className="bg-blue-100 px-1 rounded">~/.bashrc</code>, <code className="bg-blue-100 px-1 rounded">~/.zshrc</code>, or <code className="bg-blue-100 px-1 rounded">~/.profile</code>):</p>
-                      <div className="p-3 bg-blue-100 rounded-lg space-y-1">
-                        <code className="text-sm font-mono text-blue-900 block">
-                          export DOTNET_ROOT={dotnetInfo.detectedPath}
-                        </code>
-                        <code className="text-sm font-mono text-blue-900 block">
-                          export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
-                        </code>
+                      
+                      <div className="space-y-3">
+                        {/* Method 1: Simple PATH addition with conditional check */}
+                        <div>
+                          <h5 className="text-sm font-medium text-blue-800 mb-1">Method 1: Simple PATH addition (recommended)</h5>
+                          <div className="p-3 bg-blue-100 rounded-lg relative">
+                            <code className="text-sm font-mono text-blue-900 block whitespace-pre pr-16">
+{`# [hudapp_begin add_dotnet_to_path]
+# Add .NET to the PATH
+if [ -d "${dotnetInfo.detectedPath}" ] ; then
+    PATH="${dotnetInfo.detectedPath}:$PATH"
+fi
+# [hudapp_end add_dotnet_to_path]`}
+                            </code>
+                            <CopyButton 
+                              text={`# [hudapp_begin add_dotnet_to_path]\n# Add .NET to the PATH\nif [ -d "${dotnetInfo.detectedPath}" ] ; then\n    PATH="${dotnetInfo.detectedPath}:$PATH"\nfi\n# [hudapp_end add_dotnet_to_path]`}
+                              className="absolute top-2 right-2"
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Method 2: With DOTNET_ROOT */}
+                        <div>
+                          <h5 className="text-sm font-medium text-blue-800 mb-1">Method 2: With DOTNET_ROOT environment variable</h5>
+                          <div className="p-3 bg-blue-100 rounded-lg space-y-1 relative">
+                            <code className="text-sm font-mono text-blue-900 block pr-16 whitespace-pre">
+{`# [hudapp_begin add_dotnet_to_path]
+# Add .NET to the PATH
+export DOTNET_ROOT=${dotnetInfo.detectedPath}
+export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
+# [hudapp_end add_dotnet_to_path]`}
+                            </code>
+                            <CopyButton 
+                              text={`# [hudapp_begin add_dotnet_to_path]\n# Add .NET to the PATH\nexport DOTNET_ROOT=${dotnetInfo.detectedPath}\nexport PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools\n# [hudapp_end add_dotnet_to_path]`}
+                              className="absolute top-2 right-2"
+                            />
+                          </div>
+                        </div>
                       </div>
+                      
                       <p className="mt-2 text-xs">After adding these lines, restart your terminal or run <code className="bg-blue-100 px-1 rounded">source ~/.bashrc</code> (or your shell profile file).</p>
                     </div>
                   </div>
                   
-                  <div className="mt-4 p-3 bg-blue-100 rounded-lg">
+                  <div className="mt-4 p-3 bg-blue-100 rounded-lg relative">
                     <p className="font-medium text-blue-800 mb-1">Verify the setup:</p>
-                    <code className="text-sm font-mono text-blue-900">dotnet --version</code>
+                    <code className="text-sm font-mono text-blue-900 block pr-16">dotnet --version</code>
+                    <CopyButton 
+                      text="dotnet --version"
+                      className="absolute top-2 right-2"
+                    />
                   </div>
                 </div>
               </div>

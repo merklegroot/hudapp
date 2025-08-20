@@ -15,12 +15,12 @@ function getTextToAdd(folderToAdd: string) {
     // Generate the shell profile text to add dotnet to PATH
     // Uses conditional check to avoid duplicating PATH entries
     const lines = [
-        '',
-        '# Added by HudApp - .NET SDK PATH configuration',
+        '# [hudapp_begin add_dotnet_to_path]',
+        '# Add .NET to the PATH',
         `if [ -d "${folderToAdd}" ] ; then`,
         `    PATH="${folderToAdd}:$PATH"`,
         'fi',
-        ''
+        '# [hudapp_end add_dotnet_to_path]'
     ];
     
     return lines.join(EOL);
