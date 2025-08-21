@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { SiLinux, SiApple } from 'react-icons/si';
 import { DiWindows } from 'react-icons/di';
 import { FaCopy, FaCheck } from 'react-icons/fa';
+import DotNetIcon from '../components/DotNetIcon';
 
 // Custom BSD Icon Component
 interface BSDIconProps {
@@ -211,7 +212,10 @@ export default function Dotnet() {
   return (
     <div className="min-h-[calc(100vh-4rem)] p-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8">.NET</h1>
+        <div className="flex items-center gap-3 mb-8">
+          <DotNetIcon className="w-10 h-10" />
+          <h1 className="text-4xl font-bold">.NET</h1>
+        </div>
         
         {!dotnetInfo.isInstalled ? (
           <div className="space-y-6">

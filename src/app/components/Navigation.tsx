@@ -1,4 +1,5 @@
 import Link from "next/link";
+import DotNetIcon from "./DotNetIcon";
 
 export default function Navigation() {
   return (
@@ -21,8 +22,9 @@ export default function Navigation() {
             </Link>
           </li>
           <li>
-            <Link href="/dotnet" className="hover:text-gray-300 transition-colors">
-              dotnet
+            <Link href="/dotnet" className="hover:text-gray-300 transition-colors flex items-center gap-2">
+              <DotNetIcon className="w-4 h-4" />
+              .NET
             </Link>
           </li>
           <li>
