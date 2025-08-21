@@ -28,7 +28,7 @@ export default function SSEDemo() {
         setEvents(prev => [...prev, data]);
         
         // If we've reached completion, prepare to close the connection
-        if (data.stage === 'completed') {
+        if (!data.isRunning) {
           setTimeout(() => {
             setIsConnected(false);
             if (eventSourceRef.current) {
@@ -82,15 +82,14 @@ export default function SSEDemo() {
     }
   };
 
-  const getStageColor = (stage: SSEEventData['stage']) => {
-    switch (stage) {
-      case 'starting':
-        return 'bg-blue-100 text-blue-800';
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      default:
-        // All interim steps use the same color
-        return 'bg-gray-100 text-gray-800';
+  const getStageColor = (event: SSEEventData) => {
+    if (event.stage === 'Starting') {
+      return 'bg-blue-100 text-blue-800';
+    } else if (!event.isRunning) {
+      return 'bg-green-100 text-green-800';
+    } else {
+      // All interim steps use the same color
+      return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -158,7 +157,7 @@ export default function SSEDemo() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <span
-                      className={`px-2 py-1 rounded text-xs font-medium ${getStageColor(event.stage)}`}
+                      className={`px-2 py-1 rounded text-xs font-medium ${getStageColor(event)}`}
                     >
                       {event.stage.toUpperCase()}
                     </span>

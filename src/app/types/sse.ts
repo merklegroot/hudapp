@@ -1,5 +1,6 @@
 export interface SSEEventData {
-  stage: 'starting' | 'step1' | 'step2' | 'step3' | 'step4' | 'step5' | 'step6' | 'step7' | 'step8' | 'completed';
+  isRunning: boolean;
+  stageDisplayText: string;
   message: string;
   timestamp: string;
 }

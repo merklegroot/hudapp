@@ -17,17 +17,17 @@ export async function GET(request: NextRequest) {
   const stream = new ReadableStream({
     start(controller) {
       const stages: Omit<SSEEventData, 'timestamp'>[] = [
-        { stage: 'starting', message: 'Process is starting...' },
-        { stage: 'step1', message: 'Executing step 1...' },
-        { stage: 'step2', message: 'Executing step 2...' },
-        { stage: 'step3', message: 'Executing step 3...' },
-        { stage: 'step4', message: 'Executing step 4...' },
-        { stage: 'step5', message: 'Executing step 5...' },
-        { stage: 'step6', message: 'Executing step 6...' },
-        { stage: 'step7', message: 'Executing step 7...' },
-        { stage: 'step8', message: 'Executing step 8...' },
-        { stage: 'completed', message: 'Process completed successfully!' }
-      ] as const;
+        { isRunning: true, stage: 'Starting', message: 'Process is starting...' },
+        { isRunning: true, stage: 'Step 1', message: 'Executing step 1...' },
+        { isRunning: true, stage: 'Step 2', message: 'Executing step 2...' },
+        { isRunning: true, stage: 'Step 3', message: 'Executing step 3...' },
+        { isRunning: true, stage: 'Step 4', message: 'Executing step 4...' },
+        { isRunning: true, stage: 'Step 5', message: 'Executing step 5...' },
+        { isRunning: true, stage: 'Step 6', message: 'Executing step 6...' },
+        { isRunning: true, stage: 'Step 7', message: 'Executing step 7...' },
+        { isRunning: true, stage: 'Step 8', message: 'Executing step 8...' },
+        { isRunning: false, stage: 'Completed', message: 'Process completed successfully!' }
+      ];
 
       let currentStage = 0;
 
@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
       const sendEvent = () => {
         if (currentStage < stages.length && !isClosed) {
           const data: SSEEventData = {
+            isRunning: stages[currentStage].isRunning,
             stage: stages[currentStage].stage,
             message: stages[currentStage].message,
             timestamp: new Date().toISOString()
