@@ -6,7 +6,7 @@ export interface StatusTerminalRef {
   startInstallation: (version: string) => void;
 }
 
-interface StatusTerminalProps {
+interface DotNetOperationsTerminalProps {
   onDetectionComplete?: () => void;
   onInstallStart?: () => void;
   onInstallComplete?: () => void;
@@ -14,7 +14,7 @@ interface StatusTerminalProps {
   version?: string;
 }
 
-const DotNetStatusTerminal = forwardRef<StatusTerminalRef, StatusTerminalProps>(({ 
+const DotNetOperationsTerminal = forwardRef<StatusTerminalRef, DotNetOperationsTerminalProps>(({ 
   onDetectionComplete, 
   onInstallStart, 
   onInstallComplete
@@ -354,6 +354,6 @@ const DotNetStatusTerminal = forwardRef<StatusTerminalRef, StatusTerminalProps>(
   );
 });
 
-DotNetStatusTerminal.displayName = 'DotNetStatusTerminal';
+DotNetOperationsTerminal.displayName = 'DotNetOperationsTerminal';
 
-export default DotNetStatusTerminal;
+export default DotNetOperationsTerminal;
