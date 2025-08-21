@@ -249,6 +249,7 @@ export default function Dotnet() {
                       onChange={(e) => setSelectedVersion(e.target.value)}
                       className="px-3 py-2 bg-white border border-gray-300 rounded text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
+                      <option value="7.0">.NET 7</option>
                       <option value="8.0">.NET 8 LTS</option>
                       <option value="9.0">.NET 9</option>
                     </select>
@@ -274,6 +275,12 @@ export default function Dotnet() {
                   <li>Set up the necessary environment variables</li>
                 </ul>
                 <p className="font-medium">You may be prompted for your password during installation.</p>
+                {selectedVersion === '7.0' && (
+                  <div className="mt-3 p-2 bg-orange-100 rounded">
+                    <p className="text-orange-800 font-medium">⚠️ .NET 7 reached end of support on May 14, 2024</p>
+                    <p className="text-orange-700 text-xs mt-1">Consider using .NET 8 LTS for new projects</p>
+                  </div>
+                )}
                 {selectedVersion === '8.0' && (
                   <div className="mt-3 p-2 bg-green-100 rounded">
                     <p className="text-green-800 font-medium">✓ .NET 8 is a Long Term Support (LTS) release</p>
@@ -636,7 +643,29 @@ export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
               </div>
               
               {/* Available Versions */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div className="bg-white p-4 rounded-lg border">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-semibold text-gray-800">.NET 7</h4>
+                    {dotnetInfo.sdks.some(sdk => sdk.includes('7.')) ? (
+                      <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">Installed</span>
+                    ) : (
+                      <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">Not Installed</span>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2">End of Support - Legacy projects only</p>
+                  <div className="mb-3 p-2 bg-orange-50 border border-orange-200 rounded text-xs text-orange-800">
+                    ⚠️ Support ended May 2024
+                  </div>
+                  <button
+                    onClick={() => statusTerminalRef.current?.startInstallation('7.0')}
+                    disabled={dotnetInfo.sdks.some(sdk => sdk.includes('7.'))}
+                    className="w-full px-3 py-2 bg-orange-600 text-white text-sm rounded hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {dotnetInfo.sdks.some(sdk => sdk.includes('7.')) ? 'Already Installed' : 'Install .NET 7'}
+                  </button>
+                </div>
+                
                 <div className="bg-white p-4 rounded-lg border">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-semibold text-gray-800">.NET 8 LTS</h4>
