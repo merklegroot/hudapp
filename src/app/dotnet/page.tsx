@@ -105,6 +105,7 @@ export default function Dotnet() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showTerminal, setShowTerminal] = useState(false);
+  const [selectedVersion, setSelectedVersion] = useState('8.0');
   const [addingToPath, setAddingToPath] = useState(false);
   const [pathAddError, setPathAddError] = useState<string | null>(null);
   const [pathAddSuccess, setPathAddSuccess] = useState(false);
@@ -227,21 +228,31 @@ export default function Dotnet() {
                       <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-yellow-800">
-                      dotnet is not installed
-                    </h3>
-                    <div className="mt-2 text-sm text-yellow-700">
-                      <p>The .NET SDK and runtime are not currently installed on this machine.</p>
+                                      <div className="ml-3">
+                      <h3 className="text-sm font-medium text-yellow-800">
+                        dotnet is not installed
+                      </h3>
+                      <div className="mt-2 text-sm text-yellow-700">
+                        <p>The .NET SDK and runtime are not currently installed on this machine.</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <button
-                  onClick={() => setShowTerminal(!showTerminal)}
-                  className="ml-4 px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-                >
-                  {showTerminal ? 'Hide Installation Terminal' : 'Install .NET SDK 8'}
-                </button>
+                  <div className="ml-4 flex items-center gap-3">
+                    <select
+                      value={selectedVersion}
+                      onChange={(e) => setSelectedVersion(e.target.value)}
+                      className="px-3 py-2 bg-white border border-gray-300 rounded text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="8.0">.NET 8 LTS</option>
+                      <option value="9.0">.NET 9</option>
+                    </select>
+                    <button
+                      onClick={() => setShowTerminal(!showTerminal)}
+                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                    >
+                      {showTerminal ? 'Hide Installation Terminal' : `Install .NET SDK ${selectedVersion}`}
+                    </button>
+                  </div>
               </div>
             </div>
 
@@ -249,14 +260,24 @@ export default function Dotnet() {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-blue-800 mb-3">Installation Information</h3>
               <div className="text-sm text-blue-700 space-y-2">
-                <p>This will install .NET SDK 8 using the official Microsoft installation script.</p>
+                <p>This will install .NET SDK {selectedVersion} using the official Microsoft installation script.</p>
                 <p>The installation process will:</p>
                 <ul className="list-disc list-inside ml-4 space-y-1">
-                  <li>Download the latest .NET SDK 8 from Microsoft</li>
+                  <li>Download the latest .NET SDK {selectedVersion} from Microsoft</li>
                   <li>Install it to <code className="bg-blue-100 px-1 rounded">~/.dotnet</code></li>
                   <li>Set up the necessary environment variables</li>
                 </ul>
                 <p className="font-medium">You may be prompted for your password during installation.</p>
+                {selectedVersion === '8.0' && (
+                  <div className="mt-3 p-2 bg-green-100 rounded">
+                    <p className="text-green-800 font-medium">✓ .NET 8 is a Long Term Support (LTS) release</p>
+                  </div>
+                )}
+                {selectedVersion === '9.0' && (
+                  <div className="mt-3 p-2 bg-blue-100 rounded">
+                    <p className="text-blue-800 font-medium">ℹ .NET 9 is the latest Standard Term Support (STS) release</p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -267,6 +288,7 @@ export default function Dotnet() {
                   onInstallStart={handleInstallStart}
                   onInstallComplete={handleInstallComplete}
                   className="w-full"
+                  version={selectedVersion}
                 />
               </div>
             )}
@@ -624,6 +646,69 @@ export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
               </div>
             )}
 
+            {/* Additional Installation Section */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-blue-800 mb-3">Install Additional .NET Versions</h3>
+              <div className="text-sm text-blue-700 mb-4">
+                <p>You can install multiple .NET versions side by side. This is useful for maintaining compatibility with different projects.</p>
+              </div>
+              
+              {/* Available Versions */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="bg-white p-4 rounded-lg border">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-semibold text-gray-800">.NET 8 LTS</h4>
+                    {dotnetInfo.sdks.some(sdk => sdk.includes('8.')) ? (
+                      <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">Installed</span>
+                    ) : (
+                      <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">Not Installed</span>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-600 mb-3">Long Term Support (LTS) - Recommended for production</p>
+                  <button
+                    onClick={() => {
+                      setSelectedVersion('8.0');
+                      setShowTerminal(true);
+                    }}
+                    disabled={dotnetInfo.sdks.some(sdk => sdk.includes('8.'))}
+                    className="w-full px-3 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {dotnetInfo.sdks.some(sdk => sdk.includes('8.')) ? 'Already Installed' : 'Install .NET 8'}
+                  </button>
+                </div>
+                
+                <div className="bg-white p-4 rounded-lg border">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-semibold text-gray-800">.NET 9</h4>
+                    {dotnetInfo.sdks.some(sdk => sdk.includes('9.')) ? (
+                      <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">Installed</span>
+                    ) : (
+                      <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">Not Installed</span>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-600 mb-3">Standard Term Support (STS) - Latest features</p>
+                  <button
+                    onClick={() => {
+                      setSelectedVersion('9.0');
+                      setShowTerminal(true);
+                    }}
+                    disabled={dotnetInfo.sdks.some(sdk => sdk.includes('9.'))}
+                    className="w-full px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {dotnetInfo.sdks.some(sdk => sdk.includes('9.')) ? 'Already Installed' : 'Install .NET 9'}
+                  </button>
+                </div>
+              </div>
+
+              {showTerminal && (
+                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Installing:</strong> .NET SDK {selectedVersion}
+                  </p>
+                </div>
+              )}
+            </div>
+
             {/* Terminal Section - Show if requested */}
             {showTerminal && (
               <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -631,6 +716,7 @@ export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
                   onInstallStart={handleInstallStart}
                   onInstallComplete={handleInstallComplete}
                   className="w-full"
+                  version={selectedVersion}
                 />
               </div>
             )}
