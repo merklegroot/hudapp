@@ -6,6 +6,7 @@ import { SiLinux, SiApple } from 'react-icons/si';
 import { DiWindows } from 'react-icons/di';
 import { FaCopy, FaCheck } from 'react-icons/fa';
 import DotNetIcon from '../components/DotNetIcon';
+import StatusTerminal from '../components/StatusTerminal';
 
 // Custom BSD Icon Component
 interface BSDIconProps {
@@ -105,6 +106,7 @@ export default function Dotnet() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showTerminal, setShowTerminal] = useState(false);
+  const [showStatusTerminal, setShowStatusTerminal] = useState(true);
   const [selectedVersion, setSelectedVersion] = useState('8.0');
   const [addingToPath, setAddingToPath] = useState(false);
   const [pathAddError, setPathAddError] = useState<string | null>(null);
@@ -118,6 +120,7 @@ export default function Dotnet() {
   const fetchDotnetInfo = (showLoading = true) => {
     if (showLoading) {
       setLoading(true);
+      setShowStatusTerminal(true);
     }
     fetch('/api/dotnet')
       .then(response => response.json() as Promise<DotnetInfo>)
@@ -129,7 +132,15 @@ export default function Dotnet() {
         console.error('Error fetching dotnet info:', err);
         setError('Failed to fetch dotnet information');
         setLoading(false);
+        setShowStatusTerminal(false);
       });
+  };
+
+  const handleDetectionComplete = () => {
+    // Small delay to let users see the completion
+    setTimeout(() => {
+      setShowStatusTerminal(false);
+    }, 1000);
   };
 
   useEffect(() => {
@@ -188,8 +199,34 @@ export default function Dotnet() {
 
   if (loading) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] p-8 flex items-center justify-center">
-        <div className="text-xl text-gray-600">Loading .NET information...</div>
+      <div className="min-h-[calc(100vh-4rem)] p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center gap-3 mb-8">
+            <DotNetIcon className="w-10 h-10" />
+            <h1 className="text-4xl font-bold">.NET</h1>
+          </div>
+          
+          {showStatusTerminal && (
+            <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+              <StatusTerminal 
+                onDetectionComplete={handleDetectionComplete}
+                className="w-full"
+              />
+            </div>
+          )}
+          
+          {!showStatusTerminal && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 flex items-center justify-center">
+              <div className="text-blue-700">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="font-medium">Finalizing .NET status...</span>
+                </div>
+                <p className="text-sm">Processing detection results...</p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
