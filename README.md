@@ -2,7 +2,14 @@
 
 A web-based system monitoring dashboard that provides real-time information about the machine's hardware and performance.
 
-![Screenshot](img/hud-screenshot.png "Screenshot")
+_Machine information_
+
+<img src="img/hud-screenshot.png" width="320" alt="hud" />  
+  
+  
+_Managing .NET installations_  
+
+<img src="img/dotnet-installation.png" width="320" alt=".NET installation" />  
 
 ## Features
 
