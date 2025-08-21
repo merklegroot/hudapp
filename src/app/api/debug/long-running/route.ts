@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { SSEEventData, SSECloseEvent } from '../../../types/sse';
 
 export async function GET(request: NextRequest) {
   // Set up Server-Sent Events headers
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
   
   const stream = new ReadableStream({
     start(controller) {
-      const stages = [
+      const stages: Omit<SSEEventData, 'timestamp'>[] = [
         { stage: 'starting', message: 'Process is starting...' },
         { stage: 'step1', message: 'Executing step 1...' },
         { stage: 'step2', message: 'Executing step 2...' },
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
         { stage: 'step7', message: 'Executing step 7...' },
         { stage: 'step8', message: 'Executing step 8...' },
         { stage: 'completed', message: 'Process completed successfully!' }
-      ];
+      ] as const;
 
       let currentStage = 0;
 
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
 
       const sendEvent = () => {
         if (currentStage < stages.length && !isClosed) {
-          const data = {
+          const data: SSEEventData = {
             stage: stages[currentStage].stage,
             message: stages[currentStage].message,
             timestamp: new Date().toISOString()
@@ -69,7 +70,8 @@ export async function GET(request: NextRequest) {
             setTimeout(() => {
               if (!isClosed) {
                 try {
-                  const closeEvent = `event: close\ndata: {"message": "Stream completed"}\n\n`;
+                  const closeData: SSECloseEvent = { message: "Stream completed" };
+                  const closeEvent = `event: close\ndata: ${JSON.stringify(closeData)}\n\n`;
                   controller.enqueue(new TextEncoder().encode(closeEvent));
                 } catch (error) {
                   console.log('Controller already closed, skipping close event');

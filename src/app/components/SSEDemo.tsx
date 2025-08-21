@@ -1,15 +1,10 @@
 'use client';
 
 import { useState, useRef } from 'react';
-
-interface SSEEvent {
-  stage: string;
-  message: string;
-  timestamp: string;
-}
+import { SSEEventData } from '../types/sse';
 
 export default function SSEDemo() {
-  const [events, setEvents] = useState<SSEEvent[]>([]);
+  const [events, setEvents] = useState<SSEEventData[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
 
@@ -29,7 +24,7 @@ export default function SSEDemo() {
 
     eventSource.onmessage = (event) => {
       try {
-        const data: SSEEvent = JSON.parse(event.data);
+        const data: SSEEventData = JSON.parse(event.data);
         setEvents(prev => [...prev, data]);
         
         // If we've reached completion, prepare to close the connection
@@ -77,7 +72,7 @@ export default function SSEDemo() {
         eventSourceRef.current.close();
         setIsConnected(false);
       }
-    }, 2000);
+    }, 6000); // Increased to 6 seconds for 10 stages × 500ms + buffer
   };
 
   const stopProcess = () => {
@@ -87,7 +82,7 @@ export default function SSEDemo() {
     }
   };
 
-  const getStageColor = (stage: string) => {
+  const getStageColor = (stage: SSEEventData['stage']) => {
     switch (stage) {
       case 'starting':
         return 'bg-blue-100 text-blue-800';
