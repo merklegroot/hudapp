@@ -17,16 +17,16 @@ export async function GET(request: NextRequest) {
   const stream = new ReadableStream({
     start(controller) {
       const stages: Omit<SSEEventData, 'timestamp'>[] = [
-        { isRunning: true, stage: 'Starting', message: 'Process is starting...' },
-        { isRunning: true, stage: 'Step 1', message: 'Executing step 1...' },
-        { isRunning: true, stage: 'Step 2', message: 'Executing step 2...' },
-        { isRunning: true, stage: 'Step 3', message: 'Executing step 3...' },
-        { isRunning: true, stage: 'Step 4', message: 'Executing step 4...' },
-        { isRunning: true, stage: 'Step 5', message: 'Executing step 5...' },
-        { isRunning: true, stage: 'Step 6', message: 'Executing step 6...' },
-        { isRunning: true, stage: 'Step 7', message: 'Executing step 7...' },
-        { isRunning: true, stage: 'Step 8', message: 'Executing step 8...' },
-        { isRunning: false, stage: 'Completed', message: 'Process completed successfully!' }
+        { isRunning: true, stageDisplayText: 'Starting', message: 'Process is starting...' },
+        { isRunning: true, stageDisplayText: 'Step 1', message: 'Executing step 1...' },
+        { isRunning: true, stageDisplayText: 'Step 2', message: 'Executing step 2...' },
+        { isRunning: true, stageDisplayText: 'Step 3', message: 'Executing step 3...' },
+        { isRunning: true, stageDisplayText: 'Step 4', message: 'Executing step 4...' },
+        { isRunning: true, stageDisplayText: 'Step 5', message: 'Executing step 5...' },
+        { isRunning: true, stageDisplayText: 'Step 6', message: 'Executing step 6...' },
+        { isRunning: true, stageDisplayText: 'Step 7', message: 'Executing step 7...' },
+        { isRunning: true, stageDisplayText: 'Step 8', message: 'Executing step 8...' },
+        { isRunning: false, stageDisplayText: 'Completed', message: 'Process completed successfully!' }
       ];
 
       let currentStage = 0;
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
         if (currentStage < stages.length && !isClosed) {
           const data: SSEEventData = {
             isRunning: stages[currentStage].isRunning,
-            stage: stages[currentStage].stage,
+            stageDisplayText: stages[currentStage].stageDisplayText,
             message: stages[currentStage].message,
             timestamp: new Date().toISOString()
           };

@@ -89,78 +89,73 @@ export default function SSEDemo() {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-4">Server-Sent Events Demo</h2>
-      <p className="text-gray-600 mb-6">
-        This demonstrates a long-running process using Server-Sent Events (SSE) for real-time updates.
-      </p>
+    <div className="bg-gray-900 rounded-lg shadow-md p-6 font-mono">
+      <h2 className="text-l font-semibold text-gray-400 mb-4">Events Terminal</h2>
 
       {/* Controls */}
       <div className="flex gap-4 mb-6">
         <button
           onClick={startLongRunningProcess}
           disabled={isConnected}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${isConnected
-              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              : 'bg-blue-600 text-white hover:bg-blue-700'
+          className={`px-4 py-2 rounded border font-mono text-sm transition-colors ${isConnected
+            ? 'bg-gray-700 text-gray-500 border-gray-600 cursor-not-allowed'
+            : 'bg-gray-800 text-green-400 border-green-400 hover:bg-green-400 hover:text-gray-900'
             }`}
         >
-          {isConnected ? 'Process Running...' : 'Start Long Running Process'}
+          {isConnected ? '> Process Running...' : 'Start'}
         </button>
 
         <button
           onClick={stopProcess}
           disabled={!isConnected}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${!isConnected
-              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              : 'bg-red-600 text-white hover:bg-red-700'
+          className={`px-4 py-2 rounded border font-mono text-sm transition-colors ${!isConnected
+            ? 'bg-gray-700 text-gray-500 border-gray-600 cursor-not-allowed'
+            : 'bg-gray-800 text-red-400 border-red-400 hover:bg-red-400 hover:text-gray-900'
             }`}
         >
-          Stop Process
+          {'Stop'}
         </button>
       </div>
-
-
 
       {/* Connection Status */}
       <div className="mb-4">
         <div className="flex items-center gap-2">
           <div
-            className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
+            className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'
               }`}
           ></div>
-          <span className="text-sm font-medium">
-            {isConnected ? 'Connected to SSE stream' : 'Disconnected'}
+          <span className="text-sm text-gray-300 font-mono">
+            [{isConnected ? 'CONNECTED' : 'DISCONNECTED'}] SSE stream status
           </span>
         </div>
       </div>
 
-      {/* Events Log */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-800 mb-3">Process Events</h3>
-        {events.length === 0 ? (
-          <p className="text-gray-500 italic">No events yet. Start a process to see real-time updates.</p>
-        ) : (
-          <div className="space-y-3 max-h-64 overflow-y-auto">
-            {events.map((event, index) => (
-              <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-medium ${getStageColor(event)}`}
-                    >
-                      {event?.stageDisplayText?.toUpperCase()}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {new Date(event.timestamp).toLocaleTimeString()}
-                    </span>
-                  </div>
-                  <p className="text-gray-800">{event.message}</p>
+        <div className="bg-black rounded border border-gray-600 p-4 min-h-64 max-h-64 overflow-y-auto">
+          {events.length === 0 ? (
+            <p className="text-gray-500 font-mono text-sm">Waiting for process to start...</p>
+          ) : (
+            <div className="space-y-1">
+              {events.map((event, index) => (
+                <div key={index} className="font-mono text-sm">
+                  <span className="text-gray-500">
+                    [{new Date(event.timestamp).toLocaleTimeString()}]
+                  </span>
+                  <span className={`ml-2 ${event.isRunning ? 'text-yellow-400' : 'text-green-400'}`}>
+                    [{event.stageDisplayText}]
+                  </span>
+                  <span className="text-gray-300 ml-2">{event.message}</span>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+              {isConnected && (
+                <div className="flex items-center mt-2">
+                  <span className="text-green-400 animate-pulse">█</span>
+                  <span className="text-gray-500 ml-1 font-mono text-sm">process running...</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
