@@ -90,44 +90,45 @@ export default function SSEDemo() {
 
   return (
     <div className="bg-gray-900 rounded-lg shadow-md p-6 font-mono">
-      <h2 className="text-l font-semibold text-gray-400 mb-4">Events Terminal</h2>
-
-      {/* Controls */}
-      <div className="flex gap-4 mb-6">
-        <button
-          onClick={startLongRunningProcess}
-          disabled={isConnected}
-          className={`px-4 py-2 rounded border font-mono text-sm transition-colors ${isConnected
-            ? 'bg-gray-700 text-gray-500 border-gray-600 cursor-not-allowed'
-            : 'bg-gray-800 text-green-400 border-green-400 hover:bg-green-400 hover:text-gray-900'
-            }`}
-        >
-          {isConnected ? '> Process Running...' : 'Start'}
-        </button>
-
-        <button
-          onClick={stopProcess}
-          disabled={!isConnected}
-          className={`px-4 py-2 rounded border font-mono text-sm transition-colors ${!isConnected
-            ? 'bg-gray-700 text-gray-500 border-gray-600 cursor-not-allowed'
-            : 'bg-gray-800 text-red-400 border-red-400 hover:bg-red-400 hover:text-gray-900'
-            }`}
-        >
-          {'Stop'}
-        </button>
-      </div>
-
-      {/* Connection Status */}
-      <div className="mb-4">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-semibold text-gray-400">Events Terminal</h2>
+        
+        {/* Connection Status */}
         <div className="flex items-center gap-2">
           <div
             className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'
               }`}
           ></div>
           <span className="text-sm text-gray-300 font-mono">
-            [{isConnected ? 'CONNECTED' : 'DISCONNECTED'}] SSE stream status
+            [{isConnected ? 'CONNECTED' : 'DISCONNECTED'}]
           </span>
         </div>
+      </div>
+
+      {/* Controls */}
+      <div className="flex gap-4 mb-6">
+        <button
+          onClick={startLongRunningProcess}
+          disabled={isConnected}
+          className={`px-4 py-2 rounded font-medium transition-colors ${isConnected
+            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
+        >
+          {isConnected ? 'Process Running...' : 'Start'}
+        </button>
+
+        <button
+          onClick={stopProcess}
+          disabled={!isConnected}
+          className={`px-4 py-2 rounded font-medium transition-colors ${!isConnected
+            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            : 'bg-red-600 text-white hover:bg-red-700'
+            }`}
+        >
+          Stop
+        </button>
       </div>
 
       <div>
