@@ -26,7 +26,7 @@ export default function SSEDemo() {
       try {
         const data: SSEEventData = JSON.parse(event.data);
         setEvents(prev => [...prev, data]);
-        
+
         // If we've reached completion, prepare to close the connection
         if (!data.isRunning) {
           setTimeout(() => {
@@ -49,7 +49,7 @@ export default function SSEDemo() {
       console.error('SSE connection error:', error);
       console.error('EventSource readyState:', eventSource.readyState);
       console.error('EventSource url:', eventSource.url);
-      
+
       // Only set disconnected if it's actually an error, not just the end of stream
       if (eventSource.readyState === EventSource.CLOSED) {
         console.log('EventSource closed normally');
@@ -83,17 +83,10 @@ export default function SSEDemo() {
   };
 
   const getStageColor = (event: SSEEventData) => {
-    if (event.stageDisplayText === 'Starting') {
-      return 'bg-blue-100 text-blue-800';
-    } else if (!event.isRunning) {
-      return 'bg-green-100 text-green-800';
-    } else {
-      // All interim steps use the same color
-      return 'bg-gray-100 text-gray-800';
-    }
+    return event.isRunning
+      ? 'bg-gray-100 text-gray-800'
+      : 'bg-green-100 text-green-800';
   };
-
-
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -107,11 +100,10 @@ export default function SSEDemo() {
         <button
           onClick={startLongRunningProcess}
           disabled={isConnected}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            isConnected
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${isConnected
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
               : 'bg-blue-600 text-white hover:bg-blue-700'
-          }`}
+            }`}
         >
           {isConnected ? 'Process Running...' : 'Start Long Running Process'}
         </button>
@@ -119,11 +111,10 @@ export default function SSEDemo() {
         <button
           onClick={stopProcess}
           disabled={!isConnected}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            !isConnected
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${!isConnected
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
               : 'bg-red-600 text-white hover:bg-red-700'
-          }`}
+            }`}
         >
           Stop Process
         </button>
@@ -135,9 +126,8 @@ export default function SSEDemo() {
       <div className="mb-4">
         <div className="flex items-center gap-2">
           <div
-            className={`w-3 h-3 rounded-full ${
-              isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
-            }`}
+            className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
+              }`}
           ></div>
           <span className="text-sm font-medium">
             {isConnected ? 'Connected to SSE stream' : 'Disconnected'}
@@ -159,7 +149,7 @@ export default function SSEDemo() {
                     <span
                       className={`px-2 py-1 rounded text-xs font-medium ${getStageColor(event)}`}
                     >
-                      {event.stageDisplayText.toUpperCase()}
+                      {event?.stageDisplayText?.toUpperCase()}
                     </span>
                     <span className="text-xs text-gray-500">
                       {new Date(event.timestamp).toLocaleTimeString()}
