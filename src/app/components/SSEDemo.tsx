@@ -89,10 +89,10 @@ export default function SSEDemo() {
   };
 
   return (
-    <div className="bg-gray-900 rounded-lg shadow-md p-6 font-mono">
+    <div className="bg-gray-900 rounded-lg shadow-md font-mono">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold text-gray-400">Events Terminal</h2>
+      <div className="flex justify-between items-center mb-3 px-3 py-1.5 bg-slate-700 rounded-t-lg">
+        <h2 className="text-lg font-semibold text-gray-300">Events Terminal</h2>
         
         {/* Connection Status */}
         <div className="flex items-center gap-2">
@@ -106,33 +106,8 @@ export default function SSEDemo() {
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="flex gap-4 mb-6">
-        <button
-          onClick={startLongRunningProcess}
-          disabled={isConnected}
-          className={`px-4 py-2 rounded font-medium transition-colors ${isConnected
-            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
-        >
-          {isConnected ? 'Process Running...' : 'Start'}
-        </button>
-
-        <button
-          onClick={stopProcess}
-          disabled={!isConnected}
-          className={`px-4 py-2 rounded font-medium transition-colors ${!isConnected
-            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            : 'bg-red-600 text-white hover:bg-red-700'
-            }`}
-        >
-          Stop
-        </button>
-      </div>
-
       <div>
-        <div className="bg-black rounded border border-gray-600 p-4 min-h-64 max-h-64 overflow-y-auto">
+        <div className="bg-black p-4 min-h-64 max-h-64 overflow-y-auto">
           {events.length === 0 ? (
             <p className="text-gray-500 font-mono text-sm">Waiting for process to start...</p>
           ) : (
@@ -157,6 +132,31 @@ export default function SSEDemo() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Controls */}
+      <div className="flex justify-between px-3 py-3">
+        <button
+          onClick={stopProcess}
+          disabled={!isConnected}
+          className={`px-4 py-1.5 rounded font-medium transition-colors ${!isConnected
+            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            : 'bg-red-600 text-white hover:bg-red-700'
+            }`}
+        >
+          Stop
+        </button>
+
+        <button
+          onClick={startLongRunningProcess}
+          disabled={isConnected}
+          className={`px-4 py-1.5 rounded font-medium transition-colors ${isConnected
+            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
+        >
+          {isConnected ? 'Process Running...' : 'Start'}
+        </button>
       </div>
     </div>
   );
