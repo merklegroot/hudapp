@@ -23,7 +23,6 @@ export default function Navigation() {
           </li>
           <li>
             <Link href="/dotnet" className="hover:text-gray-300 transition-colors flex items-center gap-2">
-              <DotNetIcon className="w-4 h-4" />
               .NET
             </Link>
           </li>

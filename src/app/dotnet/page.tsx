@@ -174,7 +174,6 @@ export default function Dotnet() {
       <div className="min-h-[calc(100vh-4rem)] p-8">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-3 mb-8">
-            <DotNetIcon className="w-10 h-10" />
             <h1 className="text-4xl font-bold">.NET</h1>
           </div>
           
