@@ -146,31 +146,59 @@ const DotNetStatusTerminal = forwardRef<StatusTerminalRef, StatusTerminalProps>(
     terminal.writeln('\x1b[90m' + '='.repeat(50) + '\x1b[0m');
     terminal.writeln('');
 
-    // Simulate the detection steps
-    const steps = [
-      { message: 'Checking if dotnet is in PATH...', delay: 500 },
-      { message: 'Executing: dotnet --version', delay: 800 },
-      { message: 'Checking common installation locations...', delay: 600 },
-      { message: 'Scanning: ~/.dotnet/', delay: 400 },
-      { message: 'Scanning: /usr/share/dotnet/', delay: 300 },
-      { message: 'Scanning: /opt/dotnet/', delay: 300 },
-      { message: 'Scanning: /usr/local/share/dotnet/', delay: 300 },
-      { message: 'Gathering SDK information...', delay: 700 },
-      { message: 'Executing: dotnet --list-sdks', delay: 600 },
-      { message: 'Gathering runtime information...', delay: 600 },
-      { message: 'Executing: dotnet --list-runtimes', delay: 500 },
-      { message: 'Analyzing PATH configuration...', delay: 400 },
-    ];
+    try {
+      terminal.writeln('\x1b[33m→\x1b[0m Starting .NET detection...');
+      
+      const response = await fetch('/api/dotnet');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-    for (const step of steps) {
-      terminal.write('\x1b[33m→\x1b[0m ' + step.message);
-      await new Promise(resolve => setTimeout(resolve, step.delay));
-      terminal.writeln(' \x1b[32m✓\x1b[0m');
+      const data = await response.json();
+      
+      terminal.writeln('\x1b[33m→\x1b[0m Checking if dotnet is in PATH... ' + (data.inPath ? '\x1b[32m✓\x1b[0m' : '\x1b[31m✗\x1b[0m'));
+      
+      if (data.detectedPath) {
+        terminal.writeln(`\x1b[33m→\x1b[0m Found .NET installation at: ${data.detectedPath} \x1b[32m✓\x1b[0m`);
+      }
+      
+      if (data.isInstalled) {
+        terminal.writeln(`\x1b[33m→\x1b[0m .NET is installed \x1b[32m✓\x1b[0m`);
+        
+        if (data.sdks && data.sdks.length > 0) {
+          terminal.writeln(`\x1b[33m→\x1b[0m Found ${data.sdks.length} SDK(s) \x1b[32m✓\x1b[0m`);
+          data.sdks.forEach((sdk: string) => {
+            terminal.writeln(`  \x1b[90m• ${sdk}\x1b[0m`);
+          });
+        } else {
+          terminal.writeln('\x1b[33m→\x1b[0m No SDKs found \x1b[31m✗\x1b[0m');
+        }
+        
+        if (data.runtimes && data.runtimes.length > 0) {
+          terminal.writeln(`\x1b[33m→\x1b[0m Found ${data.runtimes.length} runtime(s) \x1b[32m✓\x1b[0m`);
+          data.runtimes.forEach((runtime: string) => {
+            terminal.writeln(`  \x1b[90m• ${runtime}\x1b[0m`);
+          });
+        } else {
+          terminal.writeln('\x1b[33m→\x1b[0m No runtimes found \x1b[31m✗\x1b[0m');
+        }
+      } else {
+        terminal.writeln('\x1b[33m→\x1b[0m .NET is not installed \x1b[31m✗\x1b[0m');
+      }
+
+      if (data.error) {
+        terminal.writeln(`\x1b[31mError: ${data.error}\x1b[0m`);
+      }
+
+      terminal.writeln('');
+      terminal.writeln('\x1b[32m✓ Detection completed successfully!\x1b[0m');
+      
+    } catch (error) {
+      terminal.writeln('');
+      terminal.writeln(`\x1b[31m✗ Detection failed: ${error}\x1b[0m`);
     }
-
-    terminal.writeln('');
-    terminal.writeln('\x1b[32m✓ Detection completed successfully!\x1b[0m');
-    terminal.writeln('\x1b[90mLoading .NET status information...\x1b[0m');
+    
     terminal.writeln('');
     terminal.writeln('\x1b[36m' + '='.repeat(50) + '\x1b[0m');
     terminal.writeln('\x1b[32mTerminal ready for additional operations.\x1b[0m');
@@ -180,10 +208,7 @@ const DotNetStatusTerminal = forwardRef<StatusTerminalRef, StatusTerminalProps>(
     setIsDetecting(false);
     setCurrentOperation('idle');
     
-    // Small delay before calling completion
-    setTimeout(() => {
-      onDetectionComplete?.();
-    }, 500);
+    onDetectionComplete?.();
   };
 
   const startInstallationProcess = async (installVersion: string) => {
