@@ -18,8 +18,7 @@ const DotNetStatusTerminal = forwardRef<StatusTerminalRef, StatusTerminalProps>(
   onDetectionComplete, 
   onInstallStart, 
   onInstallComplete, 
-  className = '', 
-  version = '8.0' 
+  className = ''
 }, ref) => {
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<any>(null);
@@ -61,8 +60,7 @@ const DotNetStatusTerminal = forwardRef<StatusTerminalRef, StatusTerminalProps>(
           import('@xterm/addon-fit')
         ]);
 
-        // Import CSS dynamically
-        await import('@xterm/xterm/css/xterm.css');
+        // CSS is imported globally in globals.css
 
         // Create terminal instance
         terminal = new Terminal({
@@ -73,7 +71,7 @@ const DotNetStatusTerminal = forwardRef<StatusTerminalRef, StatusTerminalProps>(
             background: '#1a1a1a',
             foreground: '#ffffff',
             cursor: '#ffffff',
-            selection: '#ffffff40',
+            selectionBackground: '#ffffff40',
           },
           rows: 15,
           cols: 100,
@@ -324,7 +322,7 @@ const DotNetStatusTerminal = forwardRef<StatusTerminalRef, StatusTerminalProps>(
       >
         {!isLoaded && (
           <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
-            Loading detection terminal...
+            Loading status terminal...
           </div>
         )}
       </div>
