@@ -17,8 +17,7 @@ interface StatusTerminalProps {
 const DotNetStatusTerminal = forwardRef<StatusTerminalRef, StatusTerminalProps>(({ 
   onDetectionComplete, 
   onInstallStart, 
-  onInstallComplete, 
-  className = ''
+  onInstallComplete
 }, ref) => {
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<any>(null);
@@ -322,9 +321,9 @@ const DotNetStatusTerminal = forwardRef<StatusTerminalRef, StatusTerminalProps>(
   };
 
   return (
-    <div className={`terminal-container ${className}`}>
+    <div className={`terminal-container`}>
       <div className="bg-gray-800 text-white p-2 text-sm font-medium flex justify-between items-center">
-        <span>.NET Operations Terminal</span>
+        <span>Operations Terminal</span>
         <div className="flex items-center gap-2">
           <div className={`w-2 h-2 rounded-full ${
             !isLoaded ? 'bg-gray-500' : 
@@ -340,7 +339,7 @@ const DotNetStatusTerminal = forwardRef<StatusTerminalRef, StatusTerminalProps>(
           </span>
         </div>
       </div>
-      <div 
+      <div
         ref={terminalRef} 
         className="w-full bg-black relative"
         style={{ height: '300px' }}
