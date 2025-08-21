@@ -38,6 +38,15 @@ const StatusTerminal = forwardRef<StatusTerminalRef, StatusTerminalProps>(({
     }
   }));
 
+  // Helper function to normalize content for terminal display
+  const normalizeTerminalContent = (content: string): string => {
+    // Ensure all line endings are \r\n for proper terminal display
+    return content
+      .replace(/\r\n/g, '\n')  // First normalize to \n
+      .replace(/\r/g, '\n')    // Convert any standalone \r to \n
+      .replace(/\n/g, '\r\n'); // Convert all \n to \r\n
+  };
+
   useEffect(() => {
     let terminal: any = null;
     let fitAddon: any = null;
@@ -69,6 +78,10 @@ const StatusTerminal = forwardRef<StatusTerminalRef, StatusTerminalProps>(({
           rows: 15,
           cols: 100,
           disableStdin: true,
+          convertEol: true,  // Convert \n to \r\n automatically
+          scrollback: 1000,  // Keep more history
+          wordSeparator: ' ()[]{}\'"`',  // Define word boundaries for wrapping
+          allowProposedApi: true,  // Enable proposed APIs for better line handling
         });
 
         // Create fit addon
@@ -77,7 +90,13 @@ const StatusTerminal = forwardRef<StatusTerminalRef, StatusTerminalProps>(({
 
         // Open terminal
         terminal.open(terminalRef.current);
-        fitAddon.fit();
+        
+        // Wait a bit for the terminal to render, then fit
+        setTimeout(() => {
+          fitAddon.fit();
+          // Force a reflow to ensure proper sizing
+          terminal.refresh(0, terminal.rows - 1);
+        }, 100);
 
         // Store refs
         xtermRef.current = terminal;
@@ -90,8 +109,12 @@ const StatusTerminal = forwardRef<StatusTerminalRef, StatusTerminalProps>(({
 
         // Handle resize
         const handleResize = () => {
-          if (fitAddon) {
-            fitAddon.fit();
+          if (fitAddon && terminal) {
+            setTimeout(() => {
+              fitAddon.fit();
+              // Refresh terminal to ensure proper rendering after resize
+              terminal.refresh(0, terminal.rows - 1);
+            }, 50);
           }
         };
 
@@ -225,11 +248,14 @@ const StatusTerminal = forwardRef<StatusTerminalRef, StatusTerminalProps>(({
                   
                   if (data && typeof data === 'object') {
                     if (data.type === 'output') {
-                      terminal.write(data.content || '');
+                      const content = normalizeTerminalContent(data.content || '');
+                      terminal.write(content);
                     } else if (data.type === 'error') {
-                      terminal.write(`\x1b[31m${data.content || ''}\x1b[0m`);
+                      const content = normalizeTerminalContent(data.content || '');
+                      terminal.write(`\x1b[31m${content}\x1b[0m`);
                     } else if (data.type === 'success') {
-                      terminal.write(`\x1b[32m${data.content || ''}\x1b[0m`);
+                      const content = normalizeTerminalContent(data.content || '');
+                      terminal.write(`\x1b[32m${content}\x1b[0m`);
                     }
                   }
                 } catch (e) {
