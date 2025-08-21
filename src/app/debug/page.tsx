@@ -1,7 +1,15 @@
+import SSEDemo from '../components/SSEDemo';
+
 export default function Debug() {
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
-      <h1 className="text-4xl font-bold">Debug</h1>
+    <div className="min-h-[calc(100vh-4rem)] p-8">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-bold mb-8">Debug</h1>
+        
+        <div className="space-y-8">
+          <SSEDemo />
+        </div>
+      </div>
     </div>
   );
 }
