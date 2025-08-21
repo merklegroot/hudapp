@@ -41,6 +41,11 @@ export default function Navigation() {
               Utils
             </Link>
           </li>
+          <li>
+            <Link href="/debug" className="hover:text-gray-300 transition-colors">
+              Debug
+            </Link>
+          </li>
         </ul>
       </div>
     </nav>
