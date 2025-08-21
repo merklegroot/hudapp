@@ -14,7 +14,7 @@ interface StatusTerminalProps {
   version?: string;
 }
 
-const StatusTerminal = forwardRef<StatusTerminalRef, StatusTerminalProps>(({ 
+const DotNetStatusTerminal = forwardRef<StatusTerminalRef, StatusTerminalProps>(({ 
   onDetectionComplete, 
   onInstallStart, 
   onInstallComplete, 
@@ -332,6 +332,6 @@ const StatusTerminal = forwardRef<StatusTerminalRef, StatusTerminalProps>(({
   );
 });
 
-StatusTerminal.displayName = 'StatusTerminal';
+DotNetStatusTerminal.displayName = 'DotNetStatusTerminal';
 
-export default StatusTerminal;
+export default DotNetStatusTerminal;
