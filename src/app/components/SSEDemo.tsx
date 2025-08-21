@@ -83,7 +83,7 @@ export default function SSEDemo() {
   };
 
   const getStageColor = (event: SSEEventData) => {
-    if (event.stage === 'Starting') {
+    if (event.stageDisplayText === 'Starting') {
       return 'bg-blue-100 text-blue-800';
     } else if (!event.isRunning) {
       return 'bg-green-100 text-green-800';
@@ -159,7 +159,7 @@ export default function SSEDemo() {
                     <span
                       className={`px-2 py-1 rounded text-xs font-medium ${getStageColor(event)}`}
                     >
-                      {event.stage.toUpperCase()}
+                      {event.stageDisplayText.toUpperCase()}
                     </span>
                     <span className="text-xs text-gray-500">
                       {new Date(event.timestamp).toLocaleTimeString()}
