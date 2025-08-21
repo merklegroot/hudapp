@@ -1,18 +1,42 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useImperativeHandle, forwardRef } from 'react';
+
+export interface StatusTerminalRef {
+  startInstallation: (version: string) => void;
+}
 
 interface StatusTerminalProps {
   onDetectionComplete?: () => void;
+  onInstallStart?: () => void;
+  onInstallComplete?: () => void;
   className?: string;
+  version?: string;
 }
 
-export default function StatusTerminal({ onDetectionComplete, className = '' }: StatusTerminalProps) {
+const StatusTerminal = forwardRef<StatusTerminalRef, StatusTerminalProps>(({ 
+  onDetectionComplete, 
+  onInstallStart, 
+  onInstallComplete, 
+  className = '', 
+  version = '8.0' 
+}, ref) => {
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<any>(null);
   const fitAddonRef = useRef<any>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isDetecting, setIsDetecting] = useState(true);
+  const [isInstalling, setIsInstalling] = useState(false);
+  const [currentOperation, setCurrentOperation] = useState<'detection' | 'installation' | 'idle'>('detection');
+
+  // Expose methods to parent component
+  useImperativeHandle(ref, () => ({
+    startInstallation: (installVersion: string) => {
+      if (xtermRef.current && isLoaded && !isInstalling) {
+        startInstallationProcess(installVersion);
+      }
+    }
+  }));
 
   useEffect(() => {
     let terminal: any = null;
@@ -126,8 +150,14 @@ export default function StatusTerminal({ onDetectionComplete, className = '' }: 
     terminal.writeln('');
     terminal.writeln('\x1b[32m✓ Detection completed successfully!\x1b[0m');
     terminal.writeln('\x1b[90mLoading .NET status information...\x1b[0m');
+    terminal.writeln('');
+    terminal.writeln('\x1b[36m' + '='.repeat(50) + '\x1b[0m');
+    terminal.writeln('\x1b[32mTerminal ready for additional operations.\x1b[0m');
+    terminal.writeln('\x1b[90mUse the installation buttons above to install .NET versions.\x1b[0m');
+    terminal.writeln('');
     
     setIsDetecting(false);
+    setCurrentOperation('idle');
     
     // Small delay before calling completion
     setTimeout(() => {
@@ -135,14 +165,129 @@ export default function StatusTerminal({ onDetectionComplete, className = '' }: 
     }, 500);
   };
 
+  const startInstallationProcess = async (installVersion: string) => {
+    const terminal = xtermRef.current;
+    if (!terminal || isInstalling) return;
+
+    setIsInstalling(true);
+    setCurrentOperation('installation');
+    onInstallStart?.();
+
+    terminal.writeln('\x1b[36m' + '='.repeat(50) + '\x1b[0m');
+    terminal.writeln(`\x1b[33mStarting .NET SDK ${installVersion} installation...\x1b[0m`);
+    terminal.writeln('');
+
+    try {
+      const response = await fetch('/api/dotnet/install', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'install', version: installVersion }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('No response body');
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        
+        // Split by double newlines to separate SSE events
+        const events = buffer.split('\n\n');
+        buffer = events.pop() || ''; // Keep the last incomplete event in buffer
+
+        for (const event of events) {
+          if (!event || typeof event !== 'string') continue;
+          
+          const lines = event.split('\n');
+          if (!Array.isArray(lines)) continue;
+          
+          for (const line of lines) {
+            if (!line || typeof line !== 'string') continue;
+            
+            if (line.startsWith('data: ')) {
+              const jsonData = line.slice(6).trim();
+              if (jsonData && terminal) {
+                try {
+                  const data = JSON.parse(jsonData);
+                  
+                  if (data && typeof data === 'object') {
+                    if (data.type === 'output') {
+                      terminal.write(data.content || '');
+                    } else if (data.type === 'error') {
+                      terminal.write(`\x1b[31m${data.content || ''}\x1b[0m`);
+                    } else if (data.type === 'success') {
+                      terminal.write(`\x1b[32m${data.content || ''}\x1b[0m`);
+                    }
+                  }
+                } catch (e) {
+                  console.error('Error parsing SSE data:', e, 'Raw data:', jsonData);
+                  // If JSON parse fails, just write the raw content as plain text
+                  if (jsonData && jsonData.length > 0 && terminal) {
+                    terminal.write(jsonData + '\r\n');
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      if (terminal) {
+        terminal.writeln('');
+        terminal.writeln('\x1b[32mInstallation process completed!\x1b[0m');
+        terminal.writeln('\x1b[36mRefreshing .NET information...\x1b[0m');
+        terminal.writeln('');
+        terminal.writeln('\x1b[36m' + '='.repeat(50) + '\x1b[0m');
+        terminal.writeln('\x1b[32mTerminal ready for additional operations.\x1b[0m');
+        terminal.writeln('');
+      }
+      onInstallComplete?.();
+
+    } catch (error) {
+      console.error('Installation error:', error);
+      if (terminal) {
+        terminal.writeln('');
+        terminal.writeln(`\x1b[31mInstallation failed: ${error}\x1b[0m`);
+        terminal.writeln('');
+        terminal.writeln('\x1b[36m' + '='.repeat(50) + '\x1b[0m');
+        terminal.writeln('\x1b[32mTerminal ready for additional operations.\x1b[0m');
+        terminal.writeln('');
+      }
+    } finally {
+      setIsInstalling(false);
+      setCurrentOperation('idle');
+    }
+  };
+
   return (
     <div className={`terminal-container ${className}`}>
       <div className="bg-gray-800 text-white p-2 text-sm font-medium flex justify-between items-center">
-        <span>.NET Detection Terminal</span>
+        <span>.NET Operations Terminal</span>
         <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${!isLoaded ? 'bg-gray-500' : isDetecting ? 'bg-yellow-500' : 'bg-green-500'}`}></div>
+          <div className={`w-2 h-2 rounded-full ${
+            !isLoaded ? 'bg-gray-500' : 
+            isDetecting ? 'bg-yellow-500' : 
+            isInstalling ? 'bg-blue-500' : 
+            'bg-green-500'
+          }`}></div>
           <span className="text-xs">
-            {!isLoaded ? 'Initializing...' : isDetecting ? 'Detecting...' : 'Complete'}
+            {!isLoaded ? 'Initializing...' : 
+             isDetecting ? 'Detecting...' : 
+             isInstalling ? 'Installing...' : 
+             'Ready'}
           </span>
         </div>
       </div>
@@ -159,4 +304,8 @@ export default function StatusTerminal({ onDetectionComplete, className = '' }: 
       </div>
     </div>
   );
-}
+});
+
+StatusTerminal.displayName = 'StatusTerminal';
+
+export default StatusTerminal;

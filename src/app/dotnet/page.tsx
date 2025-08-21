@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
+import { useState, useEffect, useRef } from 'react';
 import { SiLinux, SiApple } from 'react-icons/si';
 import { DiWindows } from 'react-icons/di';
 import { FaCopy, FaCheck } from 'react-icons/fa';
 import DotNetIcon from '../components/DotNetIcon';
-import StatusTerminal from '../components/StatusTerminal';
+import StatusTerminal, { StatusTerminalRef } from '../components/StatusTerminal';
 
 // Custom BSD Icon Component
 interface BSDIconProps {
@@ -65,32 +64,7 @@ const CopyButton = ({ text, className = "" }: CopyButtonProps) => {
   );
 };
 
-// Dynamically import Terminal to prevent SSR issues
-const Terminal = dynamic(() => import('../components/Terminal'), {
-  ssr: false,
-  loading: () => (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      <div className="bg-gray-800 text-white p-2 text-sm font-medium flex justify-between items-center">
-        <span>.NET Installation Terminal</span>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-gray-500"></div>
-          <span className="text-xs">Loading...</span>
-        </div>
-      </div>
-      <div className="w-full bg-black flex items-center justify-center" style={{ height: '400px' }}>
-        <div className="text-gray-400 text-sm">Loading terminal component...</div>
-      </div>
-      <div className="bg-gray-700 p-2">
-        <button
-          disabled
-          className="px-4 py-2 bg-gray-500 text-white text-sm rounded cursor-not-allowed"
-        >
-          Loading Terminal...
-        </button>
-      </div>
-    </div>
-  )
-});
+
 
 interface DotnetInfo {
   isInstalled: boolean;
@@ -102,10 +76,10 @@ interface DotnetInfo {
 }
 
 export default function Dotnet() {
+  const statusTerminalRef = useRef<StatusTerminalRef>(null);
   const [dotnetInfo, setDotnetInfo] = useState<DotnetInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showTerminal, setShowTerminal] = useState(false);
   const [showStatusTerminal, setShowStatusTerminal] = useState(true);
   const [selectedVersion, setSelectedVersion] = useState('8.0');
   const [addingToPath, setAddingToPath] = useState(false);
@@ -132,15 +106,13 @@ export default function Dotnet() {
         console.error('Error fetching dotnet info:', err);
         setError('Failed to fetch dotnet information');
         setLoading(false);
-        setShowStatusTerminal(false);
+
       });
   };
 
   const handleDetectionComplete = () => {
-    // Small delay to let users see the completion
-    setTimeout(() => {
-      setShowStatusTerminal(false);
-    }, 1000);
+    // Terminal stays open, just mark detection as complete
+    // The terminal will show it's ready for additional operations
   };
 
   useEffect(() => {
@@ -148,7 +120,7 @@ export default function Dotnet() {
   }, []);
 
   const handleInstallStart = () => {
-    setShowTerminal(true);
+    // Terminal is already persistent - no action needed
   };
 
   const handleInstallComplete = () => {
@@ -206,26 +178,13 @@ export default function Dotnet() {
             <h1 className="text-4xl font-bold">.NET</h1>
           </div>
           
-          {showStatusTerminal && (
-            <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
-              <StatusTerminal 
-                onDetectionComplete={handleDetectionComplete}
-                className="w-full"
-              />
-            </div>
-          )}
-          
-          {!showStatusTerminal && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 flex items-center justify-center">
-              <div className="text-blue-700">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                  <span className="font-medium">Finalizing .NET status...</span>
-                </div>
-                <p className="text-sm">Processing detection results...</p>
-              </div>
-            </div>
-          )}
+          <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+            <StatusTerminal 
+              ref={statusTerminalRef}
+              onDetectionComplete={handleDetectionComplete}
+              className="w-full"
+            />
+          </div>
         </div>
       </div>
     );
@@ -253,6 +212,17 @@ export default function Dotnet() {
         <div className="flex items-center gap-3 mb-8">
           <DotNetIcon className="w-10 h-10" />
           <h1 className="text-4xl font-bold">.NET</h1>
+        </div>
+        
+        {/* Persistent Terminal - Always visible */}
+        <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+          <StatusTerminal 
+            ref={statusTerminalRef}
+            onDetectionComplete={handleDetectionComplete}
+            onInstallStart={handleInstallStart}
+            onInstallComplete={handleInstallComplete}
+            className="w-full"
+          />
         </div>
         
         {!dotnetInfo.isInstalled ? (
@@ -284,10 +254,10 @@ export default function Dotnet() {
                       <option value="9.0">.NET 9</option>
                     </select>
                     <button
-                      onClick={() => setShowTerminal(!showTerminal)}
+                      onClick={() => statusTerminalRef.current?.startInstallation(selectedVersion)}
                       className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
                     >
-                      {showTerminal ? 'Hide Installation Terminal' : `Install .NET SDK ${selectedVersion}`}
+                      Install .NET SDK {selectedVersion}
                     </button>
                   </div>
               </div>
@@ -318,17 +288,7 @@ export default function Dotnet() {
               </div>
             </div>
 
-            {/* Terminal Section */}
-            {showTerminal && (
-              <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                <Terminal 
-                  onInstallStart={handleInstallStart}
-                  onInstallComplete={handleInstallComplete}
-                  className="w-full"
-                  version={selectedVersion}
-                />
-              </div>
-            )}
+
 
             {/* Common Installation Locations */}
             <div className="bg-white rounded-lg shadow-md p-6">
@@ -480,14 +440,7 @@ export default function Dotnet() {
                       </div>
                     </div>
                   </div>
-                  {showTerminal && (
-                    <button
-                      onClick={() => setShowTerminal(false)}
-                      className="ml-4 px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-700 transition-colors"
-                    >
-                      Hide Terminal
-                    </button>
-                  )}
+
                 </div>
               </div>
             ) : (
@@ -511,14 +464,7 @@ export default function Dotnet() {
                       </div>
                     </div>
                   </div>
-                  {showTerminal && (
-                    <button
-                      onClick={() => setShowTerminal(false)}
-                      className="ml-4 px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-700 transition-colors"
-                    >
-                      Hide Terminal
-                    </button>
-                  )}
+
                 </div>
               </div>
             )}
@@ -703,10 +649,7 @@ export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
                   </div>
                   <p className="text-sm text-gray-600 mb-3">Long Term Support (LTS) - Recommended for production</p>
                   <button
-                    onClick={() => {
-                      setSelectedVersion('8.0');
-                      setShowTerminal(true);
-                    }}
+                    onClick={() => statusTerminalRef.current?.startInstallation('8.0')}
                     disabled={dotnetInfo.sdks.some(sdk => sdk.includes('8.'))}
                     className="w-full px-3 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                   >
@@ -725,10 +668,7 @@ export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
                   </div>
                   <p className="text-sm text-gray-600 mb-3">Standard Term Support (STS) - Latest features</p>
                   <button
-                    onClick={() => {
-                      setSelectedVersion('9.0');
-                      setShowTerminal(true);
-                    }}
+                    onClick={() => statusTerminalRef.current?.startInstallation('9.0')}
                     disabled={dotnetInfo.sdks.some(sdk => sdk.includes('9.'))}
                     className="w-full px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                   >
@@ -737,26 +677,7 @@ export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
                 </div>
               </div>
 
-              {showTerminal && (
-                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
-                  <p className="text-sm text-yellow-800">
-                    <strong>Installing:</strong> .NET SDK {selectedVersion}
-                  </p>
-                </div>
-              )}
             </div>
-
-            {/* Terminal Section - Show if requested */}
-            {showTerminal && (
-              <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                <Terminal 
-                  onInstallStart={handleInstallStart}
-                  onInstallComplete={handleInstallComplete}
-                  className="w-full"
-                  version={selectedVersion}
-                />
-              </div>
-            )}
 
             {/* SDKs Section */}
             <div className="bg-white rounded-lg shadow-md p-6">
