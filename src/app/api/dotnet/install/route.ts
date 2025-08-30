@@ -3,7 +3,7 @@ import { spawn } from 'child_process';
 
 export async function POST(request: NextRequest) {
   try {
-    const { action } = await request.json();
+    const { action, version = '8.0' } = await request.json();
     
     if (action === 'install') {
       return new Response(
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
             };
             
             // Send initial message
-            sendMessage('output', 'Starting .NET SDK 8 installation...\r\n');
+            sendMessage('output', `Starting .NET SDK ${version} installation...\r\n`);
 
             // Download the installation script
             const downloadProcess = spawn('wget', [
@@ -49,10 +49,10 @@ export async function POST(request: NextRequest) {
                 
                 chmodProcess.on('close', (chmodCode) => {
                   if (chmodCode === 0) {
-                    sendMessage('output', 'Starting .NET SDK 8 installation...\r\n');
+                    sendMessage('output', `Starting .NET SDK ${version} installation...\r\n`);
 
                     // Run the installation script
-                    const installProcess = spawn('./dotnet-install.sh', ['--channel', '8.0'], {
+                    const installProcess = spawn('./dotnet-install.sh', ['--channel', version], {
                       env: { ...process.env, DOTNET_ROOT: `${process.env.HOME}/.dotnet` }
                     });
 
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 
                     installProcess.on('close', (installCode) => {
                       if (installCode === 0) {
-                        sendMessage('success', '.NET SDK 8 installation completed successfully!\r\n');
+                        sendMessage('success', `.NET SDK ${version} installation completed successfully!\r\n`);
                         sendMessage('output', 'Setting up environment variables...\r\n');
                         sendMessage('output', 'Add the following to your ~/.bashrc or ~/.profile:\r\n');
                         sendMessage('output', 'export DOTNET_ROOT=$HOME/.dotnet\r\n');

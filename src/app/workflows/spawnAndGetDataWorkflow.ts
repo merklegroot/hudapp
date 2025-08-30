@@ -4,6 +4,7 @@ interface SpawnOptions {
   command: string;
   args: string[];
   timeout?: number;
+  dataCallback?: (data: string) => void;
 }
 
 interface SpawnResult {
@@ -15,7 +16,7 @@ interface SpawnResult {
 
 /** Generic workflow to spawn a command and get its output data */
 async function execute(options: SpawnOptions): Promise<SpawnResult> {
-  const { command, args, timeout = 10000 } = options;
+  const { command, args, timeout = 10000, dataCallback } = options;
   
   return new Promise((resolve) => {
     console.log(`Spawning command: ${command} ${args.join(' ')}`);
@@ -34,6 +35,7 @@ async function execute(options: SpawnOptions): Promise<SpawnResult> {
     // Collect stdout data
     child.stdout?.on('data', (data: Buffer) => {
       stdout += data.toString();
+      dataCallback?.(data.toString());
     });
     
     // Collect stderr data
@@ -90,14 +92,14 @@ async function executeWithFallback(options: SpawnOptions): Promise<SpawnResult> 
     // Method 1: Direct command
     () => execute({ command, args, timeout }),
     
-    // Method 2: Use su to get fresh user environment
+    // Method 2: Use login shell to get fresh user environment (without password)
     () => execute({
-      command: 'su',
-      args: ['-', process.env.USER || 'goose', '-c', `${command} ${args.join(' ')}`],
+      command: 'bash',
+      args: ['-l', '-c', `${command} ${args.join(' ')}`],
       timeout
     }),
     
-    // Method 3: Use env -i for clean environment
+    // Method 3: Use env -i for clean environment  
     () => execute({
       command: 'env',
       args: ['-i', command, ...args],

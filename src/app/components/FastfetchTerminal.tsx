@@ -30,7 +30,7 @@ export default function FastfetchTerminal({ onRunStart, onRunComplete, className
         ]);
 
         // Import CSS dynamically
-        await import('@xterm/xterm/css/xterm.css');
+        await import('@xterm/xterm/css/xterm.css' as any);
 
         // Create terminal instance
         terminal = new Terminal({
@@ -41,7 +41,6 @@ export default function FastfetchTerminal({ onRunStart, onRunComplete, className
             background: '#1a1a1a',
             foreground: '#ffffff',
             cursor: '#ffffff',
-            selection: '#ffffff40',
           },
           rows: 25,
           cols: 100,

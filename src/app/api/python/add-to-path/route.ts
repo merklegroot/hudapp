@@ -25,11 +25,11 @@ function detectShellProfile(): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const { dotnetPath } = await request.json();
+    const { pythonPath } = await request.json();
 
-    if (!dotnetPath) {
+    if (!pythonPath) {
       return NextResponse.json(
-        { error: 'dotnetPath is required' },
+        { error: 'pythonPath is required' },
         { status: 400 }
       );
     }
@@ -37,9 +37,9 @@ export async function POST(request: NextRequest) {
     // Detect the appropriate shell profile path
     const profileFullPath = detectShellProfile();
 
-    // Call the workflow to add dotnet to PATH
+    // Call the workflow to add python to PATH
     const result = await addToPathWorkflow.execute({
-      folderToAdd: dotnetPath,
+      folderToAdd: pythonPath,
       profileFullPath
     });
 
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error adding dotnet to PATH:', error);
+    console.error('Error adding Python to PATH:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to add to PATH' },
       { status: 500 }

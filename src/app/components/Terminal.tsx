@@ -7,9 +7,10 @@ interface TerminalProps {
   onInstallStart?: () => void;
   onInstallComplete?: () => void;
   className?: string;
+  version?: string;
 }
 
-export default function Terminal({ onInstallStart, onInstallComplete, className = '' }: TerminalProps) {
+export default function Terminal({ onInstallStart, onInstallComplete, className = '', version = '8.0' }: TerminalProps) {
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<any>(null);
   const fitAddonRef = useRef<any>(null);
@@ -32,7 +33,7 @@ export default function Terminal({ onInstallStart, onInstallComplete, className 
         ]);
 
         // Import CSS dynamically
-        await import('@xterm/xterm/css/xterm.css');
+        await import('@xterm/xterm/css/xterm.css' as any);
 
         // Create terminal instance
         terminal = new Terminal({
@@ -43,7 +44,6 @@ export default function Terminal({ onInstallStart, onInstallComplete, className 
             background: '#1a1a1a',
             foreground: '#ffffff',
             cursor: '#ffffff',
-            selection: '#ffffff40',
           },
           rows: 25,
           cols: 100,
@@ -64,7 +64,7 @@ export default function Terminal({ onInstallStart, onInstallComplete, className 
 
         // Welcome message
         terminal.writeln('\x1b[32m.NET SDK Installation Terminal\x1b[0m');
-        terminal.writeln('Click "Install .NET SDK 8" to begin installation.');
+        terminal.writeln(`Click "Install .NET SDK ${version}" to begin installation.`);
         terminal.writeln('');
 
         setIsLoaded(true);
@@ -118,7 +118,7 @@ export default function Terminal({ onInstallStart, onInstallComplete, className 
     }
 
     terminal.clear();
-    terminal.writeln('\x1b[33mStarting .NET SDK 8 installation...\x1b[0m');
+    terminal.writeln(`\x1b[33mStarting .NET SDK ${version} installation...\x1b[0m`);
     terminal.writeln('');
 
     try {
@@ -127,7 +127,7 @@ export default function Terminal({ onInstallStart, onInstallComplete, className 
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ action: 'install' }),
+        body: JSON.stringify({ action: 'install', version }),
       });
 
       if (!response.ok) {
@@ -220,11 +220,11 @@ export default function Terminal({ onInstallStart, onInstallComplete, className 
       </div>
       <div 
         ref={terminalRef} 
-        className="w-full bg-black flex items-center justify-center"
+        className="w-full bg-black relative"
         style={{ height: '400px' }}
       >
         {!isLoaded && (
-          <div className="text-gray-400 text-sm">
+          <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
             Loading terminal...
           </div>
         )}
@@ -238,7 +238,7 @@ export default function Terminal({ onInstallStart, onInstallComplete, className 
           {isInstalling && (
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           )}
-          {!isLoaded ? 'Loading Terminal...' : isInstalling ? 'Installing .NET SDK 8...' : 'Install .NET SDK 8'}
+          {!isLoaded ? 'Loading Terminal...' : isInstalling ? `Installing .NET SDK ${version}...` : `Install .NET SDK ${version}`}
         </button>
         {isInstalling && (
           <div className="flex items-center text-yellow-300 text-sm">
