@@ -16,7 +16,21 @@ function SseLine({ event }: { event: SSEEventData }) {
   );
 }
 
-export default function SseTerminal() {
+interface SseTerminalProps {
+  url: string;
+  terminalTitle?: string;
+  startButtonLabel?: string;
+  stopButtonLabel?: string;
+  autoCloseTimeoutMs?: number;
+}
+
+export default function SseTerminal({
+  url,
+  terminalTitle = "Events Terminal",
+  startButtonLabel = "Start",
+  stopButtonLabel = "Stop",
+  autoCloseTimeoutMs = 6000
+}: SseTerminalProps) {
   const [events, setEvents] = useState<SSEEventData[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
@@ -39,7 +53,7 @@ export default function SseTerminal() {
     }
   };
 
-  const startLongRunningProcess = () => {
+  const startProcess = () => {
     // Clear previous events
     setEvents([]);
     setIsConnected(true);
@@ -50,8 +64,8 @@ export default function SseTerminal() {
       eventSourceRef.current.close();
     }
 
-    // Create new EventSource connection
-    const eventSource = new EventSource('/api/debug/long-running');
+    // Create new EventSource connection using the provided URL
+    const eventSource = new EventSource(url);
     eventSourceRef.current = eventSource;
 
     eventSource.onmessage = (event) => {
@@ -104,7 +118,7 @@ export default function SseTerminal() {
         eventSourceRef.current.close();
         setIsConnected(false);
       }
-    }, 6000); // Increased to 6 seconds for 10 stages × 500ms + buffer
+    }, autoCloseTimeoutMs);
   };
 
   const stopProcess = () => {
@@ -124,7 +138,7 @@ export default function SseTerminal() {
     <div className="bg-gray-900 rounded-lg shadow-md font-mono">
       {/* Header */}
       <div className="flex justify-between items-center mb-3 px-3 py-1.5 bg-slate-700 rounded-t-lg">
-        <h2 className="text-lg font-semibold text-gray-300">Events Terminal</h2>
+        <h2 className="text-lg font-semibold text-gray-300">{terminalTitle}</h2>
         
         {/* Connection Status */}
         <div className="flex items-center gap-2">
@@ -173,18 +187,18 @@ export default function SseTerminal() {
             : 'bg-red-600 text-white hover:bg-red-700'
             }`}
         >
-          Stop
+          {stopButtonLabel}
         </button>
 
         <button
-          onClick={startLongRunningProcess}
+          onClick={startProcess}
           disabled={isConnected}
           className={`px-4 py-1.5 rounded font-medium transition-colors ${isConnected
             ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
             : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
         >
-          {isConnected ? 'Process Running...' : 'Start'}
+          {isConnected ? 'Process Running...' : startButtonLabel}
         </button>
       </div>
     </div>
