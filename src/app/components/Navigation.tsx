@@ -7,11 +7,6 @@ export default function Navigation() {
         <ul className="flex space-x-6">
           <li>
             <Link href="/" className="hover:text-gray-300 transition-colors">
-              Home
-            </Link>
-          </li>
-          <li>
-            <Link href="/machine" className="hover:text-gray-300 transition-colors">
               Machine
             </Link>
           </li>
