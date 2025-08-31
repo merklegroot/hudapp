@@ -95,43 +95,7 @@ export default function Machine() {
 
 
 
-        {/* Physical Disks */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Physical Disks</h2>
-          {machineInfo.physicalDisks && machineInfo.physicalDisks.length > 0 ? (
-            <div className="space-y-4">
-              {machineInfo.physicalDisks.map((disk, index) => (
-                <div key={index} className="p-4 bg-gray-50 rounded-lg">
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900">{disk.device}</h3>
-                    <div className="flex gap-2">
-                      {disk.type !== 'Unknown' && (
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          disk.type === 'SSD' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          {disk.type}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                    <div>
-                      <span className="text-gray-600">Size:</span>
-                      <span className="ml-1 font-medium text-lg">{disk.size}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Model:</span>
-                      <span className="ml-1 font-medium">{disk.model}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-600">No physical disk information available</p>
-          )}
-        </div>
+
 
 
       </div>
