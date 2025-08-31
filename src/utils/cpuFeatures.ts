@@ -1,3 +1,6 @@
+import { cpus, endianness } from 'os';
+import { readFileSync, existsSync } from 'fs';
+
 export interface CPUFeatures {
   // Basic CPU info
   architecture: string;
@@ -31,7 +34,7 @@ export function detectCPUFeatures(): CPUFeatures {
   const features: CPUFeatures = {
     architecture: process.arch,
     platform: process.platform,
-    cores: require('os').cpus().length,
+    cores: cpus().length,
     sse: false,
     sse2: false,
     sse3: false,
@@ -51,8 +54,7 @@ export function detectCPUFeatures(): CPUFeatures {
   // Try to get CPU flags from /proc/cpuinfo on Linux
   if (process.platform === 'linux') {
     try {
-      const fs = require('fs');
-      const cpuInfo = fs.readFileSync('/proc/cpuinfo', 'utf8');
+      const cpuInfo = readFileSync('/proc/cpuinfo', 'utf8');
       const lines = cpuInfo.split('\n');
       
       for (const line of lines) {
@@ -92,9 +94,8 @@ export function detectCPUFeatures(): CPUFeatures {
   // ARM detection
   if (process.arch === 'arm64' || process.arch === 'arm') {
     try {
-      const fs = require('fs');
-      if (fs.existsSync('/proc/cpuinfo')) {
-        const cpuInfo = fs.readFileSync('/proc/cpuinfo', 'utf8');
+      if (existsSync('/proc/cpuinfo')) {
+        const cpuInfo = readFileSync('/proc/cpuinfo', 'utf8');
         if (cpuInfo.includes('neon')) {
           features.neon = true;
         }
@@ -109,15 +110,14 @@ export function detectCPUFeatures(): CPUFeatures {
 
 // Alternative method using Node.js built-ins
 export function getBasicCPUInfo() {
-  const os = require('os');
-  const cpus = os.cpus();
+  const cpusData = cpus();
   
   return {
-    model: cpus[0]?.model || 'Unknown',
+    model: cpusData[0]?.model || 'Unknown',
     architecture: process.arch,
     platform: process.platform,
-    cores: cpus.length,
-    speed: cpus[0]?.speed || 'Unknown',
-    endianness: os.endianness()
+    cores: cpusData.length,
+    speed: cpusData[0]?.speed || 'Unknown',
+    endianness: endianness()
   };
 }
