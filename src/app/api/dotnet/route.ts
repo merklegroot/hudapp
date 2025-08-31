@@ -45,7 +45,7 @@ async function findDotnetInstallation(): Promise<{ path?: string; inPath: boolea
   try {
     await execAsync('dotnet --version');
     return { inPath: true };
-  } catch (error) {
+  } catch {
     // Not in PATH, check common installation locations
     for (const dotnetPath of COMMON_DOTNET_PATHS) {
       const dotnetExecutable = join(dotnetPath, 'dotnet');

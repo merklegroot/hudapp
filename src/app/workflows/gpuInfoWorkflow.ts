@@ -14,7 +14,7 @@ async function getGpusFromLspci(): Promise<gpu[]> {
     
     return gpuParser.parseLspciOutput(lspciOutput);
   }
-  catch(error) {
+  catch {
     return [];
   }
 }
@@ -54,7 +54,7 @@ async function getGpusFromNvidiaSmi(): Promise<gpu[]> {
     
     return gpus;
   }
-  catch(error) {
+  catch {
     return [];
   }
 }
@@ -113,7 +113,7 @@ async function getGpus(): Promise<gpu[]> {
           }
           
           return gpus;
-        } catch (e) {
+        } catch {
           // JSON parsing or command failed
         }
       }
@@ -143,14 +143,14 @@ async function getGpus(): Promise<gpu[]> {
           }
           
           return gpus;
-        } catch (e) {
+        } catch {
           // wmic failed
         }
       }
       
       return [];
-    } catch (error) {
-      console.error('Error getting GPU info:', error);
+    } catch {
+      console.error('Error getting GPU info:');
       return [];
     }
   }
@@ -162,7 +162,7 @@ async function getOpenGLRenderer(): Promise<string | undefined> {
     const { stdout } = await execAsync('glxinfo | grep "OpenGL renderer" 2>/dev/null');
     const match = stdout.trim().match(/OpenGL renderer string:\s*(.+)/);
     return match ? match[1].trim() : undefined;
-  } catch (error) {
+  } catch {
     // glxinfo command failed or not available
     return undefined;
   }

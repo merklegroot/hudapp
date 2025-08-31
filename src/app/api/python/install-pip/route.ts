@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function installPipViaGetPip(controller: any, encoder: any, sendMessage: any) {
+function installPipViaGetPip(controller: ReadableStreamDefaultController, encoder: TextEncoder, sendMessage: (type: string, content: string) => void) {
   sendMessage('output', 'Downloading get-pip.py installation script...\r\n');
   
   // Install pip via get-pip.py

@@ -1,4 +1,3 @@
-import { gpu } from '../workflows/models';
 import { gpuInfo } from '../workflows/models/gpuInfo';
 
 interface GpuSectionProps {

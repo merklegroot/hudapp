@@ -93,14 +93,12 @@ export default function Python() {
   const [pythonInfo, setPythonInfo] = useState<PythonInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showStatusTerminal, setShowStatusTerminal] = useState(true);
   const [selectedVersion, setSelectedVersion] = useState('3.12');
   const [userDistro, setUserDistro] = useState<string>('unknown');
 
   const fetchPythonInfo = (showLoading = true) => {
     if (showLoading) {
       setLoading(true);
-      setShowStatusTerminal(true);
     }
     fetch('/api/python')
       .then(response => response.json() as Promise<PythonInfo>)
@@ -316,7 +314,7 @@ export default function Python() {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-blue-800 mb-3">Installation Information</h3>
               <div className="text-sm text-blue-700 space-y-2">
-                <p>This will install Python {selectedVersion} using your system's package manager or pyenv.</p>
+                <p>This will install Python {selectedVersion} using your system&apos;s package manager or pyenv.</p>
                 <p>The installation process will:</p>
                 <ul className="list-disc list-inside ml-4 space-y-1">
                   <li>Detect your Linux distribution</li>
@@ -768,7 +766,7 @@ export default function Python() {
                     <p><code className="bg-blue-100 px-1 rounded">PYTHONPATH</code> - Additional module search paths</p>
                     <p><code className="bg-blue-100 px-1 rounded">PYTHONHOME</code> - Python installation directory</p>
                     <p><code className="bg-blue-100 px-1 rounded">PATH</code> - Should include Python executable directory</p>
-                    <p>Use <code className="bg-blue-100 px-1 rounded">python3 -c "import sys; print(sys.executable)"</code> to find current Python path</p>
+                    <p>Use <code className="bg-blue-100 px-1 rounded">python3 -c &quot;import sys; print(sys.executable)&quot;</code> to find current Python path</p>
                     <p>Use <code className="bg-blue-100 px-1 rounded">which python3</code> or <code className="bg-blue-100 px-1 rounded">whereis python3</code> to locate installations</p>
                     <div className="mt-3 pt-3 border-t border-blue-200">
                       <p className="font-medium text-blue-800 mb-2">Helpful Resources:</p>

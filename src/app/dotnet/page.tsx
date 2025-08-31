@@ -79,7 +79,6 @@ export default function Dotnet() {
   const [dotnetInfo, setDotnetInfo] = useState<DotnetInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showStatusTerminal, setShowStatusTerminal] = useState(true);
   const [selectedVersion, setSelectedVersion] = useState('8.0');
   const [addingToPath, setAddingToPath] = useState(false);
   const [pathAddError, setPathAddError] = useState<string | null>(null);
@@ -93,7 +92,6 @@ export default function Dotnet() {
   const fetchDotnetInfo = (showLoading = true) => {
     if (showLoading) {
       setLoading(true);
-      setShowStatusTerminal(true);
     }
     fetch('/api/dotnet')
       .then(response => response.json() as Promise<DotnetInfo>)

@@ -128,12 +128,6 @@ export default function SseTerminal({
     }
   };
 
-  const getStageColor = (event: SSEEventData) => {
-    return event.isRunning
-      ? 'bg-gray-100 text-gray-800'
-      : 'bg-green-100 text-green-800';
-  };
-
   return (
     <div className="bg-gray-900 rounded-lg shadow-md font-mono">
       {/* Header */}

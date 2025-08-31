@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { SSEEventData, SSECloseEvent } from '../../../types/sse';
 import { stepCounterWorkflow } from '../../../workflows/stepCounterWorkflow';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   // Set up Server-Sent Events headers
   const headers = new Headers({
     'Content-Type': 'text/event-stream',

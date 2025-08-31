@@ -1,5 +1,4 @@
 import Link from "next/link";
-import DotNetIcon from "./DotNetIcon";
 
 export default function Navigation() {
   return (
