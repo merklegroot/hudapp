@@ -29,8 +29,7 @@ export default function FastfetchTerminal({ onRunStart, onRunComplete, className
           import('@xterm/addon-fit')
         ]);
 
-        // Import CSS dynamically
-        await import('@xterm/xterm/css/xterm.css' as any);
+        // CSS is imported globally in globals.css
 
         // Create terminal instance
         terminal = new Terminal({
@@ -235,4 +234,3 @@ export default function FastfetchTerminal({ onRunStart, onRunComplete, className
     </div>
   );
 }
-

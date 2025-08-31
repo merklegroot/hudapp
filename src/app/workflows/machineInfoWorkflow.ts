@@ -38,7 +38,7 @@ async function getMachineModel(): Promise<string> {
         if (productName && productName !== 'To be filled by O.E.M.' && productName !== 'System Product Name') {
           return productName;
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         // Continue to fallback methods if file doesn't exist or can't be read
       }
       
@@ -49,7 +49,7 @@ async function getMachineModel(): Promise<string> {
         if (boardName && boardName !== 'To be filled by O.E.M.' && boardName !== 'Default string') {
           return boardName;
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         // Continue to fallback methods
       }
       
@@ -60,7 +60,7 @@ async function getMachineModel(): Promise<string> {
         if (dmiInfo.trim() && !dmiInfo.includes('Permission denied')) {
           return dmiInfo.trim();
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         // Expected to fail without sudo
       }
       
@@ -77,7 +77,7 @@ async function getMachineModel(): Promise<string> {
       return model.replace('Model=', '').trim() || 'Unknown';
     }
     return 'Unknown';
-  } catch (error: any) {
+  } catch (error: unknown) {
     return 'Unknown';
   }
 }
@@ -191,7 +191,7 @@ async function getDiskInfo(): Promise<diskInfo[]> {
       usedPercent: 0,
       filesystem: 'Unknown'
     }];
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error getting disk info:', error);
     return [{
       mount: '/',
@@ -253,7 +253,7 @@ async function getPhysicalDisks(): Promise<physicalDisk[]> {
               });
             }
           }
-        } catch (fdiskError) {
+        } catch (fdiskError: unknown) {
           // Ignore fdisk errors
         }
       }
@@ -321,7 +321,7 @@ async function getPhysicalDisks(): Promise<physicalDisk[]> {
     }
     
     return [];
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error getting physical disk info:', error);
     return [];
   }
@@ -425,7 +425,7 @@ async function getTopProcesses(): Promise<topProcess[]> {
     }
     
     return [];
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error getting top processes:', error);
     return [];
   }
@@ -483,7 +483,7 @@ async function getOSName(): Promise<string> {
     
     // Fallback to basic OS detection
     return `${type()} ${release()}`;
-  } catch (error: any) {
+  } catch (error: unknown) {
     return 'Unknown OS';
   }
 }
@@ -517,7 +517,7 @@ async function getMachineInfo(): Promise<machineInfo> {
       physicalDisks,
       topProcesses
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error getting system information:', error);
     return {
       hostname: 'Unknown Machine',

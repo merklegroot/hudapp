@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import dynamic from 'next/dynamic';
 
 interface TerminalProps {
   onInstallStart?: () => void;
@@ -32,8 +31,7 @@ export default function Terminal({ onInstallStart, onInstallComplete, className 
           import('@xterm/addon-fit')
         ]);
 
-        // Import CSS dynamically
-        await import('@xterm/xterm/css/xterm.css' as any);
+        // CSS is imported globally in globals.css
 
         // Create terminal instance
         terminal = new Terminal({
@@ -103,7 +101,7 @@ export default function Terminal({ onInstallStart, onInstallComplete, className 
         terminal.dispose();
       }
     };
-  }, []);
+  }, [version]);
 
   const startInstallation = async () => {
     if (!xtermRef.current || isInstalling || !isLoaded) return;

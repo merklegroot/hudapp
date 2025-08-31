@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function installPythonViaSource(controller: any, encoder: any, sendMessage: any, version: string) {
+function installPythonViaSource(controller: ReadableStreamDefaultController, encoder: TextEncoder, sendMessage: (type: string, content: string) => void, version: string) {
   sendMessage('output', 'Installing pyenv (Python version manager)...\r\n');
   
   // Install pyenv and Python from source

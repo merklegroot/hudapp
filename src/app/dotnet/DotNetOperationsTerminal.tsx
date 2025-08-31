@@ -25,7 +25,6 @@ const DotNetOperationsTerminal = forwardRef<StatusTerminalRef, DotNetOperationsT
   const [isLoaded, setIsLoaded] = useState(false);
   const [isDetecting, setIsDetecting] = useState(true);
   const [isInstalling, setIsInstalling] = useState(false);
-  const [currentOperation, setCurrentOperation] = useState<'detection' | 'installation' | 'idle'>('detection');
 
   // Expose methods to parent component
   useImperativeHandle(ref, () => ({
@@ -100,18 +99,14 @@ const DotNetOperationsTerminal = forwardRef<StatusTerminalRef, DotNetOperationsT
         fitAddonRef.current = fitAddon;
 
         setIsLoaded(true);
-
+        
         // Start detection process
         startDetection(terminal);
-
+        
         // Handle resize
         const handleResize = () => {
-          if (fitAddon && terminal) {
-            setTimeout(() => {
-              fitAddon.fit();
-              // Refresh terminal to ensure proper rendering after resize
-              terminal.refresh(0, terminal.rows - 1);
-            }, 50);
+          if (fitAddon) {
+            fitAddon.fit();
           }
         };
 
@@ -125,7 +120,7 @@ const DotNetOperationsTerminal = forwardRef<StatusTerminalRef, DotNetOperationsT
           }
         };
       } catch (error) {
-        console.error('Failed to initialize status terminal:', error);
+        console.error('Failed to initialize terminal:', error);
       }
     };
 
@@ -156,7 +151,7 @@ const DotNetOperationsTerminal = forwardRef<StatusTerminalRef, DotNetOperationsT
 
       const data = await response.json();
       
-      terminal.writeln('\x1b[33m→\x1b[0m Checking if dotnet is in PATH... ' + (data.inPath ? '\x1b[32m✓\x1b[0m' : '\x1b[31m✗\x1b[0m'));
+      terminal.writeln('\x1b[33m→\x1b[0m Checking if .NET is in PATH... ' + (data.inPath ? '\x1b[32m✓\x1b[0m' : '\x1b[31m✗\x1b[0m'));
       
       if (data.detectedPath) {
         terminal.writeln(`\x1b[33m→\x1b[0m Found .NET installation at: ${data.detectedPath} \x1b[32m✓\x1b[0m`);
@@ -165,22 +160,22 @@ const DotNetOperationsTerminal = forwardRef<StatusTerminalRef, DotNetOperationsT
       if (data.isInstalled) {
         terminal.writeln(`\x1b[33m→\x1b[0m .NET is installed \x1b[32m✓\x1b[0m`);
         
-        if (data.sdks && data.sdks.length > 0) {
-          terminal.writeln(`\x1b[33m→\x1b[0m Found ${data.sdks.length} SDK(s) \x1b[32m✓\x1b[0m`);
-          data.sdks.forEach((sdk: string) => {
-            terminal.writeln(`  \x1b[90m• ${sdk}\x1b[0m`);
-          });
-        } else {
-          terminal.writeln('\x1b[33m→\x1b[0m No SDKs found \x1b[31m✗\x1b[0m');
+        if (data.version) {
+          terminal.writeln(`\x1b[33m→\x1b[0m .NET version: ${data.version} \x1b[32m✓\x1b[0m`);
         }
         
-        if (data.runtimes && data.runtimes.length > 0) {
-          terminal.writeln(`\x1b[33m→\x1b[0m Found ${data.runtimes.length} runtime(s) \x1b[32m✓\x1b[0m`);
-          data.runtimes.forEach((runtime: string) => {
-            terminal.writeln(`  \x1b[90m• ${runtime}\x1b[0m`);
+        if (data.sdks && data.sdks.length > 0) {
+          terminal.writeln(`\x1b[33m→\x1b[0m Found ${data.sdks.length} installed SDKs \x1b[32m✓\x1b[0m`);
+          // Show first few SDKs
+          const sdksToShow = data.sdks.slice(0, 5);
+          sdksToShow.forEach((sdk: string) => {
+            terminal.writeln(`  \x1b[90m• ${sdk}\x1b[0m`);
           });
+          if (data.sdks.length > 5) {
+            terminal.writeln(`  \x1b[90m... and ${data.sdks.length - 5} more SDKs\x1b[0m`);
+          }
         } else {
-          terminal.writeln('\x1b[33m→\x1b[0m No runtimes found \x1b[31m✗\x1b[0m');
+          terminal.writeln('\x1b[33m→\x1b[0m No SDKs found or unable to list SDKs');
         }
       } else {
         terminal.writeln('\x1b[33m→\x1b[0m .NET is not installed \x1b[31m✗\x1b[0m');
@@ -205,7 +200,6 @@ const DotNetOperationsTerminal = forwardRef<StatusTerminalRef, DotNetOperationsT
     terminal.writeln('');
     
     setIsDetecting(false);
-    setCurrentOperation('idle');
     
     onDetectionComplete?.();
   };
@@ -215,11 +209,15 @@ const DotNetOperationsTerminal = forwardRef<StatusTerminalRef, DotNetOperationsT
     if (!terminal || isInstalling) return;
 
     setIsInstalling(true);
-    setCurrentOperation('installation');
     onInstallStart?.();
 
     terminal.writeln('\x1b[36m' + '='.repeat(50) + '\x1b[0m');
-    terminal.writeln(`\x1b[33mStarting .NET SDK ${installVersion} installation...\x1b[0m`);
+    
+    if (installVersion === 'latest') {
+      terminal.writeln(`\x1b[33mStarting .NET latest installation...\x1b[0m`);
+    } else {
+      terminal.writeln(`\x1b[33mStarting .NET SDK ${installVersion} installation...\x1b[0m`);
+    }
     terminal.writeln('');
 
     try {
@@ -270,14 +268,11 @@ const DotNetOperationsTerminal = forwardRef<StatusTerminalRef, DotNetOperationsT
                   
                   if (data && typeof data === 'object') {
                     if (data.type === 'output') {
-                      const content = normalizeTerminalContent(data.content || '');
-                      terminal.write(content);
+                      terminal.write(data.content || '');
                     } else if (data.type === 'error') {
-                      const content = normalizeTerminalContent(data.content || '');
-                      terminal.write(`\x1b[31m${content}\x1b[0m`);
+                      terminal.write(`\x1b[31m${data.content || ''}\x1b[0m`);
                     } else if (data.type === 'success') {
-                      const content = normalizeTerminalContent(data.content || '');
-                      terminal.write(`\x1b[32m${content}\x1b[0m`);
+                      terminal.write(`\x1b[32m${data.content || ''}\x1b[0m`);
                     }
                   }
                 } catch (e) {
@@ -293,62 +288,45 @@ const DotNetOperationsTerminal = forwardRef<StatusTerminalRef, DotNetOperationsT
         }
       }
 
-      if (terminal) {
-        terminal.writeln('');
-        terminal.writeln('\x1b[32mInstallation process completed!\x1b[0m');
-        terminal.writeln('\x1b[36mRefreshing .NET information...\x1b[0m');
-        terminal.writeln('');
-        terminal.writeln('\x1b[36m' + '='.repeat(50) + '\x1b[0m');
-        terminal.writeln('\x1b[32mTerminal ready for additional operations.\x1b[0m');
-        terminal.writeln('');
-      }
       onInstallComplete?.();
 
     } catch (error) {
       console.error('Installation error:', error);
       if (terminal) {
         terminal.writeln('');
-        terminal.writeln(`\x1b[31mInstallation failed: ${error}\x1b[0m`);
-        terminal.writeln('');
-        terminal.writeln('\x1b[36m' + '='.repeat(50) + '\x1b[0m');
-        terminal.writeln('\x1b[32mTerminal ready for additional operations.\x1b[0m');
-        terminal.writeln('');
+        terminal.writeln(`\x1b[31mFailed to install .NET: ${error}\x1b[0m`);
       }
     } finally {
       setIsInstalling(false);
-      setCurrentOperation('idle');
     }
   };
 
   return (
-    <div className={`terminal-container`}>
-      <div className="bg-gray-800 text-white p-2 text-sm font-medium flex justify-between items-center">
-        <span>Operations Terminal</span>
+    <div className="bg-gray-900 rounded-lg shadow-md font-mono">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-3 px-3 py-1.5 bg-slate-700 rounded-t-lg">
+        <h2 className="text-lg font-semibold text-gray-300">.NET Operations Terminal</h2>
+        
+        {/* Status Indicators */}
         <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${
-            !isLoaded ? 'bg-gray-500' : 
-            isDetecting ? 'bg-yellow-500' : 
-            isInstalling ? 'bg-blue-500' : 
-            'bg-green-500'
-          }`}></div>
-          <span className="text-xs">
-            {!isLoaded ? 'Initializing...' : 
-             isDetecting ? 'Detecting...' : 
-             isInstalling ? 'Installing...' : 
-             'Ready'}
+          <div
+            className={`w-2 h-2 rounded-full ${isDetecting ? 'bg-blue-400 animate-pulse' : isInstalling ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`}
+          ></div>
+          <span className="text-sm text-gray-300 font-mono">
+            [{isDetecting ? 'DETECTING' : isInstalling ? 'INSTALLING' : 'READY'}]
           </span>
         </div>
       </div>
-      <div
-        ref={terminalRef} 
-        className="w-full bg-black relative"
-        style={{ height: '300px' }}
-      >
-        {!isLoaded && (
-          <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
-            Loading status terminal...
-          </div>
-        )}
+
+      <div>
+        <div 
+          ref={terminalRef}
+          className="bg-black p-4 min-h-64 max-h-64 overflow-y-auto"
+        >
+          {!isLoaded && (
+            <p className="text-gray-500 font-mono text-sm">Initializing terminal...</p>
+          )}
+        </div>
       </div>
     </div>
   );
