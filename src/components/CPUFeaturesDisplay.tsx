@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { CPUFeatures, detectCPUFeatures, getBasicCPUInfo } from '../utils/cpuFeatures';
+import { CPUFeatures } from '../utils/cpuFeatures';
 
 interface CPUInfo {
   model: string;
@@ -12,6 +12,15 @@ interface CPUInfo {
   endianness: string;
 }
 
+interface APIResponse {
+  success: boolean;
+  data?: {
+    basic: CPUInfo;
+    features: CPUFeatures;
+  };
+  error?: string;
+}
+
 export default function CPUFeaturesDisplay() {
   const [cpuFeatures, setCpuFeatures] = useState<CPUFeatures | null>(null);
   const [basicInfo, setBasicInfo] = useState<CPUInfo | null>(null);
@@ -19,26 +28,28 @@ export default function CPUFeaturesDisplay() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const detectFeatures = async () => {
+    const fetchCPUFeatures = async () => {
       try {
         setLoading(true);
         
-        // Get basic CPU info
-        const basic = getBasicCPUInfo();
-        setBasicInfo(basic);
+        const response = await fetch('/api/cpu');
+        const data: APIResponse = await response.json();
         
-        // Get detailed CPU features
-        const features = detectCPUFeatures();
-        setCpuFeatures(features);
+        if (data.success && data.data) {
+          setBasicInfo(data.data.basic);
+          setCpuFeatures(data.data.features);
+        } else {
+          setError(data.error || 'Failed to fetch CPU features');
+        }
         
         setLoading(false);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to detect CPU features');
+        setError(err instanceof Error ? err.message : 'Failed to fetch CPU features');
         setLoading(false);
       }
     };
 
-    detectFeatures();
+    fetchCPUFeatures();
   }, []);
 
   const FeatureBadge = ({ supported, label }: { supported: boolean; label: string }) => (
