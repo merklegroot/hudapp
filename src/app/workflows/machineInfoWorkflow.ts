@@ -3,7 +3,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { readFile } from 'fs/promises';
 import { detectPlatform, platformType } from './detectPlatform';
-import { diskInfo, physicalDisk, topProcess, machineInfo } from './models';
+import { diskInfo, physicalDisk, topProcess, machineInfo, cpuDetailedInfo } from './models';
 import { formatBytes } from './formatBytes';
 
 const execAsync = promisify(exec);
@@ -103,6 +103,117 @@ async function getCPUInfo(): Promise<string> {
     return 'Unknown';
   } catch (error) {
     return 'Unknown';
+  }
+}
+
+async function getDetailedCPUInfo(): Promise<cpuDetailedInfo> {
+  try {
+    const currentPlatform = detectPlatform();
+
+    if (currentPlatform === platformType.linux) {
+      // Read /proc/cpuinfo for detailed CPU information
+      const cpuInfoContent = await readFile('/proc/cpuinfo', 'utf8');
+      const lines = cpuInfoContent.split('\n');
+      
+      const cpuInfo: { [key: string]: string } = {};
+      lines.forEach(line => {
+        const [key, value] = line.split(':').map(s => s.trim());
+        if (key && value) {
+          cpuInfo[key] = value;
+        }
+      });
+
+      // Count cores and threads
+      const processorLines = lines.filter(line => line.startsWith('processor'));
+      const threads = processorLines.length;
+      
+      // Count physical cores (assuming hyperthreading if threads > cores)
+      const cores = Math.ceil(threads / 2); // This is a rough estimate
+
+      return {
+        model: cpuInfo['model name'] || 'Unknown',
+        cores: cores,
+        threads: threads,
+        architecture: cpuInfo['model name']?.includes('x86_64') ? 'x86_64' : cpuInfo['model name']?.includes('ARM') ? 'ARM' : 'Unknown',
+        frequency: cpuInfo['cpu MHz'] ? `${parseFloat(cpuInfo['cpu MHz']).toFixed(2)} MHz` : 'Unknown',
+        cache: cpuInfo['cache size'] || 'Unknown',
+        vendor: cpuInfo['vendor_id'] || 'Unknown',
+        family: cpuInfo['cpu family'] || 'Unknown',
+        stepping: cpuInfo['stepping'] || 'Unknown'
+      };
+    }
+
+    if (currentPlatform === platformType.mac) {
+      const { stdout: sysProfiler } = await execAsync('system_profiler SPHardwareDataType');
+      
+      const modelMatch = sysProfiler.match(/Processor Name:\s*(.+)/);
+      const coresMatch = sysProfiler.match(/Total Number of Cores:\s*(\d+)/);
+      const frequencyMatch = sysProfiler.match(/Processor Speed:\s*(.+)/);
+      const cacheMatch = sysProfiler.match(/L2 Cache:\s*(.+)/);
+      
+      return {
+        model: modelMatch?.[1]?.trim() || 'Unknown',
+        cores: parseInt(coresMatch?.[1] || '0'),
+        threads: parseInt(coresMatch?.[1] || '0'), // macOS doesn't always show thread count
+        architecture: 'ARM64', // Most modern Macs are ARM64
+        frequency: frequencyMatch?.[1]?.trim() || 'Unknown',
+        cache: cacheMatch?.[1]?.trim() || 'Unknown',
+        vendor: 'Apple',
+        family: 'Apple Silicon',
+        stepping: 'Unknown'
+      };
+    }
+
+    if (currentPlatform === platformType.windows) {
+      const { stdout: wmicOutput } = await execAsync('wmic cpu get NumberOfCores,NumberOfLogicalProcessors,MaxClockSpeed,Name /format:csv');
+      const lines = wmicOutput.split('\n').slice(1);
+      
+      if (lines.length > 0) {
+        const parts = lines[0].split(',');
+        if (parts.length >= 4) {
+          const cores = parseInt(parts[1]) || 0;
+          const threads = parseInt(parts[2]) || 0;
+          const frequency = parseInt(parts[3]) || 0;
+          const name = parts[4] || 'Unknown';
+          
+          return {
+            model: name,
+            cores: cores,
+            threads: threads,
+            architecture: name.includes('x64') ? 'x64' : name.includes('ARM') ? 'ARM' : 'Unknown',
+            frequency: frequency > 0 ? `${frequency} MHz` : 'Unknown',
+            cache: 'Unknown', // Windows doesn't easily provide cache info
+            vendor: name.includes('Intel') ? 'Intel' : name.includes('AMD') ? 'AMD' : 'Unknown',
+            family: 'Unknown',
+            stepping: 'Unknown'
+          };
+        }
+      }
+    }
+
+    return {
+      model: 'Unknown',
+      cores: 0,
+      threads: 0,
+      architecture: 'Unknown',
+      frequency: 'Unknown',
+      cache: 'Unknown',
+      vendor: 'Unknown',
+      family: 'Unknown',
+      stepping: 'Unknown'
+    };
+  } catch (error) {
+    return {
+      model: 'Unknown',
+      cores: 0,
+      threads: 0,
+      architecture: 'Unknown',
+      frequency: 'Unknown',
+      cache: 'Unknown',
+      vendor: 'Unknown',
+      family: 'Unknown',
+      stepping: 'Unknown'
+    };
   }
 }
 
@@ -495,6 +606,7 @@ async function getMachineInfo(): Promise<machineInfo> {
     const kernelVersion = release();
     const machineModel = await getMachineModel();
     const cpuInfo = await getCPUInfo();
+    const cpuDetailed = await getDetailedCPUInfo();
     const localIP = getLocalIPAddress();
     const totalRAM = formatBytes(totalmem());
     const freeRAM = formatBytes(freemem());
@@ -508,6 +620,7 @@ async function getMachineInfo(): Promise<machineInfo> {
       localIP,
       machineModel,
       cpuInfo,
+      cpuDetailed,
       kernelVersion,
       osName,
       totalRAM,
@@ -524,6 +637,17 @@ async function getMachineInfo(): Promise<machineInfo> {
       localIP: 'Unknown',
       machineModel: 'Unknown',
       cpuInfo: 'Unknown',
+      cpuDetailed: {
+        model: 'Unknown',
+        cores: 0,
+        threads: 0,
+        architecture: 'Unknown',
+        frequency: 'Unknown',
+        cache: 'Unknown',
+        vendor: 'Unknown',
+        family: 'Unknown',
+        stepping: 'Unknown'
+      },
       kernelVersion: 'Unknown', 
       osName: 'Unknown',
       totalRAM: 'Unknown',
