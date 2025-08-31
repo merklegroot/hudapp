@@ -139,54 +139,7 @@ export default function Memory() {
           </div>
         </div>
 
-        {/* Disk Usage (Partitions/Mounts) */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Disk Usage (Partitions)</h2>
-          {machineInfo.disks && machineInfo.disks.length > 0 ? (
-            <div className="space-y-4">
-              {machineInfo.disks.map((disk, index) => (
-                <div key={index} className="p-4 bg-gray-50 rounded-lg">
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900">{disk.mount}</h3>
-                    <span className="text-sm text-gray-600">{disk.filesystem}</span>
-                  </div>
-                  
-                  {/* Usage bar */}
-                  <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
-                    <div 
-                      className={`h-3 rounded-full ${
-                        disk.usedPercent > 90 ? 'bg-red-500' : 
-                        disk.usedPercent > 75 ? 'bg-yellow-500' : 'bg-green-500'
-                      }`}
-                      style={{ width: `${disk.usedPercent}%` }}
-                    ></div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                    <div>
-                      <span className="text-gray-600">Total:</span>
-                      <span className="ml-1 font-medium">{disk.total}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Used:</span>
-                      <span className="ml-1 font-medium">{disk.used}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Available:</span>
-                      <span className="ml-1 font-medium">{disk.available}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Usage:</span>
-                      <span className="ml-1 font-medium">{disk.usedPercent}%</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-600">No disk usage information available</p>
-          )}
-        </div>
+
       </div>
     </div>
   );
