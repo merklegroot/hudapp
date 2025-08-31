@@ -13,6 +13,17 @@ export async function GET(): Promise<NextResponse<machineInfo>> {
       localIP: 'Unknown',
       machineModel: 'Unknown',
       cpuInfo: 'Unknown',
+      cpuDetailed: {
+        model: 'Unknown',
+        cores: 0,
+        threads: 0,
+        architecture: 'Unknown',
+        frequency: 'Unknown',
+        cache: 'Unknown',
+        vendor: 'Unknown',
+        family: 'Unknown',
+        stepping: 'Unknown'
+      },
       kernelVersion: 'Unknown', 
       osName: 'Unknown',
       totalRAM: 'Unknown',
