@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 export interface BuildInfo {
-  buildTime: string;
+  buildTime: string; // ISO timestamp for client-side timezone conversion
   commitHash: string;
   commitShort: string;
   githubUrl: string;
@@ -21,19 +21,15 @@ export function getBuildInfo(): BuildInfo {
   if (fs.existsSync(buildInfoPath)) {
     try {
       const buildInfoData = JSON.parse(fs.readFileSync(buildInfoPath, 'utf8'));
-      // Convert ISO string to localized string for display
-      const buildTime = new Date(buildInfoData.buildTime).toLocaleString();
-      return {
-        ...buildInfoData,
-        buildTime
-      };
+      // Return raw ISO timestamp for client-side timezone conversion
+      return buildInfoData;
     } catch (error) {
       console.warn('Could not read build info file:', error);
     }
   }
   
   // Fallback to runtime generation (for development)
-  const buildTime = new Date().toLocaleString();
+  const buildTime = new Date().toISOString();
   
   let commitHash = '';
   let commitShort = '';

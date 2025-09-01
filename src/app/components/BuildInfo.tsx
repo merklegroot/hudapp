@@ -6,12 +6,16 @@ import type { BuildInfo } from '@/utils/buildInfo';
 export default function BuildInfo() {
   const [buildInfo, setBuildInfo] = useState<BuildInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [localizedBuildTime, setLocalizedBuildTime] = useState<string>('');
 
   useEffect(() => {
     fetch('/api/build-info')
       .then(res => res.json())
       .then(data => {
         setBuildInfo(data);
+        // Convert ISO timestamp to user's local timezone
+        const buildTime = new Date(data.buildTime).toLocaleString();
+        setLocalizedBuildTime(buildTime);
         setLoading(false);
       })
       .catch(error => {
@@ -39,7 +43,7 @@ export default function BuildInfo() {
   return (
     <div className="text-sm text-gray-400 flex flex-col items-end">
       <div className="text-xs">
-        Built: {buildInfo.buildTime}
+        Built: {localizedBuildTime}
       </div>
       <div className="text-xs">
         Commit:{' '}
