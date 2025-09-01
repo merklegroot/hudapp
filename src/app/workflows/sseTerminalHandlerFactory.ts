@@ -60,27 +60,37 @@ export function sseTerminalHandlerFactory(workflow: workflowType) {
                 const isCompleted = trimmedLine === 'Completed';
                 const isCommand = trimmedLine.startsWith('$ ');
 
-                // Format the display text to distinguish commands from output
-                let displayText = trimmedLine;
-                let message = trimmedLine;
+                // Create event data with clear distinction between command and output
+                let eventData: SSEEventData;
 
                 if (isCommand) {
-                  displayText = `🔹 ${trimmedLine}`;
-                  message = `Executing: ${trimmedLine.substring(2)}`;
+                  const actualCommand = trimmedLine.substring(2); // Remove '$ ' prefix
+                  eventData = {
+                    isRunning: true,
+                    stageDisplayText: `🔹 ${trimmedLine}`,
+                    message: `Executing: ${actualCommand}`,
+                    timestamp: new Date().toISOString(),
+                    type: 'command',
+                    command: actualCommand
+                  };
                 } else if (isCompleted) {
-                  displayText = '✅ Completed';
-                  message = 'Process completed successfully!';
+                  eventData = {
+                    isRunning: false,
+                    stageDisplayText: '✅ Completed',
+                    message: 'Process completed successfully!',
+                    timestamp: new Date().toISOString(),
+                    type: 'status'
+                  };
                 } else {
-                  displayText = `📤 ${trimmedLine}`;
-                  message = trimmedLine;
+                  eventData = {
+                    isRunning: true,
+                    stageDisplayText: `📤 ${trimmedLine}`,
+                    message: trimmedLine,
+                    timestamp: new Date().toISOString(),
+                    type: 'output',
+                    output: trimmedLine
+                  };
                 }
-
-                const eventData: SSEEventData = {
-                  isRunning: !isCompleted,
-                  stageDisplayText: displayText,
-                  message: message,
-                  timestamp: new Date().toISOString()
-                };
 
                 const sseData = `data: ${JSON.stringify(eventData)}\n\n`;
 
@@ -100,9 +110,11 @@ export function sseTerminalHandlerFactory(workflow: workflowType) {
               // Send error event
               const errorData: SSEEventData = {
                 isRunning: false,
-                stageDisplayText: 'Error',
+                stageDisplayText: '❌ Error',
                 message: 'Script execution failed',
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                type: 'error',
+                output: result.stderr || 'Unknown error'
               };
               const sseData = `data: ${JSON.stringify(errorData)}\n\n`;
               controller.enqueue(new TextEncoder().encode(sseData));

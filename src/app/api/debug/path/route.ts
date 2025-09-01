@@ -5,7 +5,7 @@ import { SSEStreamingResponse } from '@/app/types/SSEResponse';
 import { SSEEventData } from '@/app/types/sse';
 
 function executeAndEchoFactory(command: string) {
-  const args = ['-c', `echo '${command}'; ${command}`];
+  const args = ['-c', `echo '$ ${command}'; ${command}`];
   return (dataCallback?: (data: string) => void) => spawnAndGetDataWorkflow.execute({
     command: 'bash',
     args,
