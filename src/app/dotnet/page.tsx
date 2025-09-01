@@ -6,7 +6,7 @@ import { DiWindows } from 'react-icons/di';
 import { FaCopy, FaCheck } from 'react-icons/fa';
 import DotNetOperationsTerminal, { StatusTerminalRef } from './DotNetOperationsTerminal';
 import { DotNetInfo } from '@/app/types/DotNetInfo';
-import { BSDIcon } from '../components/Icons/BsdIcon';
+import { BsdIcon } from '../components/Icons/BsdIcon';
 
 // Custom BSD Icon Component
 
@@ -790,7 +790,7 @@ export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
 
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <BSDIcon className="w-5 h-5" />
+                    <BsdIcon className="w-5 h-5" />
                     <h3 className="text-lg font-medium text-gray-700">BSD Systems (FreeBSD, OpenBSD, NetBSD)</h3>
                   </div>
                   <div className="space-y-2">
