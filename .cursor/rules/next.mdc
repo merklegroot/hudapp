@@ -1,0 +1,53 @@
+---
+description: Next.js API Route Guidelines
+globs: ["**/api/**/route.ts", "**/api/**/route.js"]
+alwaysApply: true
+---
+
+# Next.js API Route Guidelines
+
+## Explicit Return Types Required
+- ALL API route handlers (GET, POST, PUT, DELETE, etc.) MUST have explicit return types
+- Do NOT use generic `Response` type - specify the actual response structure
+- Create specific types for different response patterns (JSON, SSE, etc.)
+
+### Examples of what NOT to do:
+```typescript
+export async function GET(request: NextRequest) {
+  return Response.json({ data: "hello" });
+}
+
+export async function POST(): Promise<Response> {
+  return new Response(stream, { headers });
+}
+```
+
+### Examples of what TO do:
+```typescript
+// For JSON responses
+export async function GET(request: NextRequest): Promise<NextResponse<UserData>> {
+  return NextResponse.json({ id: 1, name: "John" });
+}
+
+// For SSE responses  
+export async function GET(request: NextRequest): Promise<SSEStreamingResponse> {
+  return new Response(stream, { headers });
+}
+
+// For custom responses
+export async function POST(): Promise<NextResponse<{ success: boolean; message: string }>> {
+  return NextResponse.json({ success: true, message: "Created" });
+}
+```
+
+## Type Organization
+- Create dedicated type files for API responses (e.g., `types/APIResponses.ts`)
+- Use descriptive type names that clearly indicate the response structure
+- Document complex response types with JSDoc comments
+- Reuse types across similar endpoints to maintain consistency
+
+## Response Type Patterns
+- `NextResponse<T>` for JSON responses with typed data
+- `SSEStreamingResponse` for Server-Sent Events streams
+- Custom response types for specific data structures
+- Union types for endpoints that can return different response shapes

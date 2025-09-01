@@ -395,6 +395,42 @@ export default function CPUPage() {
         {/* Alternative CPU Features Display */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-2xl font-semibold text-gray-800 mb-6">Alternative CPU Feature Detection</h2>
+          
+          {/* Example Instructions Section */}
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Example Usage Instructions</h3>
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Command Line Detection:</h4>
+                <div className="bg-gray-800 text-gray-100 p-3 rounded-md font-mono text-sm">
+                  <div className="text-green-400"># Check CPU features using /proc/cpuinfo</div>
+                  <div>cat /proc/cpuinfo | grep flags</div>
+                  <div className="mt-2 text-green-400"># Check specific feature support</div>
+                  <div>grep -o '\bavx2\b' /proc/cpuinfo</div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Node.js Detection:</h4>
+                <div className="bg-gray-800 text-gray-100 p-3 rounded-md font-mono text-sm">
+                  <div className="text-purple-400">const</div> os = <div className="text-purple-400 inline">require</div>(<div className="text-green-300">'os'</div>);
+                  <div className="text-purple-400">const</div> cpus = os.cpus();
+                  <div>console.log(cpus[<div className="text-blue-300 inline">0</div>].model);</div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Python Detection:</h4>
+                <div className="bg-gray-800 text-gray-100 p-3 rounded-md font-mono text-sm">
+                  <div className="text-purple-400">import</div> platform
+                  <div className="text-purple-400">import</div> subprocess
+                  <div>result = subprocess.run([<div className="text-green-300 inline">'cat'</div>, <div className="text-green-300 inline">'/proc/cpuinfo'</div>], 
+                  <div className="ml-20">capture_output=<div className="text-blue-300 inline">True</div>, text=<div className="text-blue-300 inline">True</div>)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
           <CPUFeaturesDisplay />
         </div>
       </div>

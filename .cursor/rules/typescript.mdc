@@ -1,7 +1,6 @@
 ---
-alwaysApply: false
+alwaysApply: true
 ---
-
 # TypeScript Code Style Rules
 
 ## Blank Lines Before If Statements
