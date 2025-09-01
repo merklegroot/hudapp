@@ -29,8 +29,9 @@ export async function GET(request: NextRequest): Promise<NextResponse<UserData>>
   return NextResponse.json({ id: 1, name: "John" });
 }
 
-// For SSE responses  
-export async function GET(request: NextRequest): Promise<SSEStreamingResponse> {
+// For SSE responses that stream terminal/command output
+// Consumers receive: JSON.parse(event.data) as SSEEventData
+export async function GET(request: NextRequest): Promise<SSEStreamingResponse<SSEEventData>> {
   return new Response(stream, { headers });
 }
 
@@ -48,6 +49,6 @@ export async function POST(): Promise<NextResponse<{ success: boolean; message: 
 
 ## Response Type Patterns
 - `NextResponse<T>` for JSON responses with typed data
-- `SSEStreamingResponse` for Server-Sent Events streams
+- `SSEStreamingResponse<SSEEventData>` for Server-Sent Events that stream SSEEventData objects from command execution
 - Custom response types for specific data structures
 - Union types for endpoints that can return different response shapes

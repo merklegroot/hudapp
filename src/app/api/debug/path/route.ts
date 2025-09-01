@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { sseTerminalHandlerFactory } from '../../../workflows/sseTerminalHandlerFactory';
 import { spawnAndGetDataWorkflow } from '@/app/workflows/spawnAndGetDataWorkflow';
 import { SSEStreamingResponse } from '@/app/types/SSEResponse';
+import { SSEEventData } from '@/app/types/sse';
 
 function executeAndEchoFactory(command: string) {
   const args = ['-c', `echo '${command}'; ${command}`];
@@ -17,6 +18,6 @@ const execute = executeAndEchoFactory('echo $PATH');
 
 const handler = sseTerminalHandlerFactory(execute);
 
-export async function GET(request: NextRequest): Promise<SSEStreamingResponse> {
+export async function GET(request: NextRequest): Promise<SSEStreamingResponse<SSEEventData>> {
   return handler(request);
 }
