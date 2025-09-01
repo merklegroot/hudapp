@@ -5,6 +5,7 @@ import { SiLinux, SiApple } from 'react-icons/si';
 import { DiWindows } from 'react-icons/di';
 import { FaCopy, FaCheck } from 'react-icons/fa';
 import PythonOperationsTerminal, { StatusTerminalRef } from './PythonOperationsTerminal';
+import { BsdIcon } from '../components/Icons/BsdIcon';
 
 // Custom BSD Icon Component
 interface BSDIconProps {
@@ -735,7 +736,7 @@ export default function Python() {
 
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <BSDIcon className="w-5 h-5" />
+                    <BsdIcon className="w-5 h-5" />
                     <h3 className="text-lg font-medium text-gray-700">BSD Systems (FreeBSD, OpenBSD, NetBSD)</h3>
                   </div>
                   <div className="space-y-2">

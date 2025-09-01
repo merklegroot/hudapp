@@ -6,32 +6,9 @@ import { DiWindows } from 'react-icons/di';
 import { FaCopy, FaCheck } from 'react-icons/fa';
 import DotNetOperationsTerminal, { StatusTerminalRef } from './DotNetOperationsTerminal';
 import { DotNetInfo } from '@/app/types/DotNetInfo';
+import { BSDIcon } from '../components/Icons/BsdIcon';
 
 // Custom BSD Icon Component
-interface BSDIconProps {
-  className?: string;
-}
-
-const BSDIcon = ({ className = "w-5 h-5" }: BSDIconProps) => (
-  <svg
-    viewBox="0 0 24 24"
-    className={className}
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <circle cx="12" cy="12" r="11" stroke="#000000" strokeWidth="1" fill="none" />
-    <text
-      x="12"
-      y="16"
-      textAnchor="middle"
-      fontSize="8"
-      fontWeight="900"
-      fill="#ef4444"
-      fontFamily="Arial, sans-serif"
-    >
-      BSD
-    </text>
-  </svg>
-);
 
 // Copy Button Component
 interface CopyButtonProps {
@@ -370,7 +347,7 @@ export default function Dotnet() {
 
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <BSDIcon className="w-5 h-5" />
+                    <BsdIcon className="w-5 h-5" />
                     <h3 className="text-lg font-medium text-gray-700">BSD Systems (FreeBSD, OpenBSD, NetBSD)</h3>
                   </div>
                   <div className="space-y-2">
