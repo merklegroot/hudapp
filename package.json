@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "node scripts/build-with-info.js",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
