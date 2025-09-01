@@ -13,6 +13,13 @@ export default function Debug() {
             startButtonLabel="Start Debug Process"
             stopButtonLabel="Stop Debug"
           />
+          
+          <SseTerminal 
+            url="/api/debug/path"
+            terminalTitle="Path Terminal"
+            startButtonLabel="Get Path"
+            stopButtonLabel="Stop"
+          />
         </div>
       </div>
     </div>
