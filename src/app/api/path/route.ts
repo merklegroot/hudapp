@@ -12,7 +12,7 @@ interface PathErrorResponse {
 
 type PathResponse = PathData | PathErrorResponse;
 
-export async function GET(request: NextRequest): Promise<NextResponse<PathResponse>> {
+export async function GET(): Promise<NextResponse<PathResponse>> {
   try {
     const pathData: PathData = await pathWorkflow.getPathInfo();
     

@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "HudApp - Home",
-  description: "Welcome to HudApp",
+  title: "HudApp - Machine Information",
+  description: "System information and machine details",
 };
 
 export default function RootLayout({

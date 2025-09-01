@@ -10,7 +10,8 @@
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "cpu": "tsx src/utils/cpuFeaturesCli.ts"
   },
   "dependencies": {
     "@types/ws": "^8.18.1",
@@ -34,6 +35,7 @@
     "jest": "^30.0.5",
     "tailwindcss": "^4",
     "ts-jest": "^29.4.1",
+    "tsx": "^4.7.0",
     "typescript": "^5.9.2"
   }
 }

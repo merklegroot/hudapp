@@ -86,7 +86,7 @@ async function findPythonInstallation(): Promise<{ path?: string; executable?: s
       pythonCmd = 'python';
     }
     return { inPath: true, executable: pythonCmd, allFoundPaths: foundPaths };
-  } catch (error) {
+  } catch {
     // Not in PATH, use first found installation if available
     const firstFoundPath = foundPaths[0];
     
@@ -125,8 +125,8 @@ async function getPythonInfo(pythonExecutable?: string): Promise<{ version?: str
       .slice(0, 50); // Limit to first 50 packages
 
     return { version, pipVersion, packages };
-  } catch (error) {
-    console.error('Error getting Python info:', error);
+  } catch {
+    console.error('Error getting Python info:');
     return { packages: [] };
   }
 }
@@ -151,7 +151,7 @@ async function checkPython2(): Promise<{ available: boolean; version?: string; p
       version: version || 'Unknown version',
       path
     };
-  } catch (error) {
+  } catch {
     // python command not available or failed
     return { available: false };
   }
@@ -186,7 +186,7 @@ async function checkPipCommands(): Promise<{
     } catch {
       // which failed, but pip3 command worked
     }
-  } catch (error) {
+  } catch {
     // pip3 command not available or failed
   }
 
@@ -202,7 +202,7 @@ async function checkPipCommands(): Promise<{
     } catch {
       // which failed, but pip command worked
     }
-  } catch (error) {
+  } catch {
     // pip command not available or failed
   }
 

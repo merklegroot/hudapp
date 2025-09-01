@@ -133,16 +133,16 @@ export default function Path() {
                   </p>
 
                   <p className="text-sm text-blue-700">
-                    This is necessary to accurately retrieve your system's PATH environment variable from a fresh shell session,
+                    This is necessary to accurately retrieve your system&apos;s PATH environment variable from a fresh shell session,
                     ensuring we show the actual PATH your terminal uses rather than the limited PATH available to this web application.
                   </p>
 
                   <p className="text-sm text-blue-700">
-                    You're welcome to inspect the source code to see exactly what this application is doing.
+                    You&apos;re welcome to inspect the source code to see exactly what this application is doing.
                   </p>
 
                   <p className="text-sm text-blue-700">
-                    There's likely a better way to do this and I'm happy to accept PRs.
+                    There&apos;s likely a better way to do this and I&apos;m happy to accept PRs.
                   </p>
 
                   <p className="text-sm text-blue-700">
