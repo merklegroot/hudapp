@@ -6,6 +6,8 @@ import OSIcon from './components/OSIcon';
 import CPUIcon from './components/CPUIcon';
 import MachineIcon from './components/MachineIcon';
 import KernelIcon from './components/KernelIcon';
+import SystemDetailField from './components/SystemDetailField';
+import CPUDetailField from './components/CPUDetailField';
 
 export default function Home() {
   const [machineInfo, setMachineInfo] = useState<machineInfo | null>(null);
@@ -120,6 +122,7 @@ export default function Home() {
     { label: 'Machine Name', value: machineInfo.hostname },
     { label: 'Local IP Address', value: machineInfo.localIP },
     { label: 'Machine Model', value: machineInfo.machineModel },
+    { label: 'CPU Model', value: machineInfo.cpuDetailed.model },
     { label: 'Operating System', value: machineInfo.osName },
     { label: 'Kernel Version', value: machineInfo.kernelVersion },
   ];
@@ -134,21 +137,11 @@ export default function Home() {
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">System Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {infoItems.map((item, index) => (
-              <div key={index} className="p-4 bg-gray-50 rounded-lg">
-                <h3 className="text-sm font-medium text-gray-600 mb-1">{item.label}</h3>
-                <div className="flex items-center gap-2">
-                  {item.label === 'Operating System' && (
-                    <OSIcon osName={item.value} className="w-6 h-6" />
-                  )}
-                  {item.label === 'Machine Model' && (
-                    <MachineIcon machineModel={item.value} className="w-6 h-6" />
-                  )}
-                  {item.label === 'Kernel Version' && (
-                    <KernelIcon kernelVersion={item.value} className="w-6 h-6" />
-                  )}
-                  <p className="text-lg font-semibold text-gray-900">{item.value}</p>
-                </div>
-              </div>
+              <SystemDetailField
+                key={index}
+                label={item.label}
+                value={item.value}
+              />
             ))}
           </div>
         </div>
@@ -157,13 +150,9 @@ export default function Home() {
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">CPU Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <h3 className="text-sm font-medium text-gray-600 mb-1">Model</h3>
-              <div className="flex items-center gap-2">
-                <CPUIcon cpuInfo={machineInfo.cpuDetailed.model} className="w-6 h-6" />
-                <p className="text-lg font-semibold text-gray-900">{machineInfo.cpuDetailed.model}</p>
-              </div>
-            </div>
+            <CPUDetailField
+              value={machineInfo.cpuDetailed.model}
+            />
             
             <div className="p-4 bg-gray-50 rounded-lg">
               <h3 className="text-sm font-medium text-gray-600 mb-1">Cores / Threads</h3>
