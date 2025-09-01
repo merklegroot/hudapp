@@ -11,6 +11,11 @@ export default function Navigation() {
             </Link>
           </li>
           <li>
+            <Link href="/cpu" className="hover:text-gray-300 transition-colors">
+              CPU
+            </Link>
+          </li>
+          <li>
             <Link href="/memory" className="hover:text-gray-300 transition-colors">
               Memory
             </Link>
