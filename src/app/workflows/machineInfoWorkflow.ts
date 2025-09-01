@@ -106,6 +106,56 @@ async function getCPUInfo(): Promise<string> {
   }
 }
 
+async function getArchitecture(cpuInfo: { [key: string]: string }): Promise<string> {
+  try {
+    // Method 1: Try uname -m command (most reliable)
+    try {
+      const { stdout: archOutput } = await execAsync('uname -m');
+      const arch = archOutput.trim();
+      if (arch) {
+        return arch;
+      }
+    } catch (e) {
+      // Continue to fallback methods
+    }
+
+    // Method 2: Try arch command
+    try {
+      const { stdout: archOutput } = await execAsync('arch');
+      const arch = archOutput.trim();
+      if (arch) {
+        return arch;
+      }
+    } catch (e) {
+      // Continue to fallback methods
+    }
+
+    // Method 3: Check CPU flags for architecture indicators
+    const flags = cpuInfo['flags'] || '';
+    if (flags.includes('lm')) {
+      // Long mode indicates x86_64
+      return 'x86_64';
+    }
+
+    // Method 4: Check for ARM indicators in model name or flags
+    const modelName = cpuInfo['model name'] || '';
+    if (modelName.toLowerCase().includes('arm') || flags.includes('arm')) {
+      return 'ARM';
+    }
+
+    // Method 5: Try to determine from vendor and family
+    const vendor = cpuInfo['vendor_id'] || '';
+    if (vendor === 'GenuineIntel' || vendor === 'AuthenticAMD') {
+      // Intel and AMD are typically x86_64 on modern systems
+      return 'x86_64';
+    }
+
+    return 'Unknown';
+  } catch (error) {
+    return 'Unknown';
+  }
+}
+
 async function getDetailedCPUInfo(): Promise<cpuDetailedInfo> {
   try {
     const currentPlatform = detectPlatform();
@@ -134,7 +184,7 @@ async function getDetailedCPUInfo(): Promise<cpuDetailedInfo> {
         model: cpuInfo['model name'] || 'Unknown',
         cores: cores,
         threads: threads,
-        architecture: cpuInfo['model name']?.includes('x86_64') ? 'x86_64' : cpuInfo['model name']?.includes('ARM') ? 'ARM' : 'Unknown',
+        architecture: await getArchitecture(cpuInfo),
         frequency: cpuInfo['cpu MHz'] ? `${parseFloat(cpuInfo['cpu MHz']).toFixed(2)} MHz` : 'Unknown',
         cache: cpuInfo['cache size'] || 'Unknown',
         vendor: cpuInfo['vendor_id'] || 'Unknown',
