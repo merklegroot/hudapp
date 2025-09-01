@@ -46,6 +46,11 @@ export function PathControl() {
     }
   };
 
+  // Auto-start the process when component mounts
+  useEffect(() => {
+    startProcess();
+  }, []);
+
   const startProcess = () => {
     // Clear previous events and parsed data
     setEvents([]);
@@ -189,7 +194,7 @@ export function PathControl() {
               : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
           >
-            {isConnected ? 'Process Running...' : 'Get Path'}
+            {isConnected ? 'Process Running...' : 'Refresh'}
           </button>
         </div>
       </div>
