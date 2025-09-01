@@ -106,6 +106,102 @@ async function getCPUInfo(): Promise<string> {
   }
 }
 
+async function getFrequencyInfo(cpuInfo: { [key: string]: string }): Promise<{
+  current: string;
+  max: string;
+  min: string;
+  display: string;
+}> {
+  try {
+    const currentPlatform = detectPlatform();
+    
+    if (currentPlatform === platformType.linux) {
+      let currentFreq = 'Unknown';
+      let maxFreq = 'Unknown';
+      let minFreq = 'Unknown';
+      
+      // Get current frequency from /proc/cpuinfo
+      const cpuMhz = cpuInfo['cpu MHz'];
+      if (cpuMhz) {
+        currentFreq = `${parseFloat(cpuMhz).toFixed(2)} MHz`;
+      }
+      
+      // Try to get max/min frequency from sysfs
+      try {
+        const { stdout: maxFreqKhz } = await execAsync('cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq 2>/dev/null');
+        if (maxFreqKhz.trim()) {
+          const maxMhz = parseInt(maxFreqKhz.trim()) / 1000;
+          maxFreq = `${maxMhz.toFixed(0)} MHz`;
+        }
+      } catch (e) {
+        // Try lscpu as fallback
+        try {
+          const { stdout: lscpuOutput } = await execAsync('lscpu | grep "CPU max MHz"');
+          const match = lscpuOutput.match(/CPU max MHz:\s*([\d.]+)/);
+          if (match) {
+            maxFreq = `${parseFloat(match[1]).toFixed(0)} MHz`;
+          }
+        } catch (e2) {
+          // Continue with Unknown
+        }
+      }
+      
+      // Try to get min frequency
+      try {
+        const { stdout: minFreqKhz } = await execAsync('cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq 2>/dev/null');
+        if (minFreqKhz.trim()) {
+          const minMhz = parseInt(minFreqKhz.trim()) / 1000;
+          minFreq = `${minMhz.toFixed(0)} MHz`;
+        }
+      } catch (e) {
+        // Try lscpu as fallback
+        try {
+          const { stdout: lscpuOutput } = await execAsync('lscpu | grep "CPU min MHz"');
+          const match = lscpuOutput.match(/CPU min MHz:\s*([\d.]+)/);
+          if (match) {
+            minFreq = `${parseFloat(match[1]).toFixed(0)} MHz`;
+          }
+        } catch (e2) {
+          // Continue with Unknown
+        }
+      }
+      
+      // Create display string showing current/max
+      let displayFreq = currentFreq;
+      if (currentFreq !== 'Unknown' && maxFreq !== 'Unknown') {
+        displayFreq = `${currentFreq} (max: ${maxFreq})`;
+      } else if (maxFreq !== 'Unknown') {
+        displayFreq = `max: ${maxFreq}`;
+      }
+      
+      return {
+        current: currentFreq,
+        max: maxFreq,
+        min: minFreq,
+        display: displayFreq
+      };
+    }
+    
+    // For other platforms, return basic info
+    const cpuMhz = cpuInfo['cpu MHz'];
+    const freq = cpuMhz ? `${parseFloat(cpuMhz).toFixed(2)} MHz` : 'Unknown';
+    
+    return {
+      current: freq,
+      max: 'Unknown',
+      min: 'Unknown',
+      display: freq
+    };
+  } catch (error) {
+    return {
+      current: 'Unknown',
+      max: 'Unknown',
+      min: 'Unknown',
+      display: 'Unknown'
+    };
+  }
+}
+
 async function getArchitecture(cpuInfo: { [key: string]: string }): Promise<string> {
   try {
     // Method 1: Try uname -m command (most reliable)
@@ -180,12 +276,17 @@ async function getDetailedCPUInfo(): Promise<cpuDetailedInfo> {
       // Count physical cores (assuming hyperthreading if threads > cores)
       const cores = Math.ceil(threads / 2); // This is a rough estimate
 
+      const frequencyInfo = await getFrequencyInfo(cpuInfo);
+
       return {
         model: cpuInfo['model name'] || 'Unknown',
         cores: cores,
         threads: threads,
         architecture: await getArchitecture(cpuInfo),
-        frequency: cpuInfo['cpu MHz'] ? `${parseFloat(cpuInfo['cpu MHz']).toFixed(2)} MHz` : 'Unknown',
+        frequency: frequencyInfo.display,
+        currentFrequency: frequencyInfo.current,
+        maxFrequency: frequencyInfo.max,
+        minFrequency: frequencyInfo.min,
         cache: cpuInfo['cache size'] || 'Unknown',
         vendor: cpuInfo['vendor_id'] || 'Unknown',
         family: cpuInfo['cpu family'] || 'Unknown',
@@ -201,17 +302,21 @@ async function getDetailedCPUInfo(): Promise<cpuDetailedInfo> {
       const frequencyMatch = sysProfiler.match(/Processor Speed:\s*(.+)/);
       const cacheMatch = sysProfiler.match(/L2 Cache:\s*(.+)/);
       
-      return {
-        model: modelMatch?.[1]?.trim() || 'Unknown',
-        cores: parseInt(coresMatch?.[1] || '0'),
-        threads: parseInt(coresMatch?.[1] || '0'), // macOS doesn't always show thread count
-        architecture: 'ARM64', // Most modern Macs are ARM64
-        frequency: frequencyMatch?.[1]?.trim() || 'Unknown',
-        cache: cacheMatch?.[1]?.trim() || 'Unknown',
-        vendor: 'Apple',
-        family: 'Apple Silicon',
-        stepping: 'Unknown'
-      };
+              const freq = frequencyMatch?.[1]?.trim() || 'Unknown';
+        return {
+          model: modelMatch?.[1]?.trim() || 'Unknown',
+          cores: parseInt(coresMatch?.[1] || '0'),
+          threads: parseInt(coresMatch?.[1] || '0'), // macOS doesn't always show thread count
+          architecture: 'ARM64', // Most modern Macs are ARM64
+          frequency: freq,
+          currentFrequency: freq,
+          maxFrequency: freq,
+          minFrequency: 'Unknown',
+          cache: cacheMatch?.[1]?.trim() || 'Unknown',
+          vendor: 'Apple',
+          family: 'Apple Silicon',
+          stepping: 'Unknown'
+        };
     }
 
     if (currentPlatform === platformType.windows) {
@@ -226,12 +331,16 @@ async function getDetailedCPUInfo(): Promise<cpuDetailedInfo> {
           const frequency = parseInt(parts[3]) || 0;
           const name = parts[4] || 'Unknown';
           
+          const freq = frequency > 0 ? `${frequency} MHz` : 'Unknown';
           return {
             model: name,
             cores: cores,
             threads: threads,
             architecture: name.includes('x64') ? 'x64' : name.includes('ARM') ? 'ARM' : 'Unknown',
-            frequency: frequency > 0 ? `${frequency} MHz` : 'Unknown',
+            frequency: freq,
+            currentFrequency: freq,
+            maxFrequency: freq,
+            minFrequency: 'Unknown',
             cache: 'Unknown', // Windows doesn't easily provide cache info
             vendor: name.includes('Intel') ? 'Intel' : name.includes('AMD') ? 'AMD' : 'Unknown',
             family: 'Unknown',
@@ -247,6 +356,9 @@ async function getDetailedCPUInfo(): Promise<cpuDetailedInfo> {
       threads: 0,
       architecture: 'Unknown',
       frequency: 'Unknown',
+      currentFrequency: 'Unknown',
+      maxFrequency: 'Unknown',
+      minFrequency: 'Unknown',
       cache: 'Unknown',
       vendor: 'Unknown',
       family: 'Unknown',
@@ -259,6 +371,9 @@ async function getDetailedCPUInfo(): Promise<cpuDetailedInfo> {
       threads: 0,
       architecture: 'Unknown',
       frequency: 'Unknown',
+      currentFrequency: 'Unknown',
+      maxFrequency: 'Unknown',
+      minFrequency: 'Unknown',
       cache: 'Unknown',
       vendor: 'Unknown',
       family: 'Unknown',
@@ -693,6 +808,9 @@ async function getMachineInfo(): Promise<machineInfo> {
         threads: 0,
         architecture: 'Unknown',
         frequency: 'Unknown',
+        currentFrequency: 'Unknown',
+        maxFrequency: 'Unknown',
+        minFrequency: 'Unknown',
         cache: 'Unknown',
         vendor: 'Unknown',
         family: 'Unknown',

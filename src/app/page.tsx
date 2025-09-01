@@ -179,7 +179,14 @@ export default function Home() {
             
             <div className="p-4 bg-gray-50 rounded-lg">
               <h3 className="text-sm font-medium text-gray-600 mb-1">Frequency</h3>
-              <p className="text-lg font-semibold text-gray-900">{machineInfo.cpuDetailed.frequency}</p>
+              <div className="space-y-1">
+                <p className="text-lg font-semibold text-gray-900">
+                  Current: <span className="text-blue-600">{machineInfo.cpuDetailed.currentFrequency}</span>
+                </p>
+                <p className="text-sm text-gray-600">
+                  Max: {machineInfo.cpuDetailed.maxFrequency} | Min: {machineInfo.cpuDetailed.minFrequency}
+                </p>
+              </div>
             </div>
             
             <div className="p-4 bg-gray-50 rounded-lg">

@@ -47,6 +47,9 @@ export default function TestPage() {
           <p>Threads: {data.cpuDetailed.threads}</p>
           <p>Architecture: {data.cpuDetailed.architecture}</p>
           <p>Frequency: {data.cpuDetailed.frequency}</p>
+          <p>Current Frequency: {data.cpuDetailed.currentFrequency}</p>
+          <p>Max Frequency: {data.cpuDetailed.maxFrequency}</p>
+          <p>Min Frequency: {data.cpuDetailed.minFrequency}</p>
           <p>Cache: {data.cpuDetailed.cache}</p>
           <p>Vendor: {data.cpuDetailed.vendor}</p>
           <p>Family: {data.cpuDetailed.family}</p>

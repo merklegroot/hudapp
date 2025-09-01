@@ -8,6 +8,9 @@ export interface cpuDetailedInfo {
   threads: number;
   architecture: string;
   frequency: string;
+  currentFrequency: string;
+  maxFrequency: string;
+  minFrequency: string;
   cache: string;
   vendor: string;
   family: string;
