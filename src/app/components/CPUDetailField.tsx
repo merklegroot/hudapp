@@ -1,5 +1,5 @@
 import React from 'react';
-import CPUIcon from './CPUIcon';
+import CPUIcon from './Icons/CPUIcon';
 
 interface CPUDetailFieldProps {
   value: string;

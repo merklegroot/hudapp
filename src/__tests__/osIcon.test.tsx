@@ -1,5 +1,5 @@
 import { render } from '@testing-library/react';
-import OSIcon from '../app/components/OSIcon';
+import OSIcon from '../app/components/Icons/OSIcon';
 
 describe('OSIcon Component', () => {
   it('should render Amazon Linux icon for Amazon Linux 2023', () => {

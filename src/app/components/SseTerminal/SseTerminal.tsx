@@ -1,20 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { SSEEventData } from '../types/sse';
-
-function SseLine({ event }: { event: SSEEventData }) {
-  return (
-    <div className="font-mono text-sm">
-      <span className="text-gray-500">
-        [{new Date(event.timestamp).toLocaleTimeString()}]
-        <span className={event.isRunning ? 'text-yellow-400' : 'text-green-400'}>
-          &nbsp;{event.stageDisplayText}
-        </span>
-      </span>
-    </div>
-  );
-}
+import { SSEEventData } from '../../types/sse';
+import { SseLine } from './SseLine';
 
 interface SseTerminalProps {
   url: string;

@@ -1,4 +1,4 @@
-import SseTerminal from '../components/SseTerminal';
+import SseTerminal from '../components/SseTerminal/SseTerminal';
 import { PathControl } from '../components/PathControl';
 
 export default function Debug() {

@@ -1,8 +1,8 @@
 import React from 'react';
-import OSIcon from './OSIcon';
-import MachineIcon from './MachineIcon';
-import CPUIcon from './CPUIcon';
-import KernelIcon from './KernelIcon';
+import OSIcon from './Icons/OSIcon';
+import MachineIcon from './Icons/MachineIcon';
+import CPUIcon from './Icons/CPUIcon';
+import KernelIcon from './Icons/KernelIcon';
 
 interface SystemDetailFieldProps {
   label: string;
