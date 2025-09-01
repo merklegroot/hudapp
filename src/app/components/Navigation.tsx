@@ -1,4 +1,5 @@
 import Link from "next/link";
+import BuildInfo from "./BuildInfo";
 
 export default function Navigation() {
   return (
@@ -61,6 +62,7 @@ export default function Navigation() {
             </Link>
           </li>
         </ul>
+        <BuildInfo />
       </div>
     </nav>
   );
