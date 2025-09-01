@@ -13,9 +13,14 @@ export default function BuildInfo() {
       .then(res => res.json())
       .then(data => {
         setBuildInfo(data);
-        // Convert ISO timestamp to user's local timezone
-        const buildTime = new Date(data.buildTime).toLocaleString();
-        setLocalizedBuildTime(buildTime);
+        // Convert ISO timestamp to user's local timezone with YYYY-mm-dd date format
+        const buildDate = new Date(data.buildTime);
+        const year = buildDate.getFullYear();
+        const month = String(buildDate.getMonth() + 1).padStart(2, '0');
+        const day = String(buildDate.getDate()).padStart(2, '0');
+        const time = buildDate.toLocaleTimeString();
+        const formattedBuildTime = `${year}-${month}-${day} ${time}`;
+        setLocalizedBuildTime(formattedBuildTime);
         setLoading(false);
       })
       .catch(error => {
