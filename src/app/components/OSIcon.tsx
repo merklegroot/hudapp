@@ -15,7 +15,8 @@ import {
   SiElementary,
   SiLinuxmint,
   SiGentoo,
-  SiKalilinux
+  SiKalilinux,
+  SiAmazon
 } from 'react-icons/si';
 import { FaApple, FaQuestion } from 'react-icons/fa';
 import { DiWindows } from 'react-icons/di';
@@ -79,6 +80,11 @@ export default function OSIcon({ osName, className = "w-6 h-6" }: OSIconProps) {
   
   if (osLower.includes('pop') || osLower.includes('pop_os') || osLower.includes('pop!_os')) {
     return <SiLinux className={`${className} text-orange-500`} />;
+  }
+  
+  // Amazon Linux detection
+  if (osLower.includes('amazon linux') || (osLower.includes('amazon') && osLower.includes('linux'))) {
+    return <SiAmazon className={`${className} text-orange-500`} />;
   }
   
   // Generic OS family detection
