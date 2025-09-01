@@ -210,6 +210,117 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* CPU Instruction Sets */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">CPU Instruction Sets</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {/* SSE Instructions */}
+            <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.sse ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${machineInfo.cpuDetailed.instructionSets.sse ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                <span className="text-sm font-medium">SSE</span>
+              </div>
+            </div>
+
+            <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.sse2 ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${machineInfo.cpuDetailed.instructionSets.sse2 ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                <span className="text-sm font-medium">SSE2</span>
+              </div>
+            </div>
+
+            <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.sse3 ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${machineInfo.cpuDetailed.instructionSets.sse3 ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                <span className="text-sm font-medium">SSE3</span>
+              </div>
+            </div>
+
+            <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.ssse3 ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${machineInfo.cpuDetailed.instructionSets.ssse3 ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                <span className="text-sm font-medium">SSSE3</span>
+              </div>
+            </div>
+
+            <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.sse4_1 ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${machineInfo.cpuDetailed.instructionSets.sse4_1 ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                <span className="text-sm font-medium">SSE4.1</span>
+              </div>
+            </div>
+
+            <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.sse4_2 ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${machineInfo.cpuDetailed.instructionSets.sse4_2 ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                <span className="text-sm font-medium">SSE4.2</span>
+              </div>
+            </div>
+
+            {/* AVX Instructions */}
+            <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.avx ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${machineInfo.cpuDetailed.instructionSets.avx ? 'bg-blue-500' : 'bg-gray-400'}`}></div>
+                <span className="text-sm font-medium">AVX</span>
+              </div>
+            </div>
+
+            <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.avx2 ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${machineInfo.cpuDetailed.instructionSets.avx2 ? 'bg-blue-500' : 'bg-gray-400'}`}></div>
+                <span className="text-sm font-medium">AVX2</span>
+              </div>
+            </div>
+
+            <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.avx512 ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${machineInfo.cpuDetailed.instructionSets.avx512 ? 'bg-blue-500' : 'bg-gray-400'}`}></div>
+                <span className="text-sm font-medium">AVX-512</span>
+              </div>
+            </div>
+
+            {/* Other Instructions */}
+            <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.aes ? 'bg-purple-50 border-purple-200' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${machineInfo.cpuDetailed.instructionSets.aes ? 'bg-purple-500' : 'bg-gray-400'}`}></div>
+                <span className="text-sm font-medium">AES</span>
+              </div>
+            </div>
+
+            <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.sha ? 'bg-purple-50 border-purple-200' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${machineInfo.cpuDetailed.instructionSets.sha ? 'bg-purple-500' : 'bg-gray-400'}`}></div>
+                <span className="text-sm font-medium">SHA</span>
+              </div>
+            </div>
+
+            <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.fma ? 'bg-orange-50 border-orange-200' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${machineInfo.cpuDetailed.instructionSets.fma ? 'bg-orange-500' : 'bg-gray-400'}`}></div>
+                <span className="text-sm font-medium">FMA</span>
+              </div>
+            </div>
+
+            <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.mmx ? 'bg-gray-100 border-gray-300' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${machineInfo.cpuDetailed.instructionSets.mmx ? 'bg-gray-600' : 'bg-gray-400'}`}></div>
+                <span className="text-sm font-medium">MMX</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+            <div className="flex items-start gap-2">
+              <div className="w-4 h-4 bg-blue-500 rounded-full mt-0.5 flex-shrink-0"></div>
+              <div>
+                <p className="text-sm text-blue-800">
+                  <strong>What are instruction sets?</strong> These are specialized CPU instructions that accelerate specific operations like multimedia processing (SSE), mathematical calculations (AVX), encryption (AES), and hashing (SHA).
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -25,7 +25,22 @@ export async function GET(): Promise<NextResponse<machineInfo>> {
         cache: 'Unknown',
         vendor: 'Unknown',
         family: 'Unknown',
-        stepping: 'Unknown'
+        stepping: 'Unknown',
+        instructionSets: {
+          sse: false,
+          sse2: false,
+          sse3: false,
+          ssse3: false,
+          sse4_1: false,
+          sse4_2: false,
+          avx: false,
+          avx2: false,
+          avx512: false,
+          aes: false,
+          sha: false,
+          fma: false,
+          mmx: false
+        }
       },
       kernelVersion: 'Unknown', 
       osName: 'Unknown',

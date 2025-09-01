@@ -2,6 +2,22 @@ import { diskInfo } from './diskInfo';
 import { physicalDisk } from './physicalDisk';
 import { topProcess } from './topProcess';
 
+export interface cpuInstructionSets {
+  sse: boolean;
+  sse2: boolean;
+  sse3: boolean;
+  ssse3: boolean;
+  sse4_1: boolean;
+  sse4_2: boolean;
+  avx: boolean;
+  avx2: boolean;
+  avx512: boolean;
+  aes: boolean;
+  sha: boolean;
+  fma: boolean;
+  mmx: boolean;
+}
+
 export interface cpuDetailedInfo {
   model: string;
   cores: number;
@@ -15,6 +31,7 @@ export interface cpuDetailedInfo {
   vendor: string;
   family: string;
   stepping: string;
+  instructionSets: cpuInstructionSets;
 }
 
 export interface machineInfo {

@@ -3,7 +3,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { readFile } from 'fs/promises';
 import { detectPlatform, platformType } from './detectPlatform';
-import { diskInfo, physicalDisk, topProcess, machineInfo, cpuDetailedInfo } from './models';
+import { diskInfo, physicalDisk, topProcess, machineInfo, cpuDetailedInfo, cpuInstructionSets } from './models';
 import { formatBytes } from './formatBytes';
 
 const execAsync = promisify(exec);
@@ -202,6 +202,45 @@ async function getFrequencyInfo(cpuInfo: { [key: string]: string }): Promise<{
   }
 }
 
+function getDefaultInstructionSets(): cpuInstructionSets {
+  return {
+    sse: false,
+    sse2: false,
+    sse3: false,
+    ssse3: false,
+    sse4_1: false,
+    sse4_2: false,
+    avx: false,
+    avx2: false,
+    avx512: false,
+    aes: false,
+    sha: false,
+    fma: false,
+    mmx: false
+  };
+}
+
+function parseInstructionSets(cpuInfo: { [key: string]: string }): cpuInstructionSets {
+  const flags = cpuInfo['flags'] || '';
+  const flagsArray = flags.split(' ');
+  
+  return {
+    sse: flagsArray.includes('sse'),
+    sse2: flagsArray.includes('sse2'),
+    sse3: flagsArray.includes('pni'), // pni is SSE3
+    ssse3: flagsArray.includes('ssse3'),
+    sse4_1: flagsArray.includes('sse4_1'),
+    sse4_2: flagsArray.includes('sse4_2'),
+    avx: flagsArray.includes('avx'),
+    avx2: flagsArray.includes('avx2'),
+    avx512: flagsArray.some(flag => flag.startsWith('avx512')),
+    aes: flagsArray.includes('aes'),
+    sha: flagsArray.includes('sha_ni'), // sha_ni is SHA extensions
+    fma: flagsArray.includes('fma'),
+    mmx: flagsArray.includes('mmx')
+  };
+}
+
 async function getArchitecture(cpuInfo: { [key: string]: string }): Promise<string> {
   try {
     // Method 1: Try uname -m command (most reliable)
@@ -277,6 +316,7 @@ async function getDetailedCPUInfo(): Promise<cpuDetailedInfo> {
       const cores = Math.ceil(threads / 2); // This is a rough estimate
 
       const frequencyInfo = await getFrequencyInfo(cpuInfo);
+      const instructionSets = parseInstructionSets(cpuInfo);
 
       return {
         model: cpuInfo['model name'] || 'Unknown',
@@ -290,7 +330,8 @@ async function getDetailedCPUInfo(): Promise<cpuDetailedInfo> {
         cache: cpuInfo['cache size'] || 'Unknown',
         vendor: cpuInfo['vendor_id'] || 'Unknown',
         family: cpuInfo['cpu family'] || 'Unknown',
-        stepping: cpuInfo['stepping'] || 'Unknown'
+        stepping: cpuInfo['stepping'] || 'Unknown',
+        instructionSets: instructionSets
       };
     }
 
@@ -315,7 +356,8 @@ async function getDetailedCPUInfo(): Promise<cpuDetailedInfo> {
           cache: cacheMatch?.[1]?.trim() || 'Unknown',
           vendor: 'Apple',
           family: 'Apple Silicon',
-          stepping: 'Unknown'
+          stepping: 'Unknown',
+          instructionSets: getDefaultInstructionSets() // macOS would need different detection
         };
     }
 
@@ -344,7 +386,8 @@ async function getDetailedCPUInfo(): Promise<cpuDetailedInfo> {
             cache: 'Unknown', // Windows doesn't easily provide cache info
             vendor: name.includes('Intel') ? 'Intel' : name.includes('AMD') ? 'AMD' : 'Unknown',
             family: 'Unknown',
-            stepping: 'Unknown'
+            stepping: 'Unknown',
+            instructionSets: getDefaultInstructionSets() // Windows would need different detection
           };
         }
       }
@@ -362,7 +405,8 @@ async function getDetailedCPUInfo(): Promise<cpuDetailedInfo> {
       cache: 'Unknown',
       vendor: 'Unknown',
       family: 'Unknown',
-      stepping: 'Unknown'
+      stepping: 'Unknown',
+      instructionSets: getDefaultInstructionSets()
     };
   } catch (error) {
     return {
@@ -377,7 +421,8 @@ async function getDetailedCPUInfo(): Promise<cpuDetailedInfo> {
       cache: 'Unknown',
       vendor: 'Unknown',
       family: 'Unknown',
-      stepping: 'Unknown'
+      stepping: 'Unknown',
+      instructionSets: getDefaultInstructionSets()
     };
   }
 }
@@ -814,7 +859,8 @@ async function getMachineInfo(): Promise<machineInfo> {
         cache: 'Unknown',
         vendor: 'Unknown',
         family: 'Unknown',
-        stepping: 'Unknown'
+        stepping: 'Unknown',
+        instructionSets: getDefaultInstructionSets()
       },
       kernelVersion: 'Unknown', 
       osName: 'Unknown',
