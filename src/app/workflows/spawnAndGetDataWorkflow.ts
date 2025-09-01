@@ -1,18 +1,6 @@
 import { spawn, ChildProcess } from 'child_process';
-
-interface SpawnOptions {
-  command: string;
-  args: string[];
-  timeout?: number;
-  dataCallback?: (data: string) => void;
-}
-
-interface SpawnResult {
-  success: boolean;
-  stdout: string;
-  stderr: string;
-  exitCode: number | null;
-}
+import { SpawnOptions } from '../types/SpawnOptions';
+import { SpawnResult } from '../types/SpawnResult';
 
 /** Generic workflow to spawn a command and get its output data */
 async function execute(options: SpawnOptions): Promise<SpawnResult> {

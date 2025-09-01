@@ -3,7 +3,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { readFile } from 'fs/promises';
 import { detectPlatform, platformType } from './detectPlatform';
-import { diskInfo, physicalDisk, topProcess, machineInfo, cpuDetailedInfo } from './models';
+import { diskInfo, physicalDisk, topProcess, machineInfo, cpuDetailedInfo, cpuInstructionSets } from './models';
 import { formatBytes } from './formatBytes';
 
 const execAsync = promisify(exec);
@@ -106,6 +106,191 @@ async function getCPUInfo(): Promise<string> {
   }
 }
 
+async function getFrequencyInfo(cpuInfo: { [key: string]: string }): Promise<{
+  current: string;
+  max: string;
+  min: string;
+  display: string;
+}> {
+  try {
+    const currentPlatform = detectPlatform();
+    
+    if (currentPlatform === platformType.linux) {
+      let currentFreq = 'Unknown';
+      let maxFreq = 'Unknown';
+      let minFreq = 'Unknown';
+      
+      // Get current frequency from /proc/cpuinfo
+      const cpuMhz = cpuInfo['cpu MHz'];
+      if (cpuMhz) {
+        currentFreq = `${parseFloat(cpuMhz).toFixed(2)} MHz`;
+      }
+      
+      // Try to get max/min frequency from sysfs
+      try {
+        const { stdout: maxFreqKhz } = await execAsync('cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq 2>/dev/null');
+        if (maxFreqKhz.trim()) {
+          const maxMhz = parseInt(maxFreqKhz.trim()) / 1000;
+          maxFreq = `${maxMhz.toFixed(0)} MHz`;
+        }
+      } catch (e) {
+        // Try lscpu as fallback
+        try {
+          const { stdout: lscpuOutput } = await execAsync('lscpu | grep "CPU max MHz"');
+          const match = lscpuOutput.match(/CPU max MHz:\s*([\d.]+)/);
+          if (match) {
+            maxFreq = `${parseFloat(match[1]).toFixed(0)} MHz`;
+          }
+        } catch (e2) {
+          // Continue with Unknown
+        }
+      }
+      
+      // Try to get min frequency
+      try {
+        const { stdout: minFreqKhz } = await execAsync('cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq 2>/dev/null');
+        if (minFreqKhz.trim()) {
+          const minMhz = parseInt(minFreqKhz.trim()) / 1000;
+          minFreq = `${minMhz.toFixed(0)} MHz`;
+        }
+      } catch (e) {
+        // Try lscpu as fallback
+        try {
+          const { stdout: lscpuOutput } = await execAsync('lscpu | grep "CPU min MHz"');
+          const match = lscpuOutput.match(/CPU min MHz:\s*([\d.]+)/);
+          if (match) {
+            minFreq = `${parseFloat(match[1]).toFixed(0)} MHz`;
+          }
+        } catch (e2) {
+          // Continue with Unknown
+        }
+      }
+      
+      // Create display string showing current/max
+      let displayFreq = currentFreq;
+      if (currentFreq !== 'Unknown' && maxFreq !== 'Unknown') {
+        displayFreq = `${currentFreq} (max: ${maxFreq})`;
+      } else if (maxFreq !== 'Unknown') {
+        displayFreq = `max: ${maxFreq}`;
+      }
+      
+      return {
+        current: currentFreq,
+        max: maxFreq,
+        min: minFreq,
+        display: displayFreq
+      };
+    }
+    
+    // For other platforms, return basic info
+    const cpuMhz = cpuInfo['cpu MHz'];
+    const freq = cpuMhz ? `${parseFloat(cpuMhz).toFixed(2)} MHz` : 'Unknown';
+    
+    return {
+      current: freq,
+      max: 'Unknown',
+      min: 'Unknown',
+      display: freq
+    };
+  } catch (error) {
+    return {
+      current: 'Unknown',
+      max: 'Unknown',
+      min: 'Unknown',
+      display: 'Unknown'
+    };
+  }
+}
+
+function getDefaultInstructionSets(): cpuInstructionSets {
+  return {
+    sse: false,
+    sse2: false,
+    sse3: false,
+    ssse3: false,
+    sse4_1: false,
+    sse4_2: false,
+    avx: false,
+    avx2: false,
+    avx512: false,
+    aes: false,
+    sha: false,
+    fma: false,
+    mmx: false
+  };
+}
+
+function parseInstructionSets(cpuInfo: { [key: string]: string }): cpuInstructionSets {
+  const flags = cpuInfo['flags'] || '';
+  const flagsArray = flags.split(' ');
+  
+  return {
+    sse: flagsArray.includes('sse'),
+    sse2: flagsArray.includes('sse2'),
+    sse3: flagsArray.includes('pni'), // pni is SSE3
+    ssse3: flagsArray.includes('ssse3'),
+    sse4_1: flagsArray.includes('sse4_1'),
+    sse4_2: flagsArray.includes('sse4_2'),
+    avx: flagsArray.includes('avx'),
+    avx2: flagsArray.includes('avx2'),
+    avx512: flagsArray.some(flag => flag.startsWith('avx512')),
+    aes: flagsArray.includes('aes'),
+    sha: flagsArray.includes('sha_ni'), // sha_ni is SHA extensions
+    fma: flagsArray.includes('fma'),
+    mmx: flagsArray.includes('mmx')
+  };
+}
+
+async function getArchitecture(cpuInfo: { [key: string]: string }): Promise<string> {
+  try {
+    // Method 1: Try uname -m command (most reliable)
+    try {
+      const { stdout: archOutput } = await execAsync('uname -m');
+      const arch = archOutput.trim();
+      if (arch) {
+        return arch;
+      }
+    } catch (e) {
+      // Continue to fallback methods
+    }
+
+    // Method 2: Try arch command
+    try {
+      const { stdout: archOutput } = await execAsync('arch');
+      const arch = archOutput.trim();
+      if (arch) {
+        return arch;
+      }
+    } catch (e) {
+      // Continue to fallback methods
+    }
+
+    // Method 3: Check CPU flags for architecture indicators
+    const flags = cpuInfo['flags'] || '';
+    if (flags.includes('lm')) {
+      // Long mode indicates x86_64
+      return 'x86_64';
+    }
+
+    // Method 4: Check for ARM indicators in model name or flags
+    const modelName = cpuInfo['model name'] || '';
+    if (modelName.toLowerCase().includes('arm') || flags.includes('arm')) {
+      return 'ARM';
+    }
+
+    // Method 5: Try to determine from vendor and family
+    const vendor = cpuInfo['vendor_id'] || '';
+    if (vendor === 'GenuineIntel' || vendor === 'AuthenticAMD') {
+      // Intel and AMD are typically x86_64 on modern systems
+      return 'x86_64';
+    }
+
+    return 'Unknown';
+  } catch (error) {
+    return 'Unknown';
+  }
+}
+
 async function getDetailedCPUInfo(): Promise<cpuDetailedInfo> {
   try {
     const currentPlatform = detectPlatform();
@@ -130,16 +315,23 @@ async function getDetailedCPUInfo(): Promise<cpuDetailedInfo> {
       // Count physical cores (assuming hyperthreading if threads > cores)
       const cores = Math.ceil(threads / 2); // This is a rough estimate
 
+      const frequencyInfo = await getFrequencyInfo(cpuInfo);
+      const instructionSets = parseInstructionSets(cpuInfo);
+
       return {
         model: cpuInfo['model name'] || 'Unknown',
         cores: cores,
         threads: threads,
-        architecture: cpuInfo['model name']?.includes('x86_64') ? 'x86_64' : cpuInfo['model name']?.includes('ARM') ? 'ARM' : 'Unknown',
-        frequency: cpuInfo['cpu MHz'] ? `${parseFloat(cpuInfo['cpu MHz']).toFixed(2)} MHz` : 'Unknown',
+        architecture: await getArchitecture(cpuInfo),
+        frequency: frequencyInfo.display,
+        currentFrequency: frequencyInfo.current,
+        maxFrequency: frequencyInfo.max,
+        minFrequency: frequencyInfo.min,
         cache: cpuInfo['cache size'] || 'Unknown',
         vendor: cpuInfo['vendor_id'] || 'Unknown',
         family: cpuInfo['cpu family'] || 'Unknown',
-        stepping: cpuInfo['stepping'] || 'Unknown'
+        stepping: cpuInfo['stepping'] || 'Unknown',
+        instructionSets: instructionSets
       };
     }
 
@@ -151,17 +343,22 @@ async function getDetailedCPUInfo(): Promise<cpuDetailedInfo> {
       const frequencyMatch = sysProfiler.match(/Processor Speed:\s*(.+)/);
       const cacheMatch = sysProfiler.match(/L2 Cache:\s*(.+)/);
       
-      return {
-        model: modelMatch?.[1]?.trim() || 'Unknown',
-        cores: parseInt(coresMatch?.[1] || '0'),
-        threads: parseInt(coresMatch?.[1] || '0'), // macOS doesn't always show thread count
-        architecture: 'ARM64', // Most modern Macs are ARM64
-        frequency: frequencyMatch?.[1]?.trim() || 'Unknown',
-        cache: cacheMatch?.[1]?.trim() || 'Unknown',
-        vendor: 'Apple',
-        family: 'Apple Silicon',
-        stepping: 'Unknown'
-      };
+              const freq = frequencyMatch?.[1]?.trim() || 'Unknown';
+        return {
+          model: modelMatch?.[1]?.trim() || 'Unknown',
+          cores: parseInt(coresMatch?.[1] || '0'),
+          threads: parseInt(coresMatch?.[1] || '0'), // macOS doesn't always show thread count
+          architecture: 'ARM64', // Most modern Macs are ARM64
+          frequency: freq,
+          currentFrequency: freq,
+          maxFrequency: freq,
+          minFrequency: 'Unknown',
+          cache: cacheMatch?.[1]?.trim() || 'Unknown',
+          vendor: 'Apple',
+          family: 'Apple Silicon',
+          stepping: 'Unknown',
+          instructionSets: getDefaultInstructionSets() // macOS would need different detection
+        };
     }
 
     if (currentPlatform === platformType.windows) {
@@ -176,16 +373,21 @@ async function getDetailedCPUInfo(): Promise<cpuDetailedInfo> {
           const frequency = parseInt(parts[3]) || 0;
           const name = parts[4] || 'Unknown';
           
+          const freq = frequency > 0 ? `${frequency} MHz` : 'Unknown';
           return {
             model: name,
             cores: cores,
             threads: threads,
             architecture: name.includes('x64') ? 'x64' : name.includes('ARM') ? 'ARM' : 'Unknown',
-            frequency: frequency > 0 ? `${frequency} MHz` : 'Unknown',
+            frequency: freq,
+            currentFrequency: freq,
+            maxFrequency: freq,
+            minFrequency: 'Unknown',
             cache: 'Unknown', // Windows doesn't easily provide cache info
             vendor: name.includes('Intel') ? 'Intel' : name.includes('AMD') ? 'AMD' : 'Unknown',
             family: 'Unknown',
-            stepping: 'Unknown'
+            stepping: 'Unknown',
+            instructionSets: getDefaultInstructionSets() // Windows would need different detection
           };
         }
       }
@@ -197,10 +399,14 @@ async function getDetailedCPUInfo(): Promise<cpuDetailedInfo> {
       threads: 0,
       architecture: 'Unknown',
       frequency: 'Unknown',
+      currentFrequency: 'Unknown',
+      maxFrequency: 'Unknown',
+      minFrequency: 'Unknown',
       cache: 'Unknown',
       vendor: 'Unknown',
       family: 'Unknown',
-      stepping: 'Unknown'
+      stepping: 'Unknown',
+      instructionSets: getDefaultInstructionSets()
     };
   } catch (error) {
     return {
@@ -209,10 +415,14 @@ async function getDetailedCPUInfo(): Promise<cpuDetailedInfo> {
       threads: 0,
       architecture: 'Unknown',
       frequency: 'Unknown',
+      currentFrequency: 'Unknown',
+      maxFrequency: 'Unknown',
+      minFrequency: 'Unknown',
       cache: 'Unknown',
       vendor: 'Unknown',
       family: 'Unknown',
-      stepping: 'Unknown'
+      stepping: 'Unknown',
+      instructionSets: getDefaultInstructionSets()
     };
   }
 }
@@ -643,10 +853,14 @@ async function getMachineInfo(): Promise<machineInfo> {
         threads: 0,
         architecture: 'Unknown',
         frequency: 'Unknown',
+        currentFrequency: 'Unknown',
+        maxFrequency: 'Unknown',
+        minFrequency: 'Unknown',
         cache: 'Unknown',
         vendor: 'Unknown',
         family: 'Unknown',
-        stepping: 'Unknown'
+        stepping: 'Unknown',
+        instructionSets: getDefaultInstructionSets()
       },
       kernelVersion: 'Unknown', 
       osName: 'Unknown',
