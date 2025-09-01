@@ -1,4 +1,5 @@
 import SseTerminal from '../components/SseTerminal';
+import { PathControl } from '../components/PathControl';
 
 export default function Debug() {
   return (
@@ -14,12 +15,7 @@ export default function Debug() {
             stopButtonLabel="Stop Debug"
           />
           
-          <SseTerminal 
-            url="/api/debug/path"
-            terminalTitle="Path Terminal"
-            startButtonLabel="Get Path"
-            stopButtonLabel="Stop"
-          />
+          <PathControl />
         </div>
       </div>
     </div>

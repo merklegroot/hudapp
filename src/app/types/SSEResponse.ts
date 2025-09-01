@@ -14,6 +14,9 @@ import { SpawnResult } from './SpawnResult';
  *       break;
  *     case 'output':
  *       console.log('Terminal output:', data.output);
+ *       if (data.parsedData) {
+ *         console.log('Parsed data:', data.parsedData);
+ *       }
  *       break;
  *     case 'status':
  *       console.log('Status update:', data.message);
@@ -33,6 +36,7 @@ import { SpawnResult } from './SpawnResult';
  *   type: 'command' | 'output' | 'status' | 'error'; // Type of data being sent
  *   command?: string;         // The actual command being executed (when type is 'command')
  *   output?: string;          // The raw terminal output (when type is 'output' or 'error')
+ *   parsedData?: any;         // Parsed/processed data from the output (route-specific)
  * }
  * 
  * INTERNAL FLOW:
