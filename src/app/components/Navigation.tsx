@@ -4,8 +4,8 @@ import BuildInfo from "./BuildInfo";
 export default function Navigation() {
   return (
     <nav className="bg-gray-800 text-white p-4 sticky top-0 z-50 shadow-lg border-b border-gray-700">
-      <div className="container mx-auto flex justify-between items-center">
-        <ul className="flex space-x-6">
+      <div className="container mx-auto flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+        <ul className="flex flex-wrap gap-4 lg:gap-6">
           <li>
             <Link href="/" className="hover:text-gray-300 transition-colors">
               Machine
