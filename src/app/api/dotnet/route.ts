@@ -5,17 +5,9 @@ import { existsSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
 import { dotnetDetectionWorkflow } from '@/app/workflows';
+import { DotNetInfo } from '@/app/types/DotNetInfo';
 
 const execAsync = promisify(exec);
-
-interface DotnetInfo {
-  isInstalled: boolean;
-  sdks: string[];
-  runtimes: string[];
-  inPath: boolean;
-  detectedPath?: string;
-  error?: string;
-}
 
 // Common dotnet installation paths
 const COMMON_DOTNET_PATHS = [
@@ -78,7 +70,7 @@ async function getDotnetInfo(dotnetPath?: string): Promise<{ sdks: string[]; run
   return { sdks, runtimes };
 }
 
-export async function GET(): Promise<NextResponse<DotnetInfo>> {
+export async function GET(): Promise<NextResponse<DotNetInfo>> {
   try {
     const { path: detectedPath, inPath, freshShellSdks, freshShellRuntimes } = await findDotnetInstallation();
     

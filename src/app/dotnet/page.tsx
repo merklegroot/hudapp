@@ -5,6 +5,7 @@ import { SiLinux, SiApple } from 'react-icons/si';
 import { DiWindows } from 'react-icons/di';
 import { FaCopy, FaCheck } from 'react-icons/fa';
 import DotNetOperationsTerminal, { StatusTerminalRef } from './DotNetOperationsTerminal';
+import { DotNetInfo } from '@/app/types/DotNetInfo';
 
 // Custom BSD Icon Component
 interface BSDIconProps {
@@ -64,19 +65,9 @@ const CopyButton = ({ text, className = "" }: CopyButtonProps) => {
 };
 
 
-
-interface DotnetInfo {
-  isInstalled: boolean;
-  sdks: string[];
-  runtimes: string[];
-  inPath: boolean;
-  detectedPath?: string;
-  error?: string;
-}
-
 export default function Dotnet() {
   const statusTerminalRef = useRef<StatusTerminalRef>(null);
-  const [dotnetInfo, setDotnetInfo] = useState<DotnetInfo | null>(null);
+  const [dotnetInfo, setDotnetInfo] = useState<DotNetInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedVersion, setSelectedVersion] = useState('8.0');
@@ -94,7 +85,7 @@ export default function Dotnet() {
       setLoading(true);
     }
     fetch('/api/dotnet')
-      .then(response => response.json() as Promise<DotnetInfo>)
+      .then(response => response.json() as Promise<DotNetInfo>)
       .then(data => {
         setDotnetInfo(data);
         setLoading(false);
