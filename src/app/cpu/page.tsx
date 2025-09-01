@@ -7,7 +7,7 @@ import CPUDetailField from '../components/CPUDetailField';
 import CPUFeaturesDisplay from '../../components/CPUFeaturesDisplay';
 
 export default function CPUPage() {
-  const [machineInfo, setMachineInfo] = useState<machineInfo | null>(null);
+  const [machineData, setMachineData] = useState<machineInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,7 +24,7 @@ export default function CPUPage() {
       })
       .then(data => {
         console.log('API data received:', data);
-        setMachineInfo(data);
+        setMachineData(data);
         setLoading(false);
       })
       .catch(err => {
@@ -54,63 +54,63 @@ export default function CPUPage() {
         )}
 
         {/* CPU Details Section */}
-        {machineInfo && (
+        {machineData && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">CPU Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <CPUDetailField
-                value={machineInfo.cpuDetailed.model}
+                value={machineData.cpuDetailed.model}
               />
               
               <div className="p-4 bg-gray-50 rounded-lg">
                 <h3 className="text-sm font-medium text-gray-600 mb-1">Cores / Threads</h3>
                 <p className="text-lg font-semibold text-gray-900">
-                  {machineInfo.cpuDetailed.cores} cores, {machineInfo.cpuDetailed.threads} threads
+                  {machineData.cpuDetailed.cores} cores, {machineData.cpuDetailed.threads} threads
                 </p>
               </div>
               
               <div className="p-4 bg-gray-50 rounded-lg">
                 <h3 className="text-sm font-medium text-gray-600 mb-1">Architecture</h3>
-                <p className="text-lg font-semibold text-gray-900">{machineInfo.cpuDetailed.architecture}</p>
+                <p className="text-lg font-semibold text-gray-900">{machineData.cpuDetailed.architecture}</p>
               </div>
               
               <div className="p-4 bg-gray-50 rounded-lg">
                 <h3 className="text-sm font-medium text-gray-600 mb-1">Frequency</h3>
                 <div className="space-y-1">
                   <p className="text-lg font-semibold text-gray-900">
-                    Current: <span className="text-blue-600">{machineInfo.cpuDetailed.currentFrequency}</span>
+                    Current: <span className="text-blue-600">{machineData.cpuDetailed.currentFrequency}</span>
                   </p>
                   <p className="text-sm text-gray-600">
-                    Max: {machineInfo.cpuDetailed.maxFrequency} | Min: {machineInfo.cpuDetailed.minFrequency}
+                    Max: {machineData.cpuDetailed.maxFrequency} | Min: {machineData.cpuDetailed.minFrequency}
                   </p>
                 </div>
               </div>
               
               <div className="p-4 bg-gray-50 rounded-lg">
                 <h3 className="text-sm font-medium text-gray-600 mb-1">Cache</h3>
-                <p className="text-lg font-semibold text-gray-900">{machineInfo.cpuDetailed.cache}</p>
+                <p className="text-lg font-semibold text-gray-900">{machineData.cpuDetailed.cache}</p>
               </div>
               
               <div className="p-4 bg-gray-50 rounded-lg">
                 <h3 className="text-sm font-medium text-gray-600 mb-1">Vendor</h3>
-                <p className="text-lg font-semibold text-gray-900">{machineInfo.cpuDetailed.vendor}</p>
+                <p className="text-lg font-semibold text-gray-900">{machineData.cpuDetailed.vendor}</p>
               </div>
               
               <div className="p-4 bg-gray-50 rounded-lg">
                 <h3 className="text-sm font-medium text-gray-600 mb-1">Family</h3>
-                <p className="text-lg font-semibold text-gray-900">{machineInfo.cpuDetailed.family}</p>
+                <p className="text-lg font-semibold text-gray-900">{machineData.cpuDetailed.family}</p>
               </div>
               
               <div className="p-4 bg-gray-50 rounded-lg">
                 <h3 className="text-sm font-medium text-gray-600 mb-1">Stepping</h3>
-                <p className="text-lg font-semibold text-gray-900">{machineInfo.cpuDetailed.stepping}</p>
+                <p className="text-lg font-semibold text-gray-900">{machineData.cpuDetailed.stepping}</p>
               </div>
             </div>
           </div>
         )}
 
         {/* CPU Instruction Sets */}
-        {machineInfo && (
+        {machineData && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <h2 className="text-2xl font-semibold text-gray-800 mb-6">CPU Instruction Sets</h2>
             
@@ -121,9 +121,9 @@ export default function CPUPage() {
                 <span className="text-sm text-gray-600">— Streaming SIMD Extensions for multimedia</span>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-3">
-                <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.sse ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                <div className={`p-3 rounded-lg border-2 ${machineData.cpuDetailed.instructionSets.sse ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                   <div className="flex items-center gap-2">
-                    {machineInfo.cpuDetailed.instructionSets.sse ? (
+                    {machineData.cpuDetailed.instructionSets.sse ? (
                       <div className="w-3 h-3 flex items-center justify-center">
                         <span className="text-green-600 text-xs font-bold">✓</span>
                       </div>
@@ -135,9 +135,9 @@ export default function CPUPage() {
                     <span className="text-sm font-medium">SSE</span>
                   </div>
                 </div>
-                <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.sse2 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                <div className={`p-3 rounded-lg border-2 ${machineData.cpuDetailed.instructionSets.sse2 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                   <div className="flex items-center gap-2">
-                    {machineInfo.cpuDetailed.instructionSets.sse2 ? (
+                    {machineData.cpuDetailed.instructionSets.sse2 ? (
                       <div className="w-3 h-3 flex items-center justify-center">
                         <span className="text-green-600 text-xs font-bold">✓</span>
                       </div>
@@ -149,9 +149,9 @@ export default function CPUPage() {
                     <span className="text-sm font-medium">SSE2</span>
                   </div>
                 </div>
-                <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.sse3 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                <div className={`p-3 rounded-lg border-2 ${machineData.cpuDetailed.instructionSets.sse3 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                   <div className="flex items-center gap-2">
-                    {machineInfo.cpuDetailed.instructionSets.sse3 ? (
+                    {machineData.cpuDetailed.instructionSets.sse3 ? (
                       <div className="w-3 h-3 flex items-center justify-center">
                         <span className="text-green-600 text-xs font-bold">✓</span>
                       </div>
@@ -163,9 +163,9 @@ export default function CPUPage() {
                     <span className="text-sm font-medium">SSE3</span>
                   </div>
                 </div>
-                <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.ssse3 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                <div className={`p-3 rounded-lg border-2 ${machineData.cpuDetailed.instructionSets.ssse3 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                   <div className="flex items-center gap-2">
-                    {machineInfo.cpuDetailed.instructionSets.ssse3 ? (
+                    {machineData.cpuDetailed.instructionSets.ssse3 ? (
                       <div className="w-3 h-3 flex items-center justify-center">
                         <span className="text-green-600 text-xs font-bold">✓</span>
                       </div>
@@ -177,9 +177,9 @@ export default function CPUPage() {
                     <span className="text-sm font-medium">SSSE3</span>
                   </div>
                 </div>
-                <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.sse4_1 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                <div className={`p-3 rounded-lg border-2 ${machineData.cpuDetailed.instructionSets.sse4_1 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                   <div className="flex items-center gap-2">
-                    {machineInfo.cpuDetailed.instructionSets.sse4_1 ? (
+                    {machineData.cpuDetailed.instructionSets.sse4_1 ? (
                       <div className="w-3 h-3 flex items-center justify-center">
                         <span className="text-green-600 text-xs font-bold">✓</span>
                       </div>
@@ -191,9 +191,9 @@ export default function CPUPage() {
                     <span className="text-sm font-medium">SSE4.1</span>
                   </div>
                 </div>
-                <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.sse4_2 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                <div className={`p-3 rounded-lg border-2 ${machineData.cpuDetailed.instructionSets.sse4_2 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                   <div className="flex items-center gap-2">
-                    {machineInfo.cpuDetailed.instructionSets.sse4_2 ? (
+                    {machineData.cpuDetailed.instructionSets.sse4_2 ? (
                       <div className="w-3 h-3 flex items-center justify-center">
                         <span className="text-green-600 text-xs font-bold">✓</span>
                       </div>
@@ -221,9 +221,9 @@ export default function CPUPage() {
                 <span className="text-sm text-gray-600">— Advanced Vector Extensions for high-performance computing</span>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
-                <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.avx ? 'bg-blue-50 border-blue-200' : 'bg-red-50 border-red-200'}`}>
+                <div className={`p-3 rounded-lg border-2 ${machineData.cpuDetailed.instructionSets.avx ? 'bg-blue-50 border-blue-200' : 'bg-red-50 border-red-200'}`}>
                   <div className="flex items-center gap-2">
-                    {machineInfo.cpuDetailed.instructionSets.avx ? (
+                    {machineData.cpuDetailed.instructionSets.avx ? (
                       <div className="w-3 h-3 flex items-center justify-center">
                         <span className="text-green-600 text-xs font-bold">✓</span>
                       </div>
@@ -235,9 +235,9 @@ export default function CPUPage() {
                     <span className="text-sm font-medium">AVX</span>
                   </div>
                 </div>
-                <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.avx2 ? 'bg-blue-50 border-blue-200' : 'bg-red-50 border-red-200'}`}>
+                <div className={`p-3 rounded-lg border-2 ${machineData.cpuDetailed.instructionSets.avx2 ? 'bg-blue-50 border-blue-200' : 'bg-red-50 border-red-200'}`}>
                   <div className="flex items-center gap-2">
-                    {machineInfo.cpuDetailed.instructionSets.avx2 ? (
+                    {machineData.cpuDetailed.instructionSets.avx2 ? (
                       <div className="w-3 h-3 flex items-center justify-center">
                         <span className="text-green-600 text-xs font-bold">✓</span>
                       </div>
@@ -249,9 +249,9 @@ export default function CPUPage() {
                     <span className="text-sm font-medium">AVX2</span>
                   </div>
                 </div>
-                <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.avx512 ? 'bg-blue-50 border-blue-200' : 'bg-red-50 border-red-200'}`}>
+                <div className={`p-3 rounded-lg border-2 ${machineData.cpuDetailed.instructionSets.avx512 ? 'bg-blue-50 border-blue-200' : 'bg-red-50 border-red-200'}`}>
                   <div className="flex items-center gap-2">
-                    {machineInfo.cpuDetailed.instructionSets.avx512 ? (
+                    {machineData.cpuDetailed.instructionSets.avx512 ? (
                       <div className="w-3 h-3 flex items-center justify-center">
                         <span className="text-green-600 text-xs font-bold">✓</span>
                       </div>
@@ -279,9 +279,9 @@ export default function CPUPage() {
                 <span className="text-sm text-gray-600">— Hardware-accelerated encryption and hashing</span>
               </div>
               <div className="grid grid-cols-2 gap-3 mb-3">
-                <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.aes ? 'bg-purple-50 border-purple-200' : 'bg-red-50 border-red-200'}`}>
+                <div className={`p-3 rounded-lg border-2 ${machineData.cpuDetailed.instructionSets.aes ? 'bg-purple-50 border-purple-200' : 'bg-red-50 border-red-200'}`}>
                   <div className="flex items-center gap-2">
-                    {machineInfo.cpuDetailed.instructionSets.aes ? (
+                    {machineData.cpuDetailed.instructionSets.aes ? (
                       <div className="w-3 h-3 flex items-center justify-center">
                         <span className="text-green-600 text-xs font-bold">✓</span>
                       </div>
@@ -293,9 +293,9 @@ export default function CPUPage() {
                     <span className="text-sm font-medium">AES</span>
                   </div>
                 </div>
-                <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.sha ? 'bg-purple-50 border-purple-200' : 'bg-red-50 border-red-200'}`}>
+                <div className={`p-3 rounded-lg border-2 ${machineData.cpuDetailed.instructionSets.sha ? 'bg-purple-50 border-purple-200' : 'bg-red-50 border-red-200'}`}>
                   <div className="flex items-center gap-2">
-                    {machineInfo.cpuDetailed.instructionSets.sha ? (
+                    {machineData.cpuDetailed.instructionSets.sha ? (
                       <div className="w-3 h-3 flex items-center justify-center">
                         <span className="text-green-600 text-xs font-bold">✓</span>
                       </div>
@@ -323,9 +323,9 @@ export default function CPUPage() {
                 <span className="text-sm text-gray-600">— Enhanced mathematical operations</span>
               </div>
               <div className="grid grid-cols-1 gap-3 mb-3">
-                <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.fma ? 'bg-orange-50 border-orange-200' : 'bg-red-50 border-red-200'}`}>
+                <div className={`p-3 rounded-lg border-2 ${machineData.cpuDetailed.instructionSets.fma ? 'bg-orange-50 border-orange-200' : 'bg-red-50 border-red-200'}`}>
                   <div className="flex items-center gap-2">
-                    {machineInfo.cpuDetailed.instructionSets.fma ? (
+                    {machineData.cpuDetailed.instructionSets.fma ? (
                       <div className="w-3 h-3 flex items-center justify-center">
                         <span className="text-green-600 text-xs font-bold">✓</span>
                       </div>
@@ -353,9 +353,9 @@ export default function CPUPage() {
                 <span className="text-sm text-gray-600">— Older multimedia instructions</span>
               </div>
               <div className="grid grid-cols-1 gap-3 mb-3">
-                <div className={`p-3 rounded-lg border-2 ${machineInfo.cpuDetailed.instructionSets.mmx ? 'bg-gray-100 border-gray-300' : 'bg-red-50 border-red-200'}`}>
+                <div className={`p-3 rounded-lg border-2 ${machineData.cpuDetailed.instructionSets.mmx ? 'bg-gray-100 border-gray-300' : 'bg-red-50 border-red-200'}`}>
                   <div className="flex items-center gap-2">
-                    {machineInfo.cpuDetailed.instructionSets.mmx ? (
+                    {machineData.cpuDetailed.instructionSets.mmx ? (
                       <div className="w-3 h-3 flex items-center justify-center">
                         <span className="text-green-600 text-xs font-bold">✓</span>
                       </div>
@@ -435,5 +435,6 @@ export default function CPUPage() {
         </div>
       </div>
     </div>
+  </div>
   );
 }
