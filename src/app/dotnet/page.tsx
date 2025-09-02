@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { SiLinux, SiApple } from 'react-icons/si';
 import { DiWindows } from 'react-icons/di';
 import { FaCopy, FaCheck } from 'react-icons/fa';
-import DotNetOperationsTerminal, { StatusTerminalRef } from './DotNetOperationsTerminal';
+import DotNetOperationsTerminalLegacy, { StatusTerminalRef } from './DotNetOperationsTerminalLegacy';
 import { DotNetInfo } from '@/app/types/DotNetInfo';
 import { BsdIcon } from '../components/Icons/BsdIcon';
 
@@ -143,7 +143,7 @@ export default function Dotnet() {
           </div>
           
           <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
-            <DotNetOperationsTerminal 
+            <DotNetOperationsTerminalLegacy 
               ref={statusTerminalRef}
               onDetectionComplete={handleDetectionComplete}
               className="w-full"
@@ -179,7 +179,7 @@ export default function Dotnet() {
         
         {/* Persistent Terminal - Always visible */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
-          <DotNetOperationsTerminal 
+          <DotNetOperationsTerminalLegacy 
             ref={statusTerminalRef}
             onDetectionComplete={handleDetectionComplete}
             onInstallStart={handleInstallStart}

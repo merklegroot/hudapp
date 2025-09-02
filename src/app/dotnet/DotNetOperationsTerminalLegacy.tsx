@@ -14,7 +14,7 @@ interface DotNetOperationsTerminalProps {
   version?: string;
 }
 
-const DotNetOperationsTerminal = forwardRef<StatusTerminalRef, DotNetOperationsTerminalProps>(({ 
+const DotNetOperationsTerminalLegacy = forwardRef<StatusTerminalRef, DotNetOperationsTerminalProps>(({ 
   onDetectionComplete, 
   onInstallStart, 
   onInstallComplete
@@ -332,6 +332,6 @@ const DotNetOperationsTerminal = forwardRef<StatusTerminalRef, DotNetOperationsT
   );
 });
 
-DotNetOperationsTerminal.displayName = 'DotNetOperationsTerminal';
+DotNetOperationsTerminalLegacy.displayName = 'DotNetOperationsTerminal';
 
-export default DotNetOperationsTerminal;
+export default DotNetOperationsTerminalLegacy;
