@@ -1,5 +1,6 @@
 import SseTerminal from '../components/SseTerminal/SseTerminal';
 import { PathControl } from '../components/PathControl';
+import { DotNetControl } from '../components/DotNetControl';
 
 export default function Debug() {
   return (
@@ -15,6 +16,8 @@ export default function Debug() {
             stopButtonLabel="Stop Debug"
           />
           
+          <DotNetControl />
+
           <PathControl />
         </div>
       </div>
