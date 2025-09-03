@@ -10,6 +10,9 @@ interface SseTerminalProps {
   startButtonLabel?: string;
   stopButtonLabel?: string;
   autoCloseTimeoutMs?: number;
+  autoStart?: boolean;
+  onParsedData?: (parsedData: any) => void;
+  renderResults?: (parsedData: any) => React.ReactNode;
 }
 
 export default function SseTerminal({
@@ -17,10 +20,14 @@ export default function SseTerminal({
   terminalTitle = "Events Terminal",
   startButtonLabel = "Start",
   stopButtonLabel = "Stop",
-  autoCloseTimeoutMs = 6000
+  autoCloseTimeoutMs = 6000,
+  autoStart = false,
+  onParsedData,
+  renderResults
 }: SseTerminalProps) {
   const [events, setEvents] = useState<SSEEventData[]>([]);
   const [isConnected, setIsConnected] = useState(false);
+  const [parsedData, setParsedData] = useState<any>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const terminalRef = useRef<HTMLDivElement | null>(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
@@ -32,6 +39,13 @@ export default function SseTerminal({
     }
   }, [events, shouldAutoScroll]);
 
+  // Auto-start if enabled
+  useEffect(() => {
+    if (autoStart) {
+      startProcess();
+    }
+  }, [autoStart]);
+
   // Handle scroll events to detect manual scrolling
   const handleScroll = () => {
     if (terminalRef.current) {
@@ -42,8 +56,9 @@ export default function SseTerminal({
   };
 
   const startProcess = () => {
-    // Clear previous events
+    // Clear previous events and parsed data
     setEvents([]);
+    setParsedData(null);
     setIsConnected(true);
     setShouldAutoScroll(true); // Reset auto-scroll when starting new process
 
@@ -60,6 +75,14 @@ export default function SseTerminal({
       try {
         const data: SSEEventData = JSON.parse(event.data);
         setEvents(prev => [...prev, data]);
+
+        // Check if this event contains parsed data
+        if (data.parsedData) {
+          setParsedData(data.parsedData);
+          if (onParsedData) {
+            onParsedData(data.parsedData);
+          }
+        }
 
         // If we've reached completion, prepare to close the connection
         if (!data.isRunning) {
@@ -118,72 +141,81 @@ export default function SseTerminal({
   };
 
   return (
-    <div className="bg-gray-900 rounded-lg shadow-md font-mono">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-3 px-3 py-1.5 bg-slate-700 rounded-t-lg">
-        <h2 className="text-lg font-semibold text-gray-300">{terminalTitle}</h2>
-        
-        {/* Connection Status */}
-        <div className="flex items-center gap-2">
-          <div
-            className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'
+    <div className="space-y-6">
+      {/* Terminal Section */}
+      <div className="bg-gray-900 rounded-lg shadow-md font-mono">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-3 px-3 py-1.5 bg-slate-700 rounded-t-lg">
+          <h2 className="text-lg font-semibold text-gray-300">{terminalTitle}</h2>
+          
+          {/* Connection Status */}
+          <div className="flex items-center gap-2">
+            <div
+              className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'
+                }`}
+            ></div>
+            <span className="text-sm text-gray-300 font-mono">
+              [{isConnected ? 'CONNECTED' : 'DISCONNECTED'}]
+            </span>
+          </div>
+        </div>
+
+        <div>
+          <div 
+            ref={terminalRef}
+            onScroll={handleScroll}
+            className="bg-black p-4 min-h-64 max-h-64 overflow-y-auto"
+          >
+            {events.length === 0 ? (
+              <p className="text-gray-500 font-mono text-sm">Waiting for process to start...</p>
+            ) : (
+              <div className="space-y-1">
+                {events.map((event, index) => (
+                  <SseLine key={index} event={event} />
+                ))}
+                {isConnected && (
+                  <div className="flex items-center mt-2">
+                    <span className="text-green-400 animate-pulse">█</span>
+                    <span className="text-gray-500 ml-1 font-mono text-sm">process running...</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="flex justify-between px-3 py-3">
+          <button
+            onClick={stopProcess}
+            disabled={!isConnected}
+            className={`px-4 py-1.5 rounded font-medium transition-colors ${!isConnected
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : 'bg-red-600 text-white hover:bg-red-700'
               }`}
-          ></div>
-          <span className="text-sm text-gray-300 font-mono">
-            [{isConnected ? 'CONNECTED' : 'DISCONNECTED'}]
-          </span>
+          >
+            {stopButtonLabel}
+          </button>
+
+          <button
+            onClick={startProcess}
+            disabled={isConnected}
+            className={`px-4 py-1.5 rounded font-medium transition-colors ${isConnected
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+          >
+            {isConnected ? 'Process Running...' : startButtonLabel}
+          </button>
         </div>
       </div>
 
-      <div>
-        <div 
-          ref={terminalRef}
-          onScroll={handleScroll}
-          className="bg-black p-4 min-h-64 max-h-64 overflow-y-auto"
-        >
-          {events.length === 0 ? (
-            <p className="text-gray-500 font-mono text-sm">Waiting for process to start...</p>
-          ) : (
-
-            <div className="space-y-1">
-              {events.map((event, index) => (
-                <SseLine key={index} event={event} />
-              ))}
-              {isConnected && (
-                <div className="flex items-center mt-2">
-                  <span className="text-green-400 animate-pulse">█</span>
-                  <span className="text-gray-500 ml-1 font-mono text-sm">process running...</span>
-                </div>
-              )}
-            </div>
-          )}
+      {/* Results Section */}
+      {parsedData && renderResults && (
+        <div>
+          {renderResults(parsedData)}
         </div>
-      </div>
-
-      {/* Controls */}
-      <div className="flex justify-between px-3 py-3">
-        <button
-          onClick={stopProcess}
-          disabled={!isConnected}
-          className={`px-4 py-1.5 rounded font-medium transition-colors ${!isConnected
-            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            : 'bg-red-600 text-white hover:bg-red-700'
-            }`}
-        >
-          {stopButtonLabel}
-        </button>
-
-        <button
-          onClick={startProcess}
-          disabled={isConnected}
-          className={`px-4 py-1.5 rounded font-medium transition-colors ${isConnected
-            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
-        >
-          {isConnected ? 'Process Running...' : startButtonLabel}
-        </button>
-      </div>
+      )}
     </div>
   );
 }
