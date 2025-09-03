@@ -8,9 +8,6 @@ import DotNetOperationsTerminalLegacy, { StatusTerminalRef } from './DotNetOpera
 import { DotNetInfo } from '@/app/types/DotNetInfo';
 import { BsdIcon } from '../components/Icons/BsdIcon';
 
-// Custom BSD Icon Component
-
-// Copy Button Component
 interface CopyButtonProps {
   text: string;
   className?: string;
