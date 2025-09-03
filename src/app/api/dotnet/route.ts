@@ -19,34 +19,35 @@ const COMMON_DOTNET_PATHS = [
 ];
 
 async function findDotnetInstallation(): Promise<{ path?: string; inPath: boolean; freshShellSdks?: string[]; freshShellRuntimes?: string[] }> {
+  throw new Error('Not implemented');
   // First check if dotnet is in PATH using fresh shell (like PATH detection)
-  try {
-    const freshShellResult = await dotnetDetectionWorkflow.detectDotnetWithFallback();
-    if (freshShellResult.inPath) {
-      return { 
-        inPath: true,
-        freshShellSdks: freshShellResult.sdks,
-        freshShellRuntimes: freshShellResult.runtimes
-      };
-    }
-  } catch (error) {
-    console.log('Fresh shell detection failed, falling back to current process detection:', error);
-  }
+  // try {
+  //   const freshShellResult = await dotnetDetectionWorkflow.detectDotnetWithFallback();
+  //   if (freshShellResult.inPath) {
+  //     return { 
+  //       inPath: true,
+  //       freshShellSdks: freshShellResult.sdks,
+  //       freshShellRuntimes: freshShellResult.runtimes
+  //     };
+  //   }
+  // } catch (error) {
+  //   console.log('Fresh shell detection failed, falling back to current process detection:', error);
+  // }
 
-  // Fallback: check in current process environment
-  try {
-    await execAsync('dotnet --version');
-    return { inPath: true };
-  } catch {
-    // Not in PATH, check common installation locations
-    for (const dotnetPath of COMMON_DOTNET_PATHS) {
-      const dotnetExecutable = join(dotnetPath, 'dotnet');
-      if (existsSync(dotnetExecutable)) {
-        return { path: dotnetPath, inPath: false };
-      }
-    }
-    return { inPath: false };
-  }
+  // // Fallback: check in current process environment
+  // try {
+  //   await execAsync('dotnet --version');
+  //   return { inPath: true };
+  // } catch {
+  //   // Not in PATH, check common installation locations
+  //   for (const dotnetPath of COMMON_DOTNET_PATHS) {
+  //     const dotnetExecutable = join(dotnetPath, 'dotnet');
+  //     if (existsSync(dotnetExecutable)) {
+  //       return { path: dotnetPath, inPath: false };
+  //     }
+  //   }
+  //   return { inPath: false };
+  // }
 }
 
 async function getDotnetInfo(dotnetPath?: string): Promise<{ sdks: string[]; runtimes: string[] }> {
