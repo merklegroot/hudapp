@@ -80,13 +80,14 @@ export default function SseTerminal({
     };
 
     eventSource.onerror = (error) => {
-      console.error('SSE connection error:', error);
-      console.error('EventSource readyState:', eventSource.readyState);
-      console.error('EventSource url:', eventSource.url);
-
-      // Only set disconnected if it's actually an error, not just the end of stream
+      console.log('SSE connection event (may be normal closure):', error);
+      
+      // Only treat as error if it's not just the end of stream
       if (eventSource.readyState === EventSource.CLOSED) {
         console.log('EventSource closed normally');
+        setIsConnected(false);
+      } else if (eventSource.readyState === EventSource.CONNECTING) {
+        console.log('EventSource reconnecting...');
       } else {
         console.error('EventSource error occurred');
         setIsConnected(false);

@@ -4,7 +4,25 @@ import { SpawnResult } from '../types/SpawnResult';
 
 type workflowType = (dataCallback?: (data: string) => void) => Promise<SpawnResult>;
 
-export function sseTerminalHandlerFactory(workflow: workflowType) {
+type ParsedDataProcessor = (output: string, success: boolean, stderr?: string) => any;
+
+interface SSEFactoryOptions {
+  workflow: workflowType;
+  parseData?: ParsedDataProcessor;
+  customCommands?: string[];
+  customMessages?: {
+    executing?: string;
+    completed?: string;
+    error?: string;
+  };
+}
+
+export function sseTerminalHandlerFactory(options: workflowType | SSEFactoryOptions) {
+  // Support both old signature (workflow function) and new signature (options object)
+  const workflow = typeof options === 'function' ? options : options.workflow;
+  const parseData = typeof options === 'object' ? options.parseData : undefined;
+  const customCommands = typeof options === 'object' ? options.customCommands : undefined;
+  const customMessages = typeof options === 'object' ? options.customMessages : undefined;
 
   return async function GET(request: NextRequest) {
     // Set up Server-Sent Events headers
@@ -65,19 +83,21 @@ export function sseTerminalHandlerFactory(workflow: workflowType) {
 
                 if (isCommand) {
                   const actualCommand = trimmedLine.substring(2); // Remove '$ ' prefix
+                  const executingMessage = customMessages?.executing || `Executing: ${actualCommand}`;
                   eventData = {
                     isRunning: true,
                     stageDisplayText: `🔹 ${trimmedLine}`,
-                    message: `Executing: ${actualCommand}`,
+                    message: executingMessage,
                     timestamp: new Date().toISOString(),
                     type: 'command',
                     command: actualCommand
                   };
                 } else if (isCompleted) {
+                  const completedMessage = customMessages?.completed || 'Process completed successfully!';
                   eventData = {
                     isRunning: false,
                     stageDisplayText: '✅ Completed',
-                    message: 'Process completed successfully!',
+                    message: completedMessage,
                     timestamp: new Date().toISOString(),
                     type: 'status'
                   };
@@ -105,13 +125,34 @@ export function sseTerminalHandlerFactory(workflow: workflowType) {
 
             const result = await workflow(dataCallback);
 
+            // Add parsed data if parser is provided
+            if (parseData && !isClosed) {
+              try {
+                const parsedResult = parseData(result.stdout || '', result.success, result.stderr);
+                const parsedEventData: SSEEventData = {
+                  isRunning: true,
+                  stageDisplayText: result.success ? '📋 Processing results' : '⚠️ Processing errors',
+                  message: result.success ? 'Processing command output' : 'Processing error output',
+                  timestamp: new Date().toISOString(),
+                  type: 'output',
+                  output: result.stdout || result.stderr || '',
+                  parsedData: parsedResult
+                };
+                const sseData = `data: ${JSON.stringify(parsedEventData)}\n\n`;
+                controller.enqueue(new TextEncoder().encode(sseData));
+              } catch (parseError) {
+                console.error('Error parsing result:', parseError);
+              }
+            }
+
             if (!result.success) {
               console.error('Script execution failed:', result.stderr);
               // Send error event
+              const errorMessage = customMessages?.error || 'Script execution failed';
               const errorData: SSEEventData = {
                 isRunning: false,
                 stageDisplayText: '❌ Error',
-                message: 'Script execution failed',
+                message: errorMessage,
                 timestamp: new Date().toISOString(),
                 type: 'error',
                 output: result.stderr || 'Unknown error'

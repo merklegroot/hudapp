@@ -24,7 +24,7 @@ export default function Debug() {
               stopButtonLabel="Stop Debug"
             />
 
-          {/* <DotNetControl /> */}
+          <DotNetControl />
 
           {/* <PathControl /> */}
         </div>
