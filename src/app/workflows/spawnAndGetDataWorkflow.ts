@@ -12,7 +12,10 @@ async function execute(options: SpawnOptions): Promise<SpawnResult> {
     // Spawn the process
     const child: ChildProcess = spawn(command, args, {
       stdio: ['pipe', 'pipe', 'pipe'],
-      env: { NODE_ENV: 'development' }, // Minimal environment to force fresh shell profile loading
+      env: { 
+        ...process.env, // Preserve the current environment including PATH
+        NODE_ENV: 'development' 
+      },
       shell: false,
       detached: false
     });

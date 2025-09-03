@@ -1,0 +1,72 @@
+---
+description: Spawn and Terminal Pattern Guidelines
+globs:
+alwaysApply: true
+---
+
+# Spawn and Terminal Pattern Guidelines
+
+This project uses a specific pattern for spawning commands and streaming terminal output to the frontend. There are two main approaches:
+
+## 1. SSE Pattern with Structured Events (Preferred)
+
+### Backend Implementation
+- API routes return `SSEStreamingResponse<SSEEventData>` type
+- Use `spawnAndGetDataWorkflow.execute()` for command execution
+- Stream `SSEEventData` objects via Server-Sent Events
+- Each event contains:
+  - `isRunning`: boolean indicating if process is active
+  - `stageDisplayText`: formatted display text with emojis
+  - `message`: human-readable description
+  - `timestamp`: ISO timestamp
+  - `type`: 'command' | 'output' | 'status' | 'error'
+  - `command`: actual command (when type='command')
+  - `output`: raw terminal output (when type='output'/'error')
+  - `parsedData`: processed/parsed data (optional, route-specific)
+
+### Frontend Implementation
+- Use SSE Terminal components (`SseTerminal`, `PathControl`, etc.)
+- Connect via `new EventSource('/api/endpoint')`
+- Parse events: `JSON.parse(event.data) as SSEEventData`
+- Display real-time terminal output with proper formatting
+- Handle parsed data for structured display (e.g., PATH directories)
+
+### Example Flow
+1. Page displays SSE terminal component
+2. Component connects to SSE endpoint
+3. Backend sends command event: `{type: 'command', command: 'echo $PATH'}`
+4. Backend sends output events: `{type: 'output', output: '/usr/bin:/bin'}`
+5. Backend sends parsed data: `{type: 'output', parsedData: {paths: [...]}}`
+6. Frontend updates terminal display and structured data views
+
+## 2. Legacy Raw SSE Pattern
+
+### Backend Implementation  
+- Direct `spawn()` with raw ReadableStream
+- Manual SSE message formatting: `data: ${JSON.stringify({type, content})}\n\n`
+- Less structured, mainly for simple command output
+
+### When to Use Each Pattern
+
+**Use SSE Pattern with Structured Events for:**
+- Commands that need real-time output display
+- Operations requiring parsed/structured data
+- Complex workflows with multiple stages
+- Interactive terminal experiences
+
+**Use Legacy Raw SSE for:**
+- Simple command execution
+- Basic output streaming
+- Quick debugging endpoints
+
+## Key Components
+
+- `spawnAndGetDataWorkflow`: Core command execution
+- `SSEEventData`: Standard event structure  
+- `SSEStreamingResponse<T>`: Type for SSE API routes
+- `sseTerminalHandlerFactory`: Reusable SSE handler factory
+- `SseTerminal`, `PathControl`: Frontend SSE components
+
+## Type Safety Requirements
+
+All API routes MUST have explicit return types - never use generic `Response` type.
