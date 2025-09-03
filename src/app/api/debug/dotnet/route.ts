@@ -227,10 +227,74 @@ const parseComprehensiveDotnetResult = (output: string, success: boolean, stderr
     }
   }
   
-  const totalFound = installations.length;
+  // Deduplicate installations that point to the same physical location
+  // This handles cases where PATH points to an executable in a directory that's also scanned
+  const deduplicatedInstallations: Array<{
+    path: string;
+    version?: string;
+    type: 'path' | 'directory';
+    sdks: string[];
+    runtimes: string[];
+  }> = [];
+  
+  for (const installation of installations) {
+    // Check if this installation is already represented by another one
+    const existingIndex = deduplicatedInstallations.findIndex(existing => {
+      // If one is the executable and the other is its parent directory, they're the same installation
+      const existingDir = existing.path.endsWith('/dotnet') ? existing.path.replace('/dotnet', '') : existing.path;
+      const currentDir = installation.path.endsWith('/dotnet') ? installation.path.replace('/dotnet', '') : installation.path;
+      
+      return existingDir === currentDir;
+    });
+    
+    if (existingIndex === -1) {
+      // New installation - add it
+      // If this is a PATH installation (executable), prefer the directory path for consistency
+      if (installation.type === 'path' && installation.path.endsWith('/dotnet')) {
+        installation.path = installation.path.replace('/dotnet', '');
+        installation.type = 'directory'; // Mark as directory since we're using the directory path
+      }
+      deduplicatedInstallations.push(installation);
+    } else {
+      // Merge with existing installation - combine SDKs and runtimes
+      const existing = deduplicatedInstallations[existingIndex];
+      
+      // Merge SDKs (avoid duplicates)
+      const mergedSdks = [...existing.sdks];
+      for (const sdk of installation.sdks) {
+        if (!mergedSdks.includes(sdk)) {
+          mergedSdks.push(sdk);
+        }
+      }
+      
+      // Merge runtimes (avoid duplicates)
+      const mergedRuntimes = [...existing.runtimes];
+      for (const runtime of installation.runtimes) {
+        if (!mergedRuntimes.includes(runtime)) {
+          mergedRuntimes.push(runtime);
+        }
+      }
+      
+      // Update the existing installation with merged data
+      existing.sdks = mergedSdks;
+      existing.runtimes = mergedRuntimes;
+      
+      // Use the version from whichever installation has it
+      if (installation.version && !existing.version) {
+        existing.version = installation.version;
+      }
+      
+      // Prefer directory type over path type
+      if (installation.type === 'directory' && existing.type === 'path') {
+        existing.type = 'directory';
+      }
+    }
+  }
+  
+  const totalFound = deduplicatedInstallations.length;
   const inPath = pathInstallation !== null;
-  const totalSdks = installations.reduce((sum, inst) => sum + inst.sdks.length, 0);
-  const totalRuntimes = installations.reduce((sum, inst) => sum + inst.runtimes.length, 0);
+  const totalSdks = deduplicatedInstallations.reduce((sum, inst) => sum + inst.sdks.length, 0);
+  const totalRuntimes = deduplicatedInstallations.reduce((sum, inst) => sum + inst.runtimes.length, 0);
   
   return {
     dotnetDetected: totalFound > 0,
@@ -239,7 +303,7 @@ const parseComprehensiveDotnetResult = (output: string, success: boolean, stderr
     totalRuntimes: totalRuntimes,
     inPath: inPath,
     pathInstallation: pathInstallation,
-    installations: installations,
+    installations: deduplicatedInstallations,
     status: totalFound > 0 ? 'found' : 'not_found',
     message: totalFound > 0 
       ? `Found ${totalFound} .NET installation${totalFound > 1 ? 's' : ''} with ${totalSdks} SDK${totalSdks !== 1 ? 's' : ''} and ${totalRuntimes} Runtime${totalRuntimes !== 1 ? 's' : ''}${inPath ? ' (in PATH)' : ' (not in PATH)'}`
