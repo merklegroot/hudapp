@@ -9,16 +9,24 @@ export default function Debug() {
         <h1 className="text-4xl font-bold mb-8">Debug</h1>
         
         <div className="space-y-8">
-          <SseTerminal 
+          {/* <SseTerminal 
             url="/api/debug/long-running"
             terminalTitle="Debug Events Terminal"
             startButtonLabel="Start Debug Process"
             stopButtonLabel="Stop Debug"
           />
-          
-          <DotNetControl />
+           */}
 
-          <PathControl />
+            <SseTerminal 
+              url="/api/debug/dotnet"
+              terminalTitle="Debug Events Terminal"
+              startButtonLabel="Start Debug Process"
+              stopButtonLabel="Stop Debug"
+            />
+
+          {/* <DotNetControl /> */}
+
+          {/* <PathControl /> */}
         </div>
       </div>
     </div>
