@@ -767,6 +767,32 @@ async function getTopProcesses(): Promise<topProcess[]> {
 }
 
 
+function getOSType(): string {
+  try {
+    const currentPlatform = detectPlatform();
+
+    switch (currentPlatform) {
+      case platformType.windows:
+        return 'Windows';
+      case platformType.mac:
+        return 'MacOS';
+      case platformType.linux:
+        return 'Linux';
+      case platformType.freebsd:
+        return 'FreeBSD';
+      case platformType.openbsd:
+        return 'OpenBSD';
+      case platformType.aix:
+      case platformType.sunos:
+        return 'BSD';
+      default:
+        return 'Unknown';
+    }
+  } catch (error: unknown) {
+    return 'Unknown';
+  }
+}
+
 async function getOSName(): Promise<string> {
   try {
     const currentPlatform = detectPlatform();
@@ -827,6 +853,7 @@ async function getMachineInfo(): Promise<machineInfo> {
   try {
     const machineHostname = hostname();
     const osName = await getOSName();
+    const osType = getOSType();
     const kernelVersion = release();
     const machineModel = await getMachineModel();
     const cpuInfo = await getCPUInfo();
@@ -847,6 +874,7 @@ async function getMachineInfo(): Promise<machineInfo> {
       cpuDetailed,
       kernelVersion,
       osName,
+      osType,
       totalRAM,
       freeRAM,
       usedRAM,
@@ -878,6 +906,7 @@ async function getMachineInfo(): Promise<machineInfo> {
       },
       kernelVersion: 'Unknown', 
       osName: 'Unknown',
+      osType: 'Unknown',
       totalRAM: 'Unknown',
       freeRAM: 'Unknown',
       usedRAM: 'Unknown',
