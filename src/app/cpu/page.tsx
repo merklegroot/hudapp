@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { machineInfo } from '../workflows/models';
-import CPUIcon from '../components/Icons/CPUIcon';
 import CPUDetailField from '../components/CPUDetailField';
 import CPUFeaturesDisplay from '../../components/CPUFeaturesDisplay';
 

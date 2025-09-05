@@ -42,6 +42,8 @@ export interface machineInfo {
   cpuDetailed: cpuDetailedInfo;
   kernelVersion: string;
   osName: string;
+  osType: string;
+  virtualization: string;
   totalRAM: string;
   freeRAM: string;
   usedRAM: string;

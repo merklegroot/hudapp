@@ -1,5 +1,6 @@
 import React from 'react';
 import OSIcon from './Icons/OSIcon';
+import OSTypeIcon from './Icons/OSTypeIcon';
 import MachineIcon from './Icons/MachineIcon';
 import CPUIcon from './Icons/CPUIcon';
 import KernelIcon from './Icons/KernelIcon';
@@ -15,6 +16,8 @@ export default function SystemDetailField({ label, value, className = "" }: Syst
     switch (label) {
       case 'Operating System':
         return <OSIcon osName={value} className="w-6 h-6" />;
+      case 'OS Type':
+        return <OSTypeIcon osType={value} className="w-6 h-6" />;
       case 'Machine Model':
         return <MachineIcon machineModel={value} className="w-6 h-6" />;
       case 'CPU Model':

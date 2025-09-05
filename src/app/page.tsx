@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { machineInfo } from './workflows/models';
 import SystemDetailField from './components/SystemDetailField';
+import OSTypeIcon from './components/Icons/OSTypeIcon';
+import VirtualizationIcon from './components/Icons/VirtualizationIcon';
 
 export default function Home() {
   const [machineInfo, setMachineInfo] = useState<machineInfo | null>(null);
@@ -79,20 +81,62 @@ export default function Home() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] p-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold mb-8">Machine Information</h1>
         
-        {/* System Information */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">System Details</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {infoItems.map((item, index) => (
-              <SystemDetailField
-                key={index}
-                label={item.label}
-                value={item.value}
-              />
-            ))}
+        <div className="flex gap-8">
+          {/* Left Panel - OS Type and Virtualization */}
+          <div className="flex-shrink-0 w-80">
+            <div className="bg-gray-50 rounded-lg p-8 text-center space-y-8">
+              {/* OS Type */}
+              <div className="flex flex-col items-center space-y-4">
+                <OSTypeIcon osType={machineInfo.osType} className="w-20 h-20" />
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">OS Type</h3>
+                  <p className="text-2xl font-semibold text-gray-900">{machineInfo.osType}</p>
+                </div>
+              </div>
+              
+              {/* Virtualization */}
+              <div className="flex flex-col items-center space-y-4">
+                <VirtualizationIcon virtualization={machineInfo.virtualization} className="w-20 h-20" />
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">
+                    {machineInfo.virtualization === 'Physical Hardware' ? 'Running on' : 
+                     machineInfo.virtualization.includes('Serverless') || 
+                     machineInfo.virtualization.includes('Cloud') || 
+                     machineInfo.virtualization.includes('AWS') || 
+                     machineInfo.virtualization.includes('Azure') || 
+                     machineInfo.virtualization.includes('Google') || 
+                     machineInfo.virtualization.includes('Heroku') || 
+                     machineInfo.virtualization.includes('Railway') || 
+                     machineInfo.virtualization.includes('Netlify') || 
+                     machineInfo.virtualization.includes('Render') || 
+                     machineInfo.virtualization.includes('Fly.io') || 
+                     machineInfo.virtualization.includes('DigitalOcean') || 
+                     machineInfo.virtualization.includes('Linode') || 
+                     machineInfo.virtualization.includes('Vultr') ? 'Deployed to' : 'Virtualization'}
+                  </h3>
+                  <p className="text-lg font-semibold text-gray-900 text-center leading-tight">{machineInfo.virtualization}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Right Panel - System Information */}
+          <div className="flex-1">
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">System Details</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {infoItems.map((item, index) => (
+                  <SystemDetailField
+                    key={index}
+                    label={item.label}
+                    value={item.value}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
