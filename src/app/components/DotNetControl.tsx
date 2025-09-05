@@ -3,12 +3,23 @@
 import SseTerminal from './SseTerminal/SseTerminal';
 import { DotNetVersionControl } from './DotNetVersionControl';
 
+interface SdkInfo {
+  version: string;
+  path: string;
+}
+
+interface RuntimeInfo {
+  version: string;
+  path: string;
+  package: string;
+}
+
 interface DotNetInstallation {
   path: string;
   version?: string;
   type: 'path' | 'directory';
-  sdks: string[];
-  runtimes: string[];
+  sdks: SdkInfo[];
+  runtimes: RuntimeInfo[];
 }
 
 interface ParsedDotNetData {
@@ -45,40 +56,70 @@ function InstallationSummary({ parsedData }: { parsedData: ParsedDotNetData }) {
 }
 
 function InstallationDetails({ parsedData }: { parsedData: ParsedDotNetData }) {
+  // Always show all major versions (6, 7, 8, 9)
+  const allMajorVersions = ['6', '7', '8', '9'];
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <h3 className="text-lg font-semibold text-gray-800">Installation Details</h3>
 
-      {parsedData.installations.map((installation, index) => (
-        <div key={index} className="space-y-3">
-          {/* Installation Type and Path Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${installation.type === 'path'
-                ? 'bg-green-100 text-green-800'
-                : 'bg-blue-100 text-blue-800'
-                }`}>
-                {installation.type === 'path' ? 'PATH' : 'Directory'}
-              </span>
+      {/* Version Controls - Side by Side */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-4">
+        {allMajorVersions.map((majorVersion) => {
+          // Filter SDKs and runtimes from ALL installations for this specific major version
+          const filteredSdks = parsedData.installations.flatMap(inst => 
+            inst.sdks.filter(sdk => sdk.version.startsWith(`${majorVersion}.`))
+          );
+          const filteredRuntimes = parsedData.installations.flatMap(inst => 
+            inst.runtimes.filter(runtime => runtime.version.startsWith(`${majorVersion}.`))
+          );
+          
+          // Remove duplicates by version for SDKs and by package+version for runtimes
+          const uniqueSdks = filteredSdks.filter((sdk, index, self) => 
+            index === self.findIndex(s => s.version === sdk.version)
+          );
+          const uniqueRuntimes = filteredRuntimes.filter((runtime, index, self) => 
+            index === self.findIndex(r => r.package === runtime.package && r.version === runtime.version)
+          );
+
+          return (
+            <div key={majorVersion}>
+              <DotNetVersionControl
+                baseVersion={majorVersion}
+                sdkVersionsInstalled={uniqueSdks}
+                runtimeVersionsInstalled={uniqueRuntimes}
+                isEndOfSupport={false} // TODO: Implement end of support detection
+                endOfSupportDate="" // TODO: Implement end of support date
+              />
             </div>
-          </div>
+          );
+        })}
+      </div>
 
-          <div className="font-mono text-sm text-gray-700 bg-gray-50 p-2 rounded">
-            {installation.path}
-          </div>
-
-          {/* Version Control Component */}
-          {installation.version && (
-            <DotNetVersionControl
-              baseVersion={installation.version}
-              sdkVersionsInstalled={installation.sdks}
-              runtimeVersionsInstalled={installation.runtimes}
-              isEndOfSupport={false} // TODO: Implement end of support detection
-              endOfSupportDate="" // TODO: Implement end of support date
-            />
-          )}
+      {/* Installation paths - Show all installations */}
+      {parsedData.installations.length > 0 && (
+        <div className="space-y-4">
+          <h4 className="text-md font-medium text-gray-800">Installation Paths</h4>
+          {parsedData.installations.map((installation, index) => (
+            <div key={index} className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${installation.type === 'path'
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-blue-100 text-blue-800'
+                  }`}>
+                  {installation.type === 'path' ? 'PATH' : 'Directory'}
+                </span>
+                {installation.version && (
+                  <span className="text-xs text-gray-500">v{installation.version}</span>
+                )}
+              </div>
+              <div className="font-mono text-sm text-gray-700 bg-gray-50 p-2 rounded">
+                {installation.path}
+              </div>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
     </div>
   );
 }

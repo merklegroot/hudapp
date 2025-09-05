@@ -227,15 +227,65 @@ const parseComprehensiveDotnetResult = (output: string, success: boolean, stderr
     }
   }
   
-  // Deduplicate installations that point to the same physical location
-  // This handles cases where PATH points to an executable in a directory that's also scanned
-  const deduplicatedInstallations: Array<{
+  // Parse SDK and Runtime strings into structured objects
+  interface SdkInfo {
+    version: string;
+    path: string;
+  }
+
+  interface RuntimeInfo {
+    version: string;
+    path: string;
+    package: string;
+  }
+
+  interface InstallationInfo {
     path: string;
     version?: string;
     type: 'path' | 'directory';
-    sdks: string[];
-    runtimes: string[];
-  }> = [];
+    sdks: SdkInfo[];
+    runtimes: RuntimeInfo[];
+  }
+
+  // Helper function to parse SDK string: "7.0.410 [/home/goose/.dotnet/sdk]"
+  function parseSdkString(sdkString: string): SdkInfo {
+    const trimmed = sdkString.trim();
+    const match = trimmed.match(/^(.+?)\s+\[(.+)\]$/);
+    if (match) {
+      return {
+        version: match[1],
+        path: match[2]
+      };
+    }
+    // Fallback if format is unexpected
+    return {
+      version: trimmed,
+      path: ''
+    };
+  }
+
+  // Helper function to parse Runtime string: "Microsoft.AspNetCore.App 7.0.20 [/home/goose/.dotnet/shared/Microsoft.AspNetCore.App]"
+  function parseRuntimeString(runtimeString: string): RuntimeInfo {
+    const trimmed = runtimeString.trim();
+    const match = trimmed.match(/^(.+?)\s+(.+?)\s+\[(.+)\]$/);
+    if (match) {
+      return {
+        package: match[1],
+        version: match[2],
+        path: match[3]
+      };
+    }
+    // Fallback if format is unexpected
+    return {
+      package: trimmed,
+      version: '',
+      path: ''
+    };
+  }
+
+  // Deduplicate installations that point to the same physical location
+  // This handles cases where PATH points to an executable in a directory that's also scanned
+  const deduplicatedInstallations: InstallationInfo[] = [];
   
   for (const installation of installations) {
     // Check if this installation is already represented by another one
@@ -247,37 +297,41 @@ const parseComprehensiveDotnetResult = (output: string, success: boolean, stderr
       return existingDir === currentDir;
     });
     
+    // Parse SDK and runtime strings into structured objects
+    const parsedSdks = installation.sdks.map(parseSdkString);
+    const parsedRuntimes = installation.runtimes.map(parseRuntimeString);
+    
     if (existingIndex === -1) {
-      // New installation - add it
+      // New installation - add it with parsed data
+      let installationPath = installation.path;
+      let installationType = installation.type;
+      
       // If this is a PATH installation (executable), prefer the directory path for consistency
       if (installation.type === 'path' && installation.path.endsWith('/dotnet')) {
-        installation.path = installation.path.replace('/dotnet', '');
-        installation.type = 'directory'; // Mark as directory since we're using the directory path
+        installationPath = installation.path.replace('/dotnet', '');
+        installationType = 'directory'; // Mark as directory since we're using the directory path
       }
-      deduplicatedInstallations.push(installation);
+      
+      deduplicatedInstallations.push({
+        path: installationPath,
+        version: installation.version,
+        type: installationType,
+        sdks: parsedSdks,
+        runtimes: parsedRuntimes
+      });
     } else {
       // Merge with existing installation - combine SDKs and runtimes
       const existing = deduplicatedInstallations[existingIndex];
       
-      // Merge SDKs (avoid duplicates)
-      const mergedSdks = [...existing.sdks];
-      for (const sdk of installation.sdks) {
-        if (!mergedSdks.includes(sdk)) {
-          mergedSdks.push(sdk);
-        }
-      }
+      // Merge SDKs (deduplicate by version)
+      const existingSdkVersions = new Set(existing.sdks.map(sdk => sdk.version));
+      const newSdks = parsedSdks.filter(sdk => !existingSdkVersions.has(sdk.version));
+      existing.sdks = [...existing.sdks, ...newSdks];
       
-      // Merge runtimes (avoid duplicates)
-      const mergedRuntimes = [...existing.runtimes];
-      for (const runtime of installation.runtimes) {
-        if (!mergedRuntimes.includes(runtime)) {
-          mergedRuntimes.push(runtime);
-        }
-      }
-      
-      // Update the existing installation with merged data
-      existing.sdks = mergedSdks;
-      existing.runtimes = mergedRuntimes;
+      // Merge Runtimes (deduplicate by package + version)
+      const existingRuntimeKeys = new Set(existing.runtimes.map(rt => `${rt.package}:${rt.version}`));
+      const newRuntimes = parsedRuntimes.filter(rt => !existingRuntimeKeys.has(`${rt.package}:${rt.version}`));
+      existing.runtimes = [...existing.runtimes, ...newRuntimes];
       
       // Use the version from whichever installation has it
       if (installation.version && !existing.version) {
