@@ -1,6 +1,7 @@
 'use client';
 
 import SseTerminal from './SseTerminal/SseTerminal';
+import { DotNetVersionControl } from './DotNetVersionControl';
 
 interface DotNetInstallation {
   path: string;
@@ -49,8 +50,9 @@ function InstallationDetails({ parsedData }: { parsedData: ParsedDotNetData }) {
       <h3 className="text-lg font-semibold text-gray-800">Installation Details</h3>
 
       {parsedData.installations.map((installation, index) => (
-        <div key={index} className="border border-gray-200 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-3">
+        <div key={index} className="space-y-3">
+          {/* Installation Type and Path Header */}
+          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${installation.type === 'path'
                 ? 'bg-green-100 text-green-800'
@@ -58,49 +60,22 @@ function InstallationDetails({ parsedData }: { parsedData: ParsedDotNetData }) {
                 }`}>
                 {installation.type === 'path' ? 'PATH' : 'Directory'}
               </span>
-              {installation.version && (
-                <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                  v{installation.version}
-                </span>
-              )}
-            </div>
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <span>{installation.sdks.length} SDK{installation.sdks.length !== 1 ? 's' : ''}</span>
-              <span>•</span>
-              <span>{installation.runtimes.length} Runtime{installation.runtimes.length !== 1 ? 's' : ''}</span>
             </div>
           </div>
 
-          <div className="font-mono text-sm text-gray-700 bg-gray-50 p-2 rounded mb-3">
+          <div className="font-mono text-sm text-gray-700 bg-gray-50 p-2 rounded">
             {installation.path}
           </div>
 
-          {/* SDKs */}
-          {installation.sdks.length > 0 && (
-            <div className="mb-3">
-              <h5 className="text-sm font-medium text-gray-700 mb-2">SDKs:</h5>
-              <div className="space-y-1">
-                {installation.sdks.map((sdk, sdkIndex) => (
-                  <div key={sdkIndex} className="text-sm text-gray-600 bg-orange-50 px-2 py-1 rounded">
-                    {sdk}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Runtimes */}
-          {installation.runtimes.length > 0 && (
-            <div>
-              <h5 className="text-sm font-medium text-gray-700 mb-2">Runtimes:</h5>
-              <div className="space-y-1">
-                {installation.runtimes.map((runtime, runtimeIndex) => (
-                  <div key={runtimeIndex} className="text-sm text-gray-600 bg-purple-50 px-2 py-1 rounded">
-                    {runtime}
-                  </div>
-                ))}
-              </div>
-            </div>
+          {/* Version Control Component */}
+          {installation.version && (
+            <DotNetVersionControl
+              baseVersion={installation.version}
+              sdkVersionsInstalled={installation.sdks}
+              runtimeVersionsInstalled={installation.runtimes}
+              isEndOfSupport={false} // TODO: Implement end of support detection
+              endOfSupportDate="" // TODO: Implement end of support date
+            />
           )}
         </div>
       ))}
