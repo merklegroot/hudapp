@@ -5,6 +5,7 @@ import { machineInfo } from '../workflows/models';
 import CPUIcon from '../components/Icons/CPUIcon';
 import CPUDetailField from '../components/CPUDetailField';
 import CPUFeaturesDisplay from '../../components/CPUFeaturesDisplay';
+import CPUPerformanceDisplay from '../components/CPUPerformanceDisplay';
 
 export default function CPUPage() {
   const [machineData, setMachineData] = useState<machineInfo | null>(null);
@@ -106,6 +107,18 @@ export default function CPUPage() {
                 <p className="text-lg font-semibold text-gray-900">{machineData.cpuDetailed.stepping}</p>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* CPU Performance Rating */}
+        {machineData && (
+          <div className="mb-6">
+            <CPUPerformanceDisplay
+              cpuModel={machineData.cpuDetailed.model}
+              cores={machineData.cpuDetailed.cores}
+              threads={machineData.cpuDetailed.threads}
+              frequency={machineData.cpuDetailed.frequency}
+            />
           </div>
         )}
 
