@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { machineInfo } from './workflows/models';
 import SystemDetailField from './components/SystemDetailField';
 import OSTypeIcon from './components/Icons/OSTypeIcon';
+import VirtualizationIcon from './components/Icons/VirtualizationIcon';
 
 export default function Home() {
   const [machineInfo, setMachineInfo] = useState<machineInfo | null>(null);
@@ -84,14 +85,26 @@ export default function Home() {
         <h1 className="text-4xl font-bold mb-8">Machine Information</h1>
         
         <div className="flex gap-8">
-          {/* Left Panel - OS Type */}
+          {/* Left Panel - OS Type and Virtualization */}
           <div className="flex-shrink-0 w-80">
-            <div className="bg-gray-50 rounded-lg p-8 text-center">
+            <div className="bg-gray-50 rounded-lg p-8 text-center space-y-8">
+              {/* OS Type */}
               <div className="flex flex-col items-center space-y-4">
-                <OSTypeIcon osType={machineInfo.osType} className="w-24 h-24" />
+                <OSTypeIcon osType={machineInfo.osType} className="w-20 h-20" />
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-800 mb-2">OS Type</h3>
-                  <p className="text-3xl font-semibold text-gray-900">{machineInfo.osType}</p>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">OS Type</h3>
+                  <p className="text-2xl font-semibold text-gray-900">{machineInfo.osType}</p>
+                </div>
+              </div>
+              
+              {/* Virtualization */}
+              <div className="flex flex-col items-center space-y-4">
+                <VirtualizationIcon virtualization={machineInfo.virtualization} className="w-20 h-20" />
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">
+                    {machineInfo.virtualization === 'Physical Hardware' ? 'Running on' : 'Virtualization'}
+                  </h3>
+                  <p className="text-lg font-semibold text-gray-900 text-center leading-tight">{machineInfo.virtualization}</p>
                 </div>
               </div>
             </div>

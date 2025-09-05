@@ -45,6 +45,7 @@ export async function GET(): Promise<NextResponse<machineInfo>> {
       kernelVersion: 'Unknown', 
       osName: 'Unknown',
       osType: 'Unknown',
+      virtualization: 'Unknown',
       totalRAM: 'Unknown',
       freeRAM: 'Unknown',
       usedRAM: 'Unknown',

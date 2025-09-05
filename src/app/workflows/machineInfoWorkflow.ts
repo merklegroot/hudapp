@@ -793,6 +793,134 @@ function getOSType(): string {
   }
 }
 
+async function getVirtualization(): Promise<string> {
+  try {
+    const currentPlatform = detectPlatform();
+
+    if (currentPlatform === platformType.linux) {
+      // Check for Docker container
+      try {
+        await readFile('/.dockerenv', 'utf8');
+        return 'Docker Container';
+      } catch (e) {
+        // Not in Docker, continue checking
+      }
+
+      // Check for LXC container
+      try {
+        const cgroup = await readFile('/proc/self/cgroup', 'utf8');
+        if (cgroup.includes('lxc')) {
+          return 'LXC Container';
+        }
+      } catch (e) {
+        // Continue checking
+      }
+
+      // Check for systemd-detect-virt (Linux systems with systemd)
+      try {
+        const { stdout: virtOutput } = await execAsync('systemd-detect-virt');
+        const virtType = virtOutput.trim();
+        
+        if (virtType !== 'none') {
+          switch (virtType) {
+            case 'kvm':
+              return 'KVM Virtual Machine';
+            case 'qemu':
+              return 'QEMU Virtual Machine';
+            case 'vmware':
+              return 'VMware Virtual Machine';
+            case 'virtualbox':
+              return 'VirtualBox Virtual Machine';
+            case 'xen':
+              return 'Xen Virtual Machine';
+            case 'hyperv':
+              return 'Hyper-V Virtual Machine';
+            case 'microsoft':
+              return 'Microsoft Virtual Machine';
+            case 'oracle':
+              return 'Oracle Virtual Machine';
+            case 'parallels':
+              return 'Parallels Virtual Machine';
+            case 'bhyve':
+              return 'Bhyve Virtual Machine';
+            case 'openvz':
+              return 'OpenVZ Container';
+            case 'lxc':
+              return 'LXC Container';
+            case 'systemd-nspawn':
+              return 'systemd-nspawn Container';
+            case 'podman':
+              return 'Podman Container';
+            case 'container':
+              return 'Container';
+            default:
+              return `Virtual Machine (${virtType})`;
+          }
+        }
+      } catch (e) {
+        // systemd-detect-virt not available, continue checking
+      }
+
+      // Check for WSL (Windows Subsystem for Linux)
+      try {
+        const osRelease = await readFile('/proc/sys/kernel/osrelease', 'utf8');
+        if (osRelease.includes('Microsoft') || osRelease.includes('WSL')) {
+          return 'WSL (Windows Subsystem for Linux)';
+        }
+      } catch (e) {
+        // Continue checking
+      }
+
+      // Check for other virtualization indicators
+      try {
+        const version = await readFile('/proc/version', 'utf8');
+        if (version.includes('microsoft') || version.includes('WSL')) {
+          return 'WSL (Windows Subsystem for Linux)';
+        }
+      } catch (e) {
+        // Continue checking
+      }
+
+      // Check for cgroup v2 container indicators
+      try {
+        const cgroup = await readFile('/proc/self/cgroup', 'utf8');
+        if (cgroup.includes('docker')) {
+          return 'Docker Container';
+        }
+        if (cgroup.includes('containerd')) {
+          return 'containerd Container';
+        }
+        if (cgroup.includes('crio')) {
+          return 'CRI-O Container';
+        }
+      } catch (e) {
+        // Continue checking
+      }
+
+      // If we get here, it's likely physical hardware
+      return 'Physical Hardware';
+    }
+
+    if (currentPlatform === platformType.windows) {
+      // For Windows, we could check for VM indicators, but for now return Physical Hardware
+      // In the future, we could check WMI or registry entries for VM detection
+      return 'Physical Hardware';
+    }
+
+    if (currentPlatform === platformType.mac) {
+      // For macOS, we could check for VM indicators, but for now return Physical Hardware
+      // In the future, we could check system_profiler or other macOS-specific methods
+      return 'Physical Hardware';
+    }
+
+    // Default fallback
+    return 'Physical Hardware';
+  } catch (error: unknown) {
+    console.error('Error detecting virtualization:', error);
+    return 'Unknown';
+  }
+}
+
 async function getOSName(): Promise<string> {
   try {
     const currentPlatform = detectPlatform();
@@ -854,6 +982,7 @@ async function getMachineInfo(): Promise<machineInfo> {
     const machineHostname = hostname();
     const osName = await getOSName();
     const osType = getOSType();
+    const virtualization = await getVirtualization();
     const kernelVersion = release();
     const machineModel = await getMachineModel();
     const cpuInfo = await getCPUInfo();
@@ -875,6 +1004,7 @@ async function getMachineInfo(): Promise<machineInfo> {
       kernelVersion,
       osName,
       osType,
+      virtualization,
       totalRAM,
       freeRAM,
       usedRAM,
@@ -907,6 +1037,7 @@ async function getMachineInfo(): Promise<machineInfo> {
       kernelVersion: 'Unknown', 
       osName: 'Unknown',
       osType: 'Unknown',
+      virtualization: 'Unknown',
       totalRAM: 'Unknown',
       freeRAM: 'Unknown',
       usedRAM: 'Unknown',

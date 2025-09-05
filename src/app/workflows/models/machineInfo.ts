@@ -43,6 +43,7 @@ export interface machineInfo {
   kernelVersion: string;
   osName: string;
   osType: string;
+  virtualization: string;
   totalRAM: string;
   freeRAM: string;
   usedRAM: string;
