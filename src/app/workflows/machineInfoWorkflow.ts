@@ -798,6 +798,51 @@ async function getVirtualization(): Promise<string> {
     const currentPlatform = detectPlatform();
 
     if (currentPlatform === platformType.linux) {
+      // Check for cloud platform indicators first
+      try {
+        // Check for Vercel environment
+        if (process.env.VERCEL === '1' || process.env.VERCEL_URL) {
+          return 'Vercel Serverless';
+        }
+        
+        // Check for other cloud platforms
+        if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
+          return 'AWS Lambda';
+        }
+        if (process.env.AZURE_FUNCTIONS_WORKER_RUNTIME) {
+          return 'Azure Functions';
+        }
+        if (process.env.GOOGLE_CLOUD_PROJECT || process.env.GCP_PROJECT) {
+          return 'Google Cloud Platform';
+        }
+        if (process.env.HEROKU_APP_NAME) {
+          return 'Heroku';
+        }
+        if (process.env.RAILWAY_ENVIRONMENT) {
+          return 'Railway';
+        }
+        if (process.env.NETLIFY) {
+          return 'Netlify';
+        }
+        if (process.env.RENDER) {
+          return 'Render';
+        }
+        if (process.env.FLY_APP_NAME) {
+          return 'Fly.io';
+        }
+        if (process.env.DIGITAL_OCEAN_APP_ID) {
+          return 'DigitalOcean App Platform';
+        }
+        if (process.env.LINODE_APP_ID) {
+          return 'Linode';
+        }
+        if (process.env.VULTR_APP_ID) {
+          return 'Vultr';
+        }
+      } catch (e) {
+        // Continue checking
+      }
+
       // Check for Docker container
       try {
         await readFile('/.dockerenv', 'utf8');
@@ -892,6 +937,30 @@ async function getVirtualization(): Promise<string> {
         }
         if (cgroup.includes('crio')) {
           return 'CRI-O Container';
+        }
+        if (cgroup.includes('kubepods')) {
+          return 'Kubernetes Pod';
+        }
+        if (cgroup.includes('systemd')) {
+          return 'systemd Container';
+        }
+      } catch (e) {
+        // Continue checking
+      }
+
+      // Check for serverless/cloud indicators in environment
+      if (process.env.NODE_ENV === 'production' && 
+          (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || 
+           process.env.AZURE_FUNCTIONS_WORKER_RUNTIME || process.env.GOOGLE_CLOUD_PROJECT)) {
+        return 'Cloud Platform';
+      }
+
+      // Check for container indicators in /proc/1/cgroup
+      try {
+        const cgroup = await readFile('/proc/1/cgroup', 'utf8');
+        if (cgroup.includes('docker') || cgroup.includes('containerd') || 
+            cgroup.includes('kubepods') || cgroup.includes('systemd')) {
+          return 'Container';
         }
       } catch (e) {
         // Continue checking

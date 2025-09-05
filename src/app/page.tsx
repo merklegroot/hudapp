@@ -102,7 +102,20 @@ export default function Home() {
                 <VirtualizationIcon virtualization={machineInfo.virtualization} className="w-20 h-20" />
                 <div>
                   <h3 className="text-xl font-bold text-gray-800 mb-2">
-                    {machineInfo.virtualization === 'Physical Hardware' ? 'Running on' : 'Virtualization'}
+                    {machineInfo.virtualization === 'Physical Hardware' ? 'Running on' : 
+                     machineInfo.virtualization.includes('Serverless') || 
+                     machineInfo.virtualization.includes('Cloud') || 
+                     machineInfo.virtualization.includes('AWS') || 
+                     machineInfo.virtualization.includes('Azure') || 
+                     machineInfo.virtualization.includes('Google') || 
+                     machineInfo.virtualization.includes('Heroku') || 
+                     machineInfo.virtualization.includes('Railway') || 
+                     machineInfo.virtualization.includes('Netlify') || 
+                     machineInfo.virtualization.includes('Render') || 
+                     machineInfo.virtualization.includes('Fly.io') || 
+                     machineInfo.virtualization.includes('DigitalOcean') || 
+                     machineInfo.virtualization.includes('Linode') || 
+                     machineInfo.virtualization.includes('Vultr') ? 'Deployed to' : 'Virtualization'}
                   </h3>
                   <p className="text-lg font-semibold text-gray-900 text-center leading-tight">{machineInfo.virtualization}</p>
                 </div>

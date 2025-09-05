@@ -90,9 +90,56 @@ export default function VirtualizationIcon({ virtualization, className = "w-6 h-
   }
   
   // Cloud environments
-  if (virtLower.includes('cloud') || virtLower.includes('aws') || 
-      virtLower.includes('azure') || virtLower.includes('gcp') || 
-      virtLower.includes('digital ocean') || virtLower.includes('linode')) {
+  if (virtLower.includes('vercel')) {
+    return <FaCloud className={`${className} text-black`} />;
+  }
+  
+  if (virtLower.includes('aws') || virtLower.includes('lambda')) {
+    return <FaCloud className={`${className} text-orange-500`} />;
+  }
+  
+  if (virtLower.includes('azure')) {
+    return <FaCloud className={`${className} text-blue-500`} />;
+  }
+  
+  if (virtLower.includes('google') || virtLower.includes('gcp')) {
+    return <FaCloud className={`${className} text-blue-600`} />;
+  }
+  
+  if (virtLower.includes('heroku')) {
+    return <FaCloud className={`${className} text-purple-500`} />;
+  }
+  
+  if (virtLower.includes('railway')) {
+    return <FaCloud className={`${className} text-gray-600`} />;
+  }
+  
+  if (virtLower.includes('netlify')) {
+    return <FaCloud className={`${className} text-green-500`} />;
+  }
+  
+  if (virtLower.includes('render')) {
+    return <FaCloud className={`${className} text-orange-600`} />;
+  }
+  
+  if (virtLower.includes('fly.io') || virtLower.includes('flyio')) {
+    return <FaCloud className={`${className} text-purple-600`} />;
+  }
+  
+  if (virtLower.includes('digital ocean') || virtLower.includes('digitalocean')) {
+    return <FaCloud className={`${className} text-blue-500`} />;
+  }
+  
+  if (virtLower.includes('linode')) {
+    return <FaCloud className={`${className} text-red-500`} />;
+  }
+  
+  if (virtLower.includes('vultr')) {
+    return <FaCloud className={`${className} text-blue-700`} />;
+  }
+  
+  if (virtLower.includes('cloud') || virtLower.includes('serverless') || 
+      virtLower.includes('platform')) {
     return <FaCloud className={`${className} text-sky-500`} />;
   }
   

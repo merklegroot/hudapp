@@ -99,8 +99,48 @@ describe('VirtualizationIcon', () => {
     expect(svgElement).toHaveClass('text-indigo-600');
   });
 
-  it('should render cloud icon for cloud environments', () => {
-    const { container } = render(<VirtualizationIcon virtualization="AWS Cloud" />);
+  it('should render Vercel icon for Vercel Serverless', () => {
+    const { container } = render(<VirtualizationIcon virtualization="Vercel Serverless" />);
+    
+    const svgElement = container.querySelector('svg');
+    expect(svgElement).toBeInTheDocument();
+    expect(svgElement).toHaveClass('text-black');
+  });
+
+  it('should render AWS icon for AWS Lambda', () => {
+    const { container } = render(<VirtualizationIcon virtualization="AWS Lambda" />);
+    
+    const svgElement = container.querySelector('svg');
+    expect(svgElement).toBeInTheDocument();
+    expect(svgElement).toHaveClass('text-orange-500');
+  });
+
+  it('should render Azure icon for Azure Functions', () => {
+    const { container } = render(<VirtualizationIcon virtualization="Azure Functions" />);
+    
+    const svgElement = container.querySelector('svg');
+    expect(svgElement).toBeInTheDocument();
+    expect(svgElement).toHaveClass('text-blue-500');
+  });
+
+  it('should render Google Cloud icon for Google Cloud Platform', () => {
+    const { container } = render(<VirtualizationIcon virtualization="Google Cloud Platform" />);
+    
+    const svgElement = container.querySelector('svg');
+    expect(svgElement).toBeInTheDocument();
+    expect(svgElement).toHaveClass('text-blue-600');
+  });
+
+  it('should render Heroku icon for Heroku', () => {
+    const { container } = render(<VirtualizationIcon virtualization="Heroku" />);
+    
+    const svgElement = container.querySelector('svg');
+    expect(svgElement).toBeInTheDocument();
+    expect(svgElement).toHaveClass('text-purple-500');
+  });
+
+  it('should render cloud icon for generic cloud environments', () => {
+    const { container } = render(<VirtualizationIcon virtualization="Cloud Platform" />);
     
     const svgElement = container.querySelector('svg');
     expect(svgElement).toBeInTheDocument();
