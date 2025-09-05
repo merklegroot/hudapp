@@ -40,9 +40,9 @@ export function DotNetVersionControl({ baseVersion, sdkVersionsInstalled, runtim
                 </>
             )}
 
-            {/* SDKs and Runtimes Section - Side by Side */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* SDKs Section - Left */}
+            {/* SDKs and Runtimes Section - Stacked Vertically */}
+            <div className="space-y-4">
+                {/* SDKs Section - Top */}
                 {sdkVersionsInstalled.length > 0 && (
                     <div>
                         <h5 className="text-sm font-medium text-gray-700 mb-2">SDKs:</h5>
@@ -57,7 +57,7 @@ export function DotNetVersionControl({ baseVersion, sdkVersionsInstalled, runtim
                     </div>
                 )}
 
-                {/* Runtimes Section - Right */}
+                {/* Runtimes Section - Bottom */}
                 {runtimeVersionsInstalled.length > 0 && (
                     <div>
                         <h5 className="text-sm font-medium text-gray-700 mb-2">Runtimes:</h5>

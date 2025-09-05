@@ -64,7 +64,7 @@ function InstallationDetails({ parsedData }: { parsedData: ParsedDotNetData }) {
       <h3 className="text-lg font-semibold text-gray-800">Installation Details</h3>
 
       {/* Version Controls - Side by Side */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-4 gap-4">
         {allMajorVersions.map((majorVersion) => {
           // Filter SDKs and runtimes from ALL installations for this specific major version
           const filteredSdks = parsedData.installations.flatMap(inst => 
