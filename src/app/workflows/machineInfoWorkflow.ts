@@ -31,6 +31,20 @@ async function getMachineModel(): Promise<string> {
     const currentPlatform = detectPlatform();
 
     if (currentPlatform === platformType.linux) {
+      // Check if we're running in WSL
+      try {
+        const version = await readFile('/proc/version', 'utf8');
+        
+        if (version.includes('microsoft') || version.includes('WSL')) {
+          // Extract WSL version and hostname for a more meaningful model name
+          const machineHostname = hostname();
+          const wslVersion = version.includes('WSL2') ? 'WSL2' : 'WSL';
+          return `${wslVersion} (${machineHostname})`;
+        }
+      } catch (e: unknown) {
+        // Continue to regular Linux detection if /proc/version can't be read
+      }
+
       // Try to get machine model from /sys filesystem (no sudo required)
       try {
         const productName = (await readFile('/sys/class/dmi/id/product_name', 'utf8')).trim();
